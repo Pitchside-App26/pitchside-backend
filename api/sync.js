@@ -12,8 +12,7 @@ export default async function handler(req, res) {
     method: 'GET',
     url: 'https://v3.football.api-sports.io/fixtures',
     params: {
-      live: 'all', // Premier League (You can add 30 for Scottish Premiership later!)
-      next: '10'    // Get the next 10 matches
+      next: '50'    // This looks for the next 50 matches globally
     },
     headers: {
       'x-apisports-key': process.env.FOOTBALL_API_KEY,
