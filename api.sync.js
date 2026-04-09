@@ -35,7 +35,7 @@ export default async function handler(req, res) {
         status: item.fixture.status.short
       });
     }));
- 
+  
     res.status(200).json({ message: 'Sync Successful', count: fixtures.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
