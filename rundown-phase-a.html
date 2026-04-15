@@ -705,7 +705,308 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
 }
 .jump-btn:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.7); }
 .jump-btn.on { background: var(--live); border-color: var(--live); color: white; }
+
+/* ── phase-a-styles.css ── */
+/* ═══════════════════════════════════════════════════
+   PHASE A — NEW CSS ONLY
+   Insert before </style> in rundown-base.html
+   ═══════════════════════════════════════════════════ */
+
+/* ── Auth Gate Overlay (betting screens) ── */
+.auth-gate {
+  position: absolute; inset: 0; z-index: 50;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(245,240,232,0.94); backdrop-filter: blur(6px);
+  padding: 24px;
+}
+.auth-gate.show { display: flex; }
+.auth-gate-card {
+  background: var(--card); border-radius: 16px;
+  border: 1.5px solid var(--rule-strong);
+  padding: 28px 22px; text-align: center;
+  box-shadow: 0 8px 28px rgba(26,23,20,0.13);
+  max-width: 290px; width: 100%;
+}
+.auth-gate-icon { font-size: 34px; margin-bottom: 12px; }
+.auth-gate-title {
+  font-family: var(--fd); font-size: 20px; font-weight: 800;
+  color: var(--ink); margin-bottom: 6px;
+}
+.auth-gate-sub {
+  font-family: var(--fs); font-size: 12px; color: var(--ink4);
+  line-height: 1.55; margin-bottom: 20px;
+}
+.auth-gate-btn {
+  width: 100%; background: var(--ink); color: var(--parchment);
+  padding: 12px; border-radius: 9px; font-family: var(--fs);
+  font-size: 13px; font-weight: 700; border: none; cursor: pointer;
+  margin-bottom: 10px;
+}
+.auth-gate-link {
+  font-family: var(--fs); font-size: 12px; color: var(--ink4); cursor: pointer;
+}
+.auth-gate-link span { color: var(--ink); font-weight: 700; text-decoration: underline; }
+
+/* ── Auth screens (Login / Register) ── */
+.auth-screen { overflow-y: auto; scrollbar-width: none; }
+.auth-screen::-webkit-scrollbar { display: none; }
+.auth-hero {
+  background: var(--ink); padding: 44px 20px 22px;
+}
+.auth-wordmark {
+  font-family: var(--fd); font-size: 20px; font-weight: 800;
+  color: white; margin-bottom: 14px;
+}
+.auth-wordmark em { color: var(--live); font-style: italic; }
+.auth-hero-title {
+  font-family: var(--fd); font-size: 26px; font-weight: 800;
+  color: white; line-height: 1.2; margin-bottom: 5px;
+}
+.auth-hero-sub {
+  font-family: var(--fs); font-size: 13px;
+  color: rgba(255,255,255,0.42); line-height: 1.5;
+}
+.auth-form { padding: 22px 16px 16px; }
+.auth-field { margin-bottom: 16px; }
+.auth-field-label {
+  display: block; font-family: var(--fm); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.auth-input {
+  width: 100%; background: var(--card);
+  border: 1.5px solid var(--rule-strong); border-radius: 10px;
+  padding: 12px 14px; font-family: var(--fs); font-size: 14px;
+  color: var(--ink); outline: none; appearance: none;
+}
+.auth-input:focus { border-color: var(--ink); }
+.auth-btn {
+  width: 100%; background: var(--ink); color: var(--parchment);
+  padding: 13px; border-radius: 10px; font-family: var(--fs);
+  font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+  margin-top: 4px; transition: opacity 0.15s;
+}
+.auth-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.auth-btn.ghost {
+  background: transparent; color: var(--ink3);
+  border: 1.5px solid var(--rule-strong); margin-top: 10px;
+}
+.auth-link-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 5px; padding: 14px 0 6px;
+}
+.auth-link-text { font-family: var(--fs); font-size: 12px; color: var(--ink4); }
+.auth-link-btn {
+  font-family: var(--fs); font-size: 12px; font-weight: 700;
+  color: var(--ink); text-decoration: underline; cursor: pointer; background: none; border: none;
+}
+.gdpr-row {
+  display: flex; align-items: flex-start; gap: 11px;
+  margin-top: 4px; padding: 13px 12px;
+  background: var(--parchment2); border-radius: 10px;
+  border: 1.5px solid var(--rule-strong);
+}
+.gdpr-checkbox {
+  width: 18px; height: 18px; margin-top: 1px; flex-shrink: 0;
+  accent-color: var(--ink); cursor: pointer;
+}
+.gdpr-label {
+  font-family: var(--fs); font-size: 11px;
+  color: var(--ink3); line-height: 1.55;
+}
+.gdpr-label a { color: var(--ink); font-weight: 700; text-decoration: underline; }
+.auth-error {
+  font-family: var(--fs); font-size: 12px; color: var(--live);
+  text-align: center; padding: 6px 0; display: none;
+}
+.auth-error.show { display: block; }
+
+/* ── Onboarding screens ── */
+.ob-hero {
+  background: var(--ink); padding: 44px 16px 16px;
+}
+.ob-step {
+  font-family: var(--fm); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.38); margin-bottom: 5px;
+}
+.ob-title {
+  font-family: var(--fd); font-size: 24px; font-weight: 800;
+  color: white; margin-bottom: 4px; line-height: 1.2;
+}
+.ob-sub {
+  font-family: var(--fs); font-size: 12px;
+  color: rgba(255,255,255,0.42); line-height: 1.5;
+}
+.ob-counter {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--fm); font-size: 11px; font-weight: 700;
+  color: var(--live); background: rgba(176,42,24,0.16);
+  padding: 4px 11px; border-radius: 10px; margin-top: 10px;
+}
+.ob-counter.full { color: var(--gold); background: rgba(139,105,20,0.18); }
+.ob-search-wrap {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--parchment); padding: 9px 16px;
+  border-bottom: 1px solid var(--rule-strong);
+}
+.ob-search {
+  width: 100%; background: var(--card);
+  border: 1.5px solid var(--rule-strong); border-radius: 10px;
+  padding: 9px 14px 9px 36px; font-family: var(--fs); font-size: 13px;
+  color: var(--ink); outline: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A09890' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 12px center;
+}
+.ob-search::placeholder { color: var(--ink5); }
+.ob-league-hdr {
+  padding: 8px 16px 5px; font-family: var(--fm); font-size: 9px;
+  font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--ink5); background: var(--parchment2);
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+}
+.ob-team-row {
+  display: flex; align-items: center; padding: 11px 16px;
+  background: var(--card); border-bottom: 1px solid var(--rule);
+  cursor: pointer; gap: 12px; transition: background 0.1s;
+}
+.ob-team-row:active { background: var(--parchment2); }
+.ob-team-row.selected { background: var(--live-bg); }
+.ob-team-name {
+  font-family: var(--fs); font-size: 13px; font-weight: 500;
+  color: var(--ink); flex: 1;
+}
+.ob-team-row.selected .ob-team-name { font-weight: 700; color: var(--live); }
+.ob-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid var(--rule-strong);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 11px; color: transparent;
+  transition: all 0.15s;
+}
+.ob-team-row.selected .ob-check {
+  background: var(--live); border-color: var(--live); color: white;
+}
+.ob-empty {
+  padding: 30px 16px; text-align: center;
+  font-family: var(--fs); font-size: 13px; color: var(--ink4);
+}
+.ob-footer {
+  position: sticky; bottom: 0; z-index: 10;
+  background: var(--parchment); border-top: 1px solid var(--rule-strong);
+  padding: 12px 16px;
+}
+.ob-continue {
+  width: 100%; background: var(--ink); color: var(--parchment);
+  padding: 13px; border-radius: 10px; font-family: var(--fs);
+  font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.ob-continue:disabled { opacity: 0.38; cursor: not-allowed; }
+.ob-skip {
+  display: block; text-align: center; padding: 10px 0 2px;
+  font-family: var(--fs); font-size: 12px; color: var(--ink4); cursor: pointer;
+}
+.ob-bookie-row {
+  display: flex; align-items: center; padding: 12px 16px;
+  background: var(--card); border-bottom: 1px solid var(--rule);
+  cursor: pointer; gap: 12px;
+}
+.ob-bookie-name {
+  font-family: var(--fs); font-size: 13px; font-weight: 500;
+  color: var(--ink); flex: 1;
+}
+.ob-toggle {
+  width: 44px; height: 26px; border-radius: 13px;
+  background: var(--rule-strong); position: relative;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.ob-toggle.on { background: var(--forest); }
+.ob-toggle-dot {
+  position: absolute; top: 4px; left: 4px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.ob-toggle.on .ob-toggle-dot { transform: translateX(18px); }
+
+/* ── Profile screen — dynamic states ── */
+.profile-cta-wrap {
+  height: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 24px; text-align: center;
+}
+.profile-cta-icon { font-size: 44px; margin-bottom: 14px; }
+.profile-cta-title {
+  font-family: var(--fd); font-size: 24px; font-weight: 800;
+  color: var(--ink); margin-bottom: 8px;
+}
+.profile-cta-sub {
+  font-family: var(--fs); font-size: 13px; color: var(--ink4);
+  line-height: 1.55; margin-bottom: 24px; max-width: 260px;
+}
+.profile-cta-btn {
+  width: 100%; padding: 13px; border-radius: 10px;
+  font-family: var(--fs); font-size: 14px; font-weight: 700;
+  border: none; cursor: pointer; margin-bottom: 10px;
+}
+.profile-cta-btn.primary { background: var(--ink); color: var(--parchment); }
+.profile-cta-btn.secondary {
+  background: transparent; border: 1.5px solid var(--rule-strong); color: var(--ink3);
+}
+.profile-signout-btn {
+  width: calc(100% - 32px); margin: 0 16px 14px;
+  padding: 12px; border-radius: 10px; background: var(--live-bg);
+  border: 1px solid rgba(176,42,24,0.2); color: var(--live);
+  font-family: var(--fs); font-size: 13px; font-weight: 700;
+  cursor: pointer; text-align: center;
+}
+
+/* ── Supabase connection card ── */
+.sb-connect-card {
+  margin: 20px 16px; background: var(--card); border-radius: 14px;
+  border: 1.5px solid var(--rule-strong); padding: 18px;
+  box-shadow: 0 2px 8px rgba(26,23,20,0.05);
+}
+.sb-connect-title {
+  font-family: var(--fd); font-size: 17px; font-weight: 800;
+  color: var(--ink); margin-bottom: 4px;
+}
+.sb-connect-sub {
+  font-family: var(--fs); font-size: 11px; color: var(--ink4);
+  line-height: 1.55; margin-bottom: 14px;
+}
+.sb-connect-input {
+  width: 100%; background: var(--parchment); border: 1.5px solid var(--rule-strong);
+  border-radius: 8px; padding: 9px 12px; font-family: var(--fm); font-size: 11px;
+  color: var(--ink); margin-bottom: 8px; outline: none; appearance: none;
+}
+.sb-connect-input:focus { border-color: var(--ink); }
+.sb-connect-btn {
+  width: 100%; background: var(--ink); color: var(--parchment);
+  padding: 11px; border-radius: 8px; font-family: var(--fs);
+  font-size: 13px; font-weight: 700; border: none; cursor: pointer;
+}
+
+/* ── Toast notification ── */
+.toast {
+  position: fixed; bottom: 110px; left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--ink); color: var(--parchment);
+  font-family: var(--fs); font-size: 13px; font-weight: 600;
+  padding: 11px 20px; border-radius: 22px;
+  opacity: 0; transition: all 0.25s ease;
+  z-index: 9999; white-space: nowrap;
+  max-width: 300px; text-align: center; pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--forest); }
+.toast.error   { background: var(--live); }
+.toast.info    { background: var(--gold); }
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="scene">
@@ -1955,7 +2256,156 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
   </div>
 
 
-  </div><!-- /phone -->
+  <!-- ═══════════════════════════════════════════════════════════
+     PHASE A — NEW HTML FRAGMENTS ONLY
+     These five divs are inserted into the phone shell by build.py
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- ① AGE GATE OVERLAY — sits above all screens, z-index 500 -->
+<div id="ageGate" style="display:none;position:absolute;inset:0;z-index:500;background:var(--parchment);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
+  <div style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--ink);margin-bottom:4px">The Run<em style="color:var(--live);font-style:italic">down</em></div>
+  <div style="font-family:var(--fm);font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink5);margin-bottom:28px">Sports companion</div>
+
+  <div style="font-size:36px;margin-bottom:14px">🎟️</div>
+  <div style="font-family:var(--fd);font-size:24px;font-weight:800;color:var(--ink);line-height:1.2;margin-bottom:10px">Are you 18<br>or over?</div>
+  <div style="font-family:var(--fs);font-size:12px;color:var(--ink4);line-height:1.6;margin-bottom:28px;max-width:250px">This app contains betting odds, affiliate offers and gambling content. You must be 18 or over to continue.</div>
+
+  <button onclick="ageGatePass()" style="width:100%;background:var(--ink);color:var(--parchment);padding:14px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px">Yes, I am 18 or over</button>
+  <button onclick="ageGateFail()" style="width:100%;background:transparent;color:var(--ink4);padding:13px;border-radius:10px;font-family:var(--fs);font-size:13px;font-weight:600;border:1.5px solid var(--rule-strong);cursor:pointer">No, take me away</button>
+
+  <div style="font-family:var(--fm);font-size:8px;color:var(--ink5);margin-top:20px;line-height:1.6">18+ · BeGambleAware.org · GamStop.co.uk<br>UKGC Licensed operators only</div>
+</div>
+
+<!-- ② LOGIN SCREEN -->
+<div class="screen auth-screen" id="auth-login">
+  <!-- Dark hero -->
+  <div class="auth-hero">
+    <div class="auth-wordmark">The Run<em>down</em></div>
+    <div class="auth-hero-title">Welcome<br>back.</div>
+    <div class="auth-hero-sub">Sign in to access your teams,<br>bets and fan reports.</div>
+  </div>
+
+  <!-- Form -->
+  <div class="auth-form">
+    <div class="auth-field">
+      <label class="auth-field-label" for="login-email">Email address</label>
+      <input class="auth-input" id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com"/>
+    </div>
+    <div class="auth-field">
+      <label class="auth-field-label" for="login-pw">Password</label>
+      <input class="auth-input" id="login-pw" type="password" autocomplete="current-password" placeholder="••••••••"/>
+    </div>
+    <div class="auth-error" id="login-error"></div>
+    <button class="auth-btn" id="login-btn" data-label="Sign In" onclick="doLogin()">Sign In</button>
+    <button class="auth-btn ghost" onclick="goToScreen('n0')">Browse without an account</button>
+    <div class="auth-link-row">
+      <span class="auth-link-text">No account yet?</span>
+      <button class="auth-link-btn" onclick="goToScreen('auth-register')">Create one</button>
+    </div>
+  </div>
+
+  <!-- Supabase not connected warning (shown by JS when needed) -->
+  <div id="login-no-sb" style="display:none;margin:0 16px;padding:11px 14px;background:var(--gold-bg);border-radius:10px;border:1px solid rgba(139,105,20,0.2)">
+    <div style="font-family:var(--fs);font-size:12px;font-weight:700;color:var(--gold);margin-bottom:3px">Supabase not connected</div>
+    <div style="font-family:var(--fs);font-size:11px;color:var(--ink4)">Open Profile and enter your Supabase URL and anon key first.</div>
+  </div>
+</div>
+
+<!-- ③ REGISTER SCREEN -->
+<div class="screen auth-screen" id="auth-register">
+  <!-- Dark hero -->
+  <div class="auth-hero">
+    <div class="auth-wordmark">The Run<em>down</em></div>
+    <div class="auth-hero-title">Create your<br>account.</div>
+    <div class="auth-hero-sub">Free forever. No spam.<br>Cancel any time.</div>
+  </div>
+
+  <!-- Form -->
+  <div class="auth-form">
+    <div class="auth-field">
+      <label class="auth-field-label" for="reg-email">Email address</label>
+      <input class="auth-input" id="reg-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com"/>
+    </div>
+    <div class="auth-field">
+      <label class="auth-field-label" for="reg-pw">Password</label>
+      <input class="auth-input" id="reg-pw" type="password" autocomplete="new-password" placeholder="At least 6 characters"/>
+    </div>
+    <div class="auth-field">
+      <label class="auth-field-label" for="reg-pw2">Confirm password</label>
+      <input class="auth-input" id="reg-pw2" type="password" autocomplete="new-password" placeholder="Repeat your password"/>
+    </div>
+
+    <!-- GDPR consent — mandatory -->
+    <div class="gdpr-row">
+      <input class="gdpr-checkbox" type="checkbox" id="reg-gdpr"/>
+      <label class="gdpr-label" for="reg-gdpr">
+        I agree to the <a href="#" onclick="return false">Privacy Policy</a> and <a href="#" onclick="return false">Cookie Policy</a>. I understand my data is stored securely and will not be shared with third parties without my consent.
+      </label>
+    </div>
+
+    <div class="auth-error" id="reg-error"></div>
+    <button class="auth-btn" id="reg-btn" data-label="Create Account" onclick="doRegister()" style="margin-top:14px">Create Account</button>
+    <div class="auth-link-row">
+      <span class="auth-link-text">Already have an account?</span>
+      <button class="auth-link-btn" onclick="goToScreen('auth-login')">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<!-- ④ ONBOARDING SCREEN 1 — FAVOURITE TEAMS -->
+<!--
+  NOTE: Team lists reflect the 2024/25 season.
+  Review these arrays each summer — promotion/relegation changes membership annually.
+  Long-term: pull from API-Football /teams endpoint to automate updates.
+-->
+<div class="screen" id="auth-onboard1" style="display:none;flex-direction:column;">
+  <!-- Dark hero -->
+  <div class="ob-hero">
+    <div class="ob-step">Step 1 of 2</div>
+    <div class="ob-title">Pick your teams.</div>
+    <div class="ob-sub">Choose up to 5 teams across any leagues. We'll personalise your scores and alerts.</div>
+    <div class="ob-counter" id="ob1-counter">0 of 5 selected</div>
+  </div>
+
+  <!-- Sticky search -->
+  <div class="ob-search-wrap">
+    <input class="ob-search" id="ob1-search" type="text" placeholder="Search all leagues…" oninput="filterTeams(this.value)"/>
+  </div>
+
+  <!-- Team list — populated by renderTeamsList() -->
+  <div id="ob1-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;">
+    <!-- JS renders league headers + team rows here -->
+  </div>
+
+  <!-- Sticky footer -->
+  <div class="ob-footer">
+    <button class="ob-continue" id="ob1-continue" onclick="submitTeams()">Continue →</button>
+  </div>
+</div>
+
+<!-- ⑤ ONBOARDING SCREEN 2 — BOOKMAKER ACCOUNTS -->
+<div class="screen" id="auth-onboard2" style="display:none;flex-direction:column;">
+  <!-- Dark hero -->
+  <div class="ob-hero">
+    <div class="ob-step">Step 2 of 2</div>
+    <div class="ob-title">Your bookmaker accounts.</div>
+    <div class="ob-sub">Toggle on the ones you already have. We'll highlight your best available odds in Bet Builder.</div>
+    <div style="font-family:var(--fm);font-size:9px;color:rgba(255,255,255,0.3);margin-top:8px">Optional — you can update this any time in Profile.</div>
+  </div>
+
+  <!-- Bookmaker toggle list — populated by renderBookmakerList() -->
+  <div id="ob2-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:100px;">
+    <!-- JS renders bookie rows here -->
+  </div>
+
+  <!-- Sticky footer -->
+  <div class="ob-footer">
+    <button class="ob-continue" id="ob2-continue" onclick="submitBookmakers()">Finish setup →</button>
+    <span class="ob-skip" onclick="submitBookmakers(true)">Skip for now</span>
+  </div>
+</div>
+
+</div><!-- /phone -->
 
   <div id="sdesc" style="font-family:var(--fs);font-size:12px;color:rgba(255,255,255,0.38);text-align:center;max-width:350px;line-height:1.5;padding:4px 8px 0"></div>
 </div>
@@ -2050,6 +2500,716 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
 });
+
+
+/* ── phase-a-additions.js ── */
+/* ═══════════════════════════════════════════════════════════
+   PHASE A — PART 1: Supabase init · Age gate · Auth
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Shared state ── */
+var sbClient   = null;   // Supabase client instance
+var authUser   = null;   // supabase auth user object
+var userProfile = null;  // user_profiles row
+
+/* ─────────────────────────────────────────
+   SUPABASE INITIALISATION
+   Reads sb_url / sb_key from localStorage
+   (set by the connection panel in Profile)
+───────────────────────────────────────── */
+function initSupabase() {
+  var url = localStorage.getItem('sb_url');
+  var key = localStorage.getItem('sb_key');
+  if (!url || !key) return;
+
+  try {
+    sbClient = window.supabase.createClient(url, key);
+  } catch (e) {
+    console.warn('Supabase init failed:', e);
+    return;
+  }
+
+  // Listen for auth changes (tab switches, token refresh, etc.)
+  sbClient.auth.onAuthStateChange(function(event, session) {
+    authUser = session ? session.user : null;
+    if (authUser) {
+      loadUserProfile();
+    } else {
+      userProfile = null;
+      updateBettingGates();
+      updateProfileScreen();
+    }
+  });
+
+  // Check existing session on load
+  checkAuthState();
+}
+
+/* ─────────────────────────────────────────
+   AGE GATE
+   Checks localStorage for rundown_age_verified.
+   If absent, injects DOB dropdowns into #ageGate
+   and displays the overlay.
+───────────────────────────────────────── */
+function initAgeGate() {
+  if (localStorage.getItem('rundown_age_verified') === '1') return;
+
+  var gate = document.getElementById('ageGate');
+  if (!gate) return;
+
+  // Build DOB form and inject into gate
+  var months = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+  var curYear = new Date().getFullYear();
+
+  var dayOpts  = '<option value="">Day</option>'   + Array.from({length:31}, function(_,i){ return '<option value="'+(i+1)+'">'+(i+1)+'</option>'; }).join('');
+  var monOpts  = '<option value="">Month</option>' + months.map(function(m,i){ return '<option value="'+(i+1)+'">'+m+'</option>'; }).join('');
+  var yearOpts = '<option value="">Year</option>'  + Array.from({length:100}, function(_,i){ var y=curYear-18-i; return '<option value="'+y+'">'+y+'</option>'; }).join('');
+
+  var inputStyle = 'flex:1;padding:10px 8px;border:1.5px solid var(--rule-strong);border-radius:8px;font-family:var(--fm);font-size:13px;background:var(--card);color:var(--ink);outline:none;';
+
+  gate.innerHTML =
+    '<div style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--ink);margin-bottom:4px">The Run<em style="color:var(--live);font-style:italic">down</em></div>' +
+    '<div style="font-family:var(--fm);font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink5);margin-bottom:28px">Sports companion</div>' +
+    '<div style="font-size:36px;margin-bottom:14px">🎟️</div>' +
+    '<div style="font-family:var(--fd);font-size:24px;font-weight:800;color:var(--ink);line-height:1.2;margin-bottom:10px">Are you 18<br>or over?</div>' +
+    '<div style="font-family:var(--fs);font-size:12px;color:var(--ink4);line-height:1.6;margin-bottom:22px;max-width:250px">This app contains betting content. Enter your date of birth to confirm you are 18 or over.</div>' +
+    '<div style="font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:8px;align-self:flex-start">Date of birth</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:14px;width:100%">' +
+      '<select id="ag-day"   style="'+inputStyle+'">'+dayOpts+'</select>' +
+      '<select id="ag-month" style="'+inputStyle+'flex:1.6;">'+monOpts+'</select>' +
+      '<select id="ag-year"  style="'+inputStyle+'flex:1.6;">'+yearOpts+'</select>' +
+    '</div>' +
+    '<div id="ag-error" style="display:none;font-family:var(--fs);font-size:12px;color:var(--live);margin-bottom:10px;text-align:center;width:100%"></div>' +
+    '<button onclick="checkAgeGate()" style="width:100%;background:var(--ink);color:var(--parchment);padding:14px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px">Confirm age &amp; continue</button>' +
+    '<button onclick="ageGateFail()" style="width:100%;background:transparent;color:var(--ink4);padding:13px;border-radius:10px;font-family:var(--fs);font-size:13px;font-weight:600;border:1.5px solid var(--rule-strong);cursor:pointer">I am under 18</button>' +
+    '<div style="font-family:var(--fm);font-size:8px;color:var(--ink5);margin-top:20px;line-height:1.6;text-align:center">18+ · BeGambleAware.org · GamStop.co.uk</div>';
+
+  gate.style.display = 'flex';
+}
+
+function checkAgeGate() {
+  var d = parseInt(document.getElementById('ag-day').value,   10);
+  var m = parseInt(document.getElementById('ag-month').value, 10);
+  var y = parseInt(document.getElementById('ag-year').value,  10);
+  var errEl = document.getElementById('ag-error');
+
+  if (!d || !m || !y) {
+    errEl.textContent = 'Please select your full date of birth.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var dob  = new Date(y, m - 1, d);
+  var now  = new Date();
+  var age  = now.getFullYear() - dob.getFullYear();
+  var had  = now >= new Date(now.getFullYear(), dob.getMonth(), dob.getDate());
+  if (!had) age--;
+
+  if (age < 18) {
+    errEl.textContent = 'You must be 18 or over to use this app.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  ageGatePass();
+}
+
+function ageGatePass() {
+  localStorage.setItem('rundown_age_verified', '1');
+  var gate = document.getElementById('ageGate');
+  if (gate) gate.style.display = 'none';
+}
+
+function ageGateFail() {
+  document.body.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1a1714;font-family:Instrument Sans,sans-serif;color:rgba(255,255,255,0.5);text-align:center;padding:40px">' +
+    '<div><div style="font-size:40px;margin-bottom:16px">🚫</div>' +
+    '<div style="font-size:16px">This app is for users aged 18 and over only.</div>' +
+    '<div style="font-size:12px;margin-top:8px">BeGambleAware.org · GamStop.co.uk</div></div></div>';
+}
+
+/* ─────────────────────────────────────────
+   AUTH STATE MANAGEMENT
+───────────────────────────────────────── */
+function checkAuthState() {
+  if (!sbClient) return;
+  sbClient.auth.getSession().then(function(result) {
+    var session = result.data.session;
+    authUser = session ? session.user : null;
+    if (authUser) {
+      loadUserProfile();
+    } else {
+      updateBettingGates();
+      updateProfileScreen();
+    }
+  });
+}
+
+function loadUserProfile() {
+  if (!sbClient || !authUser) return;
+  sbClient
+    .from('user_profiles')
+    .select('*')
+    .eq('id', authUser.id)
+    .single()
+    .then(function(result) {
+      if (result.data) {
+        userProfile = result.data;
+      } else {
+        // Row missing — create it (e.g. OAuth sign-in without registration flow)
+        sbClient.from('user_profiles').insert({
+          id: authUser.id,
+          favourite_teams:    [],
+          bookmaker_accounts: [],
+          trust_tier:         'New Fan',
+          gdpr_consent:       false
+        }).then(function() {
+          userProfile = { id: authUser.id, favourite_teams: [], bookmaker_accounts: [], trust_tier: 'New Fan', gdpr_consent: false };
+          updateBettingGates();
+          updateProfileScreen();
+        });
+        return;
+      }
+      updateBettingGates();
+      updateProfileScreen();
+    });
+}
+
+function updateBettingGates() {
+  // Screens that require auth: n9 (AI Bet), n10 (Bet Builder), n11 (In-Play Tracker)
+  var gatedIds = ['n9', 'n10', 'n11'];
+  var loggedIn = !!authUser;
+  gatedIds.forEach(function(id) {
+    var screen = document.getElementById(id);
+    if (!screen) return;
+    var gate = screen.querySelector('.auth-gate');
+    if (!gate) return;
+    if (loggedIn) {
+      gate.classList.remove('show');
+    } else {
+      gate.classList.add('show');
+    }
+  });
+}
+
+function updateProfileScreen() {
+  var container = document.getElementById('profile-dynamic');
+  if (!container) return;
+
+  if (!sbClient) {
+    // No Supabase connected — show connection card
+    container.innerHTML =
+      '<div style="overflow-y:auto;height:100%;padding-bottom:10px">' +
+      '<div class="sb-connect-card">' +
+        '<div class="sb-connect-title">Connect Supabase</div>' +
+        '<div class="sb-connect-sub">Enter your project URL and anon key. Find these in your Supabase dashboard under Project Settings → API.</div>' +
+        '<input class="sb-connect-input" id="sb-url-input" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off"/>' +
+        '<input class="sb-connect-input" id="sb-key-input" type="text" placeholder="anon public key" autocomplete="off"/>' +
+        '<button class="sb-connect-btn" onclick="saveSupabaseCredentials()">Connect</button>' +
+      '</div></div>';
+    return;
+  }
+
+  if (!authUser) {
+    // Connected but not logged in
+    container.innerHTML =
+      '<div class="profile-cta-wrap">' +
+        '<div class="profile-cta-icon">👤</div>' +
+        '<div class="profile-cta-title">Your account</div>' +
+        '<div class="profile-cta-sub">Sign in to see your favourite teams, bookmaker accounts and betting history.</div>' +
+        '<button class="profile-cta-btn primary" onclick="showAuthScreen(\'auth-login\')">Sign In</button>' +
+        '<button class="profile-cta-btn secondary" onclick="showAuthScreen(\'auth-register\')">Create Account</button>' +
+      '</div>';
+    return;
+  }
+
+  // Logged in — build full profile view
+  var p = userProfile || {};
+  var teams = (p.favourite_teams || []);
+  var bookies = (p.bookmaker_accounts || []);
+  var tier = p.trust_tier || 'New Fan';
+  var tierIcon = tier === 'New Fan' ? '🌱' : tier === 'Regular Fan' ? '⭐' : '🔴';
+  var initials = (authUser.email || 'U').substring(0,2).toUpperCase();
+
+  var teamRows = teams.length
+    ? teams.map(function(t){ return '<div class="profile-row"><div class="profile-row-icon" style="background:var(--live-bg)">⚽</div><div class="profile-row-label">'+t+'</div><div class="profile-row-arrow">›</div></div>'; }).join('')
+    : '<div style="padding:12px 16px;font-family:var(--fs);font-size:12px;color:var(--ink4)">No teams selected yet. <span style="color:var(--ink);font-weight:700;cursor:pointer" onclick="showAuthScreen(\'auth-onboard1\')">Add teams →</span></div>';
+
+  var bookieRows = bookies.length
+    ? bookies.map(function(b){ return '<div class="bookie-row"><div class="bookie-name">'+b+'</div><div class="bookie-toggle on"><div class="bookie-toggle-dot"></div></div></div>'; }).join('')
+    : '<div style="padding:12px 16px;font-family:var(--fs);font-size:12px;color:var(--ink4)">No bookmakers added yet.</div>';
+
+  container.innerHTML =
+    '<div style="overflow-y:auto;height:100%">' +
+      '<div class="profile-hero">' +
+        '<div class="profile-avatar">'+initials+'</div>' +
+        '<div class="trust-badge-hero"><span class="tb-icon">'+tierIcon+'</span><span class="tb-label">'+tier.toUpperCase()+'</span></div>' +
+        '<div class="profile-name">'+(authUser.email || '')+'</div>' +
+        '<div class="profile-meta">Member · '+tier+'</div>' +
+        '<div class="profile-tabs">' +
+          '<div class="profile-tab on">Overview</div>' +
+          '<div class="profile-tab">Bets</div>' +
+          '<div class="profile-tab">Reports</div>' +
+          '<div class="profile-tab">Settings</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="profile-section-header" style="margin-top:12px">Favourite Teams</div>' +
+      teamRows +
+      '<div class="profile-section-header" style="margin-top:4px">Bookmaker Accounts</div>' +
+      bookieRows +
+      '<div style="padding:10px 16px 4px"></div>' +
+      '<button class="profile-signout-btn" onclick="doSignOut()">Sign Out</button>' +
+      '<div style="height:14px"></div>' +
+    '</div>';
+}
+
+/* ─────────────────────────────────────────
+   SUPABASE CREDENTIALS (connection card)
+───────────────────────────────────────── */
+function saveSupabaseCredentials() {
+  var url = (document.getElementById('sb-url-input') || {}).value || '';
+  var key = (document.getElementById('sb-key-input') || {}).value || '';
+  if (!url || !key) { showToast('Please enter both URL and anon key', 'error'); return; }
+  localStorage.setItem('sb_url', url.trim());
+  localStorage.setItem('sb_key', key.trim());
+  initSupabase();
+  updateProfileScreen();
+  showToast('Connected to Supabase', 'success');
+}
+
+/* ─────────────────────────────────────────
+   REGISTRATION
+───────────────────────────────────────── */
+function doRegister() {
+  if (!sbClient) { showToast('Supabase not connected', 'error'); return; }
+
+  var email = (document.getElementById('reg-email') || {}).value || '';
+  var pw    = (document.getElementById('reg-pw')    || {}).value || '';
+  var pw2   = (document.getElementById('reg-pw2')   || {}).value || '';
+  var gdpr  = (document.getElementById('reg-gdpr')  || {}).checked;
+  var errEl = document.getElementById('reg-error');
+
+  email = email.trim();
+
+  function setErr(msg) {
+    if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
+    else showToast(msg, 'error');
+  }
+
+  if (!email || !pw || !pw2) { setErr('Please fill in all fields.'); return; }
+  if (pw !== pw2)             { setErr('Passwords do not match.'); return; }
+  if (pw.length < 6)          { setErr('Password must be at least 6 characters.'); return; }
+  if (!gdpr)                  { setErr('You must agree to the Privacy Policy to continue.'); return; }
+  if (errEl) errEl.classList.remove('show');
+
+  var btn = document.getElementById('reg-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
+
+  sbClient.auth.signUp({ email: email, password: pw }).then(function(result) {
+    if (btn) { btn.disabled = false; btn.textContent = btn.dataset.label || 'Create Account'; }
+    if (result.error) { setErr(result.error.message); return; }
+
+    authUser = result.data.user;
+
+    // Create user_profiles row
+    var now = new Date().toISOString();
+    sbClient.from('user_profiles').insert({
+      id:                 authUser.id,
+      favourite_teams:    [],
+      bookmaker_accounts: [],
+      trust_tier:         'New Fan',
+      gdpr_consent:       true,
+      gdpr_consent_at:    now
+    }).then(function() {
+      userProfile = { id: authUser.id, favourite_teams: [], bookmaker_accounts: [], trust_tier: 'New Fan', gdpr_consent: true };
+      showToast('Account created!', 'success');
+      // Proceed to onboarding
+      hideAuthScreens();
+      showAuthScreen('auth-onboard1');
+      if (typeof renderTeamsList === 'function') renderTeamsList('');
+    });
+  });
+}
+
+/* ─────────────────────────────────────────
+   LOGIN
+───────────────────────────────────────── */
+function doLogin() {
+  if (!sbClient) { showToast('Supabase not connected', 'error'); return; }
+
+  var email = (document.getElementById('login-email') || {}).value || '';
+  var pw    = (document.getElementById('login-pw')    || {}).value || '';
+  var errEl = document.getElementById('login-error');
+  email = email.trim();
+
+  function setErr(msg) {
+    if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
+    else showToast(msg, 'error');
+  }
+
+  if (!email || !pw) { setErr('Please enter your email and password.'); return; }
+  if (errEl) errEl.classList.remove('show');
+
+  var btn = document.getElementById('login-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+
+  sbClient.auth.signInWithPassword({ email: email, password: pw }).then(function(result) {
+    if (btn) { btn.disabled = false; btn.textContent = btn.dataset.label || 'Sign In'; }
+    if (result.error) { setErr(result.error.message); return; }
+
+    authUser = result.data.user;
+    loadUserProfile();
+    showToast('Welcome back!', 'success');
+    hideAuthScreens();
+    // Return to profile screen
+    if (typeof goTo === 'function') goTo(13);
+  });
+}
+
+/* ─────────────────────────────────────────
+   SIGN OUT
+───────────────────────────────────────── */
+function doSignOut() {
+  if (!sbClient) return;
+  sbClient.auth.signOut().then(function() {
+    authUser    = null;
+    userProfile = null;
+    updateBettingGates();
+    updateProfileScreen();
+    if (typeof goTo === 'function') goTo(0);
+    showToast('Signed out', 'info');
+  });
+}
+
+/* ─────────────────────────────────────────
+   AUTH SCREEN NAVIGATION HELPERS
+───────────────────────────────────────── */
+var _prevScreenIdx = 0; // remembers where to return after auth
+
+function showAuthScreen(screenId) {
+  // Store current position so we can return
+  if (typeof cur !== 'undefined') _prevScreenIdx = cur;
+
+  // Hide all .screen divs
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('on'); });
+
+  var target = document.getElementById(screenId);
+  if (target) target.classList.add('on');
+
+  // Hide prototype chrome while in auth flow
+  var jumpBar = document.getElementById('jumpBar');
+  var controls = document.querySelector('.controls');
+  var secStrip = document.querySelector('.section-strip');
+  var sdesc    = document.getElementById('sdesc');
+  if (jumpBar)  jumpBar.style.visibility  = 'hidden';
+  if (controls) controls.style.visibility = 'hidden';
+  if (secStrip) secStrip.style.visibility = 'hidden';
+  if (sdesc)    sdesc.style.visibility    = 'hidden';
+
+  // Show/hide Supabase warning on login screen
+  var noSbWarn = document.getElementById('login-no-sb');
+  if (noSbWarn) noSbWarn.style.display = (!sbClient && screenId === 'auth-login') ? 'block' : 'none';
+}
+
+function hideAuthScreens() {
+  var authIds = ['auth-login', 'auth-register', 'auth-onboard1', 'auth-onboard2'];
+  authIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('on');
+  });
+
+  // Restore prototype chrome
+  var jumpBar  = document.getElementById('jumpBar');
+  var controls = document.querySelector('.controls');
+  var secStrip = document.querySelector('.section-strip');
+  var sdesc    = document.getElementById('sdesc');
+  if (jumpBar)  jumpBar.style.visibility  = '';
+  if (controls) controls.style.visibility = '';
+  if (secStrip) secStrip.style.visibility = '';
+  if (sdesc)    sdesc.style.visibility    = '';
+
+  // Restore previous screen
+  if (typeof goTo === 'function') goTo(_prevScreenIdx);
+}
+
+// Navigate by screen ID — bridges auth screens with the existing goTo() system
+function goToScreen(screenId) {
+  var authIds = ['auth-login', 'auth-register', 'auth-onboard1', 'auth-onboard2'];
+  if (authIds.indexOf(screenId) !== -1) {
+    showAuthScreen(screenId);
+    return;
+  }
+  // Named app screens
+  var map = { 'n0':0,'n1':1,'n2':2,'n3':3,'n4':4,'n5':5,'n6':6,'n7':7,'n8':8,'n9':9,'n10':10,'n11':11,'n12':12,'n13':13 };
+  if (map[screenId] !== undefined && typeof goTo === 'function') {
+    hideAuthScreens();
+    goTo(map[screenId]);
+  }
+}
+
+/* ─────────────────────────────────────────
+   TOAST UTILITY
+   (safe to call before DOM is ready —
+    will no-op if #toast doesn't exist yet)
+───────────────────────────────────────── */
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast show ' + (type || 'info');
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.classList.remove('show'); }, 3200);
+}
+
+
+/* ── phase-a-additions-2.js ── */
+/* ═══════════════════════════════════════════════════════════
+   PHASE A — PART 2: Teams · Bookmakers · Onboarding · Init
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────
+   ONBOARDING STATE
+───────────────────────────────────────── */
+var selectedTeams     = [];
+var selectedBookmakers = [];
+
+/* ─────────────────────────────────────────
+   ALL_TEAMS
+   NOTE: These lists reflect the 2024/25 season.
+   Review every summer — promotion/relegation
+   changes membership annually.
+   Long-term: replace with live call to the
+   API-Football /teams endpoint.
+───────────────────────────────────────── */
+var ALL_TEAMS = {
+  'PREMIER LEAGUE': [
+    'Arsenal','Aston Villa','Bournemouth','Brentford','Brighton',
+    'Chelsea','Crystal Palace','Everton','Fulham','Ipswich Town',
+    'Leicester City','Liverpool','Manchester City','Manchester United',
+    'Newcastle United','Nottingham Forest','Southampton',
+    'Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'
+  ],
+  'CHAMPIONSHIP': [
+    'Birmingham City','Blackburn Rovers','Blackpool','Bristol City',
+    'Burnley','Cardiff City','Coventry City','Derby County','Hull City',
+    'Leeds United','Luton Town','Middlesbrough','Millwall','Norwich City',
+    'Oxford United','Plymouth Argyle','Portsmouth','Preston North End',
+    'Queens Park Rangers','Sheffield United','Sheffield Wednesday',
+    'Stoke City','Sunderland','Swansea City','Watford','West Bromwich Albion'
+  ],
+  'LEAGUE ONE': [
+    'Barnsley','Birmingham City','Bolton Wanderers','Bristol Rovers',
+    'Burton Albion','Cambridge United','Charlton Athletic','Crawley Town',
+    'Exeter City','Leyton Orient','Lincoln City','Mansfield Town',
+    'MK Dons','Northampton Town','Peterborough United','Reading',
+    'Rotherham United','Shrewsbury Town','Stevenage','Stockport County',
+    'Wigan Athletic','Wrexham'
+  ],
+  'LEAGUE TWO': [
+    'AFC Wimbledon','Barrow','Bradford City','Bromley','Carlisle United',
+    'Chesterfield','Colchester United','Crewe Alexandra','Doncaster Rovers',
+    'Fleetwood Town','Gillingham','Grimsby Town','Harrogate Town',
+    'Morecambe','Newport County','Notts County','Port Vale','Salford City',
+    'Swindon Town','Tranmere Rovers','Walsall','Accrington Stanley'
+  ],
+  'SCOTTISH PREMIERSHIP': [
+    'Aberdeen','Celtic','Dundee','Dundee United','Falkirk',
+    'Heart of Midlothian','Hibernian','Kilmarnock','Motherwell',
+    'Rangers','Ross County','St Johnstone','St Mirren'
+  ],
+  'SCOTTISH CHAMPIONSHIP': [
+    'Airdrieonians','Ayr United','Dunfermline Athletic',
+    'Hamilton Academical','Inverness CT','Livingston','Morton',
+    'Partick Thistle',"Queen's Park",'Raith Rovers'
+  ],
+  'SCOTTISH LEAGUE ONE': [
+    'Alloa Athletic','Arbroath','Cove Rangers','Dumbarton','East Fife',
+    'Kelty Hearts','Montrose','Peterhead','Stenhousemuir','Stirling Albion'
+  ],
+  'SCOTTISH LEAGUE TWO': [
+    'Annan Athletic','Bonnyrigg Rose','Clyde','Edinburgh City','Elgin City',
+    'Forfar Athletic','Queen of the South','Spartans','Stranraer'
+  ]
+};
+
+/* ─────────────────────────────────────────
+   TEAM ONBOARDING — render / toggle / save
+───────────────────────────────────────── */
+function renderTeamsList(filter) {
+  var list = document.getElementById('ob1-list');
+  if (!list) return;
+
+  var q = (filter || '').toLowerCase().trim();
+  var html = '';
+  var anyResult = false;
+
+  Object.keys(ALL_TEAMS).forEach(function(league) {
+    var teams = ALL_TEAMS[league].filter(function(t) {
+      return !q || t.toLowerCase().indexOf(q) !== -1;
+    });
+    if (!teams.length) return;
+    anyResult = true;
+
+    html += '<div class="ob-league-hdr">'+league+'</div>';
+    teams.forEach(function(team) {
+      var sel = selectedTeams.indexOf(team) !== -1;
+      html +=
+        '<div class="ob-team-row'+(sel?' selected':'')+'" onclick="toggleTeam(\''+team.replace(/'/g,"\\'")+'\')">' +
+          '<span class="ob-team-name">'+team+'</span>' +
+          '<span class="ob-check">'+(sel ? '✓' : '')+'</span>' +
+        '</div>';
+    });
+  });
+
+  if (!anyResult) {
+    html = '<div class="ob-empty">No teams match "'+filter+'"</div>';
+  }
+
+  list.innerHTML = html;
+  updateTeamCounter();
+}
+
+function filterTeams(val) {
+  renderTeamsList(val);
+}
+
+function toggleTeam(team) {
+  var idx = selectedTeams.indexOf(team);
+  if (idx !== -1) {
+    selectedTeams.splice(idx, 1);
+  } else {
+    if (selectedTeams.length >= 5) {
+      showToast('Maximum 5 teams — remove one first', 'error');
+      return;
+    }
+    selectedTeams.push(team);
+  }
+  // Re-render with current search value
+  var searchEl = document.getElementById('ob1-search');
+  renderTeamsList(searchEl ? searchEl.value : '');
+}
+
+function updateTeamCounter() {
+  var counter = document.getElementById('ob1-counter');
+  if (!counter) return;
+  var n = selectedTeams.length;
+  counter.textContent = n + ' of 5 selected';
+  counter.className = 'ob-counter' + (n === 5 ? ' full' : '');
+}
+
+function submitTeams() { saveTeams(); }
+
+function saveTeams() {
+  if (!sbClient || !authUser) {
+    // Offline / demo — just advance
+    showAuthScreen('auth-onboard2');
+    renderBookmakerList();
+    return;
+  }
+  sbClient
+    .from('user_profiles')
+    .update({ favourite_teams: selectedTeams, updated_at: new Date().toISOString() })
+    .eq('id', authUser.id)
+    .then(function(result) {
+      if (result.error) { showToast('Could not save teams — try again', 'error'); return; }
+      if (userProfile) userProfile.favourite_teams = selectedTeams.slice();
+      showAuthScreen('auth-onboard2');
+      renderBookmakerList();
+    });
+}
+
+/* ─────────────────────────────────────────
+   ALL_BOOKMAKERS
+───────────────────────────────────────── */
+var ALL_BOOKMAKERS = [
+  'Bet365','Sky Bet','Paddy Power','William Hill',
+  'Betfair','Coral','Ladbrokes','Betfred',
+  '888sport','Unibet','BetVictor','Betway',
+  'BoyleSports','Spreadex','QuinnBet','Tote',
+  'Mr Green','NetBet','Grosvenor Sport','10bet',
+  'Parimatch','Mansion Bet'
+];
+
+/* ─────────────────────────────────────────
+   BOOKMAKER ONBOARDING — render / toggle / save
+───────────────────────────────────────── */
+function renderBookmakerList() {
+  var list = document.getElementById('ob2-list');
+  if (!list) return;
+
+  // Pre-populate from saved profile if available
+  if (userProfile && userProfile.bookmaker_accounts && !selectedBookmakers.length) {
+    selectedBookmakers = (userProfile.bookmaker_accounts || []).slice();
+  }
+
+  var html = '';
+  ALL_BOOKMAKERS.forEach(function(bookie) {
+    var on = selectedBookmakers.indexOf(bookie) !== -1;
+    html +=
+      '<div class="ob-bookie-row" onclick="toggleBookie(\''+bookie+'\')">'+
+        '<span class="ob-bookie-name">'+bookie+'</span>'+
+        '<div class="ob-toggle'+(on?' on':'')+'" id="ob-tog-'+bookie.replace(/\s/g,'_')+'">'+
+          '<div class="ob-toggle-dot"></div>'+
+        '</div>'+
+      '</div>';
+  });
+
+  list.innerHTML = html;
+}
+
+function toggleBookie(bookie) {
+  var idx = selectedBookmakers.indexOf(bookie);
+  if (idx !== -1) {
+    selectedBookmakers.splice(idx, 1);
+  } else {
+    selectedBookmakers.push(bookie);
+  }
+  // Update just the toggle UI — no full re-render needed
+  var togId = 'ob-tog-' + bookie.replace(/\s/g,'_');
+  var tog = document.getElementById(togId);
+  if (tog) {
+    var on = selectedBookmakers.indexOf(bookie) !== -1;
+    tog.className = 'ob-toggle' + (on ? ' on' : '');
+  }
+}
+
+function submitBookmakers(skip) { saveBookmakers(skip); }
+
+function saveBookmakers(skip) {
+  var toSave = skip ? [] : selectedBookmakers.slice();
+
+  if (!sbClient || !authUser) {
+    // Offline / demo — go straight to profile
+    hideAuthScreens();
+    if (typeof goTo === 'function') goTo(13);
+    return;
+  }
+
+  sbClient
+    .from('user_profiles')
+    .update({ bookmaker_accounts: toSave, updated_at: new Date().toISOString() })
+    .eq('id', authUser.id)
+    .then(function(result) {
+      if (result.error) { showToast('Could not save — try again', 'error'); return; }
+      if (userProfile) userProfile.bookmaker_accounts = toSave;
+      showToast('Setup complete!', 'success');
+      hideAuthScreens();
+      updateProfileScreen();
+      if (typeof goTo === 'function') goTo(13);
+    });
+}
+
+/* ─────────────────────────────────────────
+   WINDOW LOAD HANDLER
+   Must run after the existing script block
+   has defined goTo() and built the DOM.
+───────────────────────────────────────── */
+window.addEventListener('load', function() {
+  initAgeGate();
+  initSupabase();
+});
+
 </script>
 </body>
 </html>
