@@ -2257,35 +2257,23 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
 
 
   <!-- ═══════════════════════════════════════════════════════════
-     PHASE A — NEW HTML FRAGMENTS ONLY
-     These five divs are inserted into the phone shell by build.py
+     PHASE A — HTML FRAGMENTS (revised)
+     Inserted into phone shell by build.py
+     NO inline display:none on .screen divs — CSS class handles hiding
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ① AGE GATE OVERLAY — sits above all screens, z-index 500 -->
+<!-- ① AGE GATE OVERLAY — position:absolute, not a .screen, z-index 500 -->
 <div id="ageGate" style="display:none;position:absolute;inset:0;z-index:500;background:var(--parchment);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
-  <div style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--ink);margin-bottom:4px">The Run<em style="color:var(--live);font-style:italic">down</em></div>
-  <div style="font-family:var(--fm);font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink5);margin-bottom:28px">Sports companion</div>
-
-  <div style="font-size:36px;margin-bottom:14px">🎟️</div>
-  <div style="font-family:var(--fd);font-size:24px;font-weight:800;color:var(--ink);line-height:1.2;margin-bottom:10px">Are you 18<br>or over?</div>
-  <div style="font-family:var(--fs);font-size:12px;color:var(--ink4);line-height:1.6;margin-bottom:28px;max-width:250px">This app contains betting odds, affiliate offers and gambling content. You must be 18 or over to continue.</div>
-
-  <button onclick="ageGatePass()" style="width:100%;background:var(--ink);color:var(--parchment);padding:14px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px">Yes, I am 18 or over</button>
-  <button onclick="ageGateFail()" style="width:100%;background:transparent;color:var(--ink4);padding:13px;border-radius:10px;font-family:var(--fs);font-size:13px;font-weight:600;border:1.5px solid var(--rule-strong);cursor:pointer">No, take me away</button>
-
-  <div style="font-family:var(--fm);font-size:8px;color:var(--ink5);margin-top:20px;line-height:1.6">18+ · BeGambleAware.org · GamStop.co.uk<br>UKGC Licensed operators only</div>
+  <!-- Content injected by initAgeGate() in phase-a-additions.js -->
 </div>
 
-<!-- ② LOGIN SCREEN -->
+<!-- ② LOGIN -->
 <div class="screen auth-screen" id="auth-login">
-  <!-- Dark hero -->
   <div class="auth-hero">
     <div class="auth-wordmark">The Run<em>down</em></div>
     <div class="auth-hero-title">Welcome<br>back.</div>
-    <div class="auth-hero-sub">Sign in to access your teams,<br>bets and fan reports.</div>
+    <div class="auth-hero-sub">Sign in to access your account.</div>
   </div>
-
-  <!-- Form -->
   <div class="auth-form">
     <div class="auth-field">
       <label class="auth-field-label" for="login-email">Email address</label>
@@ -2297,30 +2285,24 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
     </div>
     <div class="auth-error" id="login-error"></div>
     <button class="auth-btn" id="login-btn" data-label="Sign In" onclick="doLogin()">Sign In</button>
-    <button class="auth-btn ghost" onclick="goToScreen('n0')">Browse without an account</button>
     <div class="auth-link-row">
-      <span class="auth-link-text">No account yet?</span>
-      <button class="auth-link-btn" onclick="goToScreen('auth-register')">Create one</button>
+      <span class="auth-link-text">No account?</span>
+      <button class="auth-link-btn" onclick="showAuthScreen('auth-register')">Create one</button>
     </div>
   </div>
-
-  <!-- Supabase not connected warning (shown by JS when needed) -->
   <div id="login-no-sb" style="display:none;margin:0 16px;padding:11px 14px;background:var(--gold-bg);border-radius:10px;border:1px solid rgba(139,105,20,0.2)">
     <div style="font-family:var(--fs);font-size:12px;font-weight:700;color:var(--gold);margin-bottom:3px">Supabase not connected</div>
     <div style="font-family:var(--fs);font-size:11px;color:var(--ink4)">Open Profile and enter your Supabase URL and anon key first.</div>
   </div>
 </div>
 
-<!-- ③ REGISTER SCREEN -->
+<!-- ③ REGISTER -->
 <div class="screen auth-screen" id="auth-register">
-  <!-- Dark hero -->
   <div class="auth-hero">
     <div class="auth-wordmark">The Run<em>down</em></div>
     <div class="auth-hero-title">Create your<br>account.</div>
-    <div class="auth-hero-sub">Free forever. No spam.<br>Cancel any time.</div>
+    <div class="auth-hero-sub">Free forever. Takes 60 seconds.</div>
   </div>
-
-  <!-- Form -->
   <div class="auth-form">
     <div class="auth-field">
       <label class="auth-field-label" for="reg-email">Email address</label>
@@ -2334,71 +2316,99 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
       <label class="auth-field-label" for="reg-pw2">Confirm password</label>
       <input class="auth-input" id="reg-pw2" type="password" autocomplete="new-password" placeholder="Repeat your password"/>
     </div>
-
-    <!-- GDPR consent — mandatory -->
     <div class="gdpr-row">
       <input class="gdpr-checkbox" type="checkbox" id="reg-gdpr"/>
       <label class="gdpr-label" for="reg-gdpr">
-        I agree to the <a href="#" onclick="return false">Privacy Policy</a> and <a href="#" onclick="return false">Cookie Policy</a>. I understand my data is stored securely and will not be shared with third parties without my consent.
+        I agree to the <a href="#" onclick="return false">Privacy Policy</a> and <a href="#" onclick="return false">Cookie Policy</a>. I am 18 or over.
       </label>
     </div>
-
     <div class="auth-error" id="reg-error"></div>
     <button class="auth-btn" id="reg-btn" data-label="Create Account" onclick="doRegister()" style="margin-top:14px">Create Account</button>
     <div class="auth-link-row">
       <span class="auth-link-text">Already have an account?</span>
-      <button class="auth-link-btn" onclick="goToScreen('auth-login')">Sign in</button>
+      <button class="auth-link-btn" onclick="showAuthScreen('auth-login')">Sign in</button>
     </div>
   </div>
 </div>
 
-<!-- ④ ONBOARDING SCREEN 1 — FAVOURITE TEAMS -->
-<!--
-  NOTE: Team lists reflect the 2024/25 season.
-  Review these arrays each summer — promotion/relegation changes membership annually.
-  Long-term: pull from API-Football /teams endpoint to automate updates.
--->
-<div class="screen" id="auth-onboard1" style="display:none;flex-direction:column;">
-  <!-- Dark hero -->
+<!-- ④ ONBOARDING 1a — MY CLUB (single, mandatory) -->
+<div class="screen" id="auth-onboard1a">
   <div class="ob-hero">
-    <div class="ob-step">Step 1 of 2</div>
-    <div class="ob-title">Pick your teams.</div>
-    <div class="ob-sub">Choose up to 5 teams across any leagues. We'll personalise your scores and alerts.</div>
-    <div class="ob-counter" id="ob1-counter">0 of 5 selected</div>
+    <div class="ob-step">Step 1 of 4 — My Club</div>
+    <div class="ob-title">Which team do<br>you support?</div>
+    <div class="ob-sub">Choose one club. This is your primary team — it unlocks personalised scores, alerts and match day info.</div>
+    <div class="ob-counter" id="ob1a-counter">No club selected</div>
   </div>
-
-  <!-- Sticky search -->
   <div class="ob-search-wrap">
-    <input class="ob-search" id="ob1-search" type="text" placeholder="Search all leagues…" oninput="filterTeams(this.value)"/>
+    <input class="ob-search" id="ob1a-search" type="text" placeholder="Search all leagues…" oninput="filterMyClub(this.value)"/>
   </div>
-
-  <!-- Team list — populated by renderTeamsList() -->
-  <div id="ob1-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;">
-    <!-- JS renders league headers + team rows here -->
-  </div>
-
-  <!-- Sticky footer -->
+  <div id="ob1a-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
   <div class="ob-footer">
-    <button class="ob-continue" id="ob1-continue" onclick="submitTeams()">Continue →</button>
+    <button class="ob-continue" id="ob1a-continue" onclick="submitMyClub()" disabled>Select your club to continue →</button>
   </div>
 </div>
 
-<!-- ⑤ ONBOARDING SCREEN 2 — BOOKMAKER ACCOUNTS -->
-<div class="screen" id="auth-onboard2" style="display:none;flex-direction:column;">
-  <!-- Dark hero -->
+<!-- ⑤ ONBOARDING 1b — WATCH LIVE (up to 5, My Club locked) -->
+<div class="screen" id="auth-onboard1b">
   <div class="ob-hero">
-    <div class="ob-step">Step 2 of 2</div>
-    <div class="ob-title">Your bookmaker accounts.</div>
+    <div class="ob-step">Step 2 of 4 — Live Matches</div>
+    <div class="ob-title">Do you attend<br>matches in person?</div>
+    <div class="ob-sub">We'll show pub and transport info for games you attend.</div>
+  </div>
+
+  <!-- Yes / No choice -->
+  <div id="ob1b-yn" style="display:flex;gap:10px;padding:14px 16px;background:var(--parchment);border-bottom:1px solid var(--rule-strong);">
+    <button id="ob1b-yes" onclick="answerGoesToMatches(true)"
+      style="flex:1;padding:12px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:1.5px solid var(--rule-strong);background:var(--card);color:var(--ink);cursor:pointer;">
+      Yes
+    </button>
+    <button id="ob1b-no" onclick="answerGoesToMatches(false)"
+      style="flex:1;padding:12px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:1.5px solid var(--rule-strong);background:var(--card);color:var(--ink);cursor:pointer;">
+      No — skip this
+    </button>
+  </div>
+
+  <!-- Team list — shown only when Yes is selected -->
+  <div id="ob1b-teams" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+    <div style="padding:8px 16px 4px;font-family:var(--fs);font-size:11px;color:var(--ink4)">Select up to 5 teams you attend live. Your club is pre-selected.</div>
+    <div class="ob-counter" id="ob1b-counter" style="margin:0 16px 8px;">1 of 5 selected</div>
+    <div class="ob-search-wrap" style="position:static;">
+      <input class="ob-search" id="ob1b-search" type="text" placeholder="Search teams…" oninput="filterWatchLive(this.value)"/>
+    </div>
+    <div id="ob1b-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
+  </div>
+
+  <div class="ob-footer" id="ob1b-footer" style="display:none;">
+    <button class="ob-continue" id="ob1b-continue" onclick="submitWatchLive()">Continue →</button>
+  </div>
+</div>
+
+<!-- ⑥ ONBOARDING 1c — FOLLOW TEAMS (up to 10, pre-seeded) -->
+<div class="screen" id="auth-onboard1c">
+  <div class="ob-hero">
+    <div class="ob-step">Step 3 of 4 — Score Tracking</div>
+    <div class="ob-title">Which teams do<br>you follow?</div>
+    <div class="ob-sub">Up to 10 teams. We'll surface their scores and tables on your home screen.</div>
+    <div class="ob-counter" id="ob1c-counter">0 of 10 selected</div>
+  </div>
+  <div class="ob-search-wrap">
+    <input class="ob-search" id="ob1c-search" type="text" placeholder="Search teams…" oninput="filterFollowTeams(this.value)"/>
+  </div>
+  <div id="ob1c-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
+  <div class="ob-footer">
+    <button class="ob-continue" id="ob1c-continue" onclick="submitFollowTeams()">Continue →</button>
+  </div>
+</div>
+
+<!-- ⑦ ONBOARDING 2 — BOOKMAKERS (unchanged) -->
+<div class="screen" id="auth-onboard2">
+  <div class="ob-hero">
+    <div class="ob-step">Step 4 of 4 — Bookmaker Accounts</div>
+    <div class="ob-title">Your bookmaker<br>accounts.</div>
     <div class="ob-sub">Toggle on the ones you already have. We'll highlight your best available odds in Bet Builder.</div>
-    <div style="font-family:var(--fm);font-size:9px;color:rgba(255,255,255,0.3);margin-top:8px">Optional — you can update this any time in Profile.</div>
+    <div style="font-family:var(--fm);font-size:9px;color:rgba(255,255,255,0.3);margin-top:8px">Optional — update any time in Profile.</div>
   </div>
-
-  <!-- Bookmaker toggle list — populated by renderBookmakerList() -->
-  <div id="ob2-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:100px;">
-    <!-- JS renders bookie rows here -->
-  </div>
-
-  <!-- Sticky footer -->
+  <div id="ob2-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:100px;"></div>
   <div class="ob-footer">
     <button class="ob-continue" id="ob2-continue" onclick="submitBookmakers()">Finish setup →</button>
     <span class="ob-skip" onclick="submitBookmakers(true)">Skip for now</span>
@@ -2621,6 +2631,8 @@ function ageGatePass() {
   localStorage.setItem('rundown_age_verified', '1');
   var gate = document.getElementById('ageGate');
   if (gate) gate.style.display = 'none';
+  // Registration is mandatory — go straight to register screen
+  showAuthScreen('auth-register');
 }
 
 function ageGateFail() {
@@ -2736,7 +2748,7 @@ function updateProfileScreen() {
 
   var teamRows = teams.length
     ? teams.map(function(t){ return '<div class="profile-row"><div class="profile-row-icon" style="background:var(--live-bg)">⚽</div><div class="profile-row-label">'+t+'</div><div class="profile-row-arrow">›</div></div>'; }).join('')
-    : '<div style="padding:12px 16px;font-family:var(--fs);font-size:12px;color:var(--ink4)">No teams selected yet. <span style="color:var(--ink);font-weight:700;cursor:pointer" onclick="showAuthScreen(\'auth-onboard1\')">Add teams →</span></div>';
+    : '<div style="padding:12px 16px;font-family:var(--fs);font-size:12px;color:var(--ink4)">No teams selected yet. <span style="color:var(--ink);font-weight:700;cursor:pointer" onclick="showAuthScreen(\'auth-onboard1a\')">Add teams →</span></div>';
 
   var bookieRows = bookies.length
     ? bookies.map(function(b){ return '<div class="bookie-row"><div class="bookie-name">'+b+'</div><div class="bookie-toggle on"><div class="bookie-toggle-dot"></div></div></div>'; }).join('')
@@ -2833,8 +2845,8 @@ function doRegister() {
       showToast('Account created!', 'success');
       // Go directly to onboarding — do NOT call hideAuthScreens() first
       // (that would trigger goTo() and show the profile screen)
-      showAuthScreen('auth-onboard1');
-      if (typeof renderTeamsList === 'function') renderTeamsList('');
+      showAuthScreen('auth-onboard1a');
+      if (typeof renderMyClubList === 'function') renderMyClubList('');
     });
   });
 }
@@ -2908,7 +2920,7 @@ function showAuthScreen(screenId) {
   if (target) {
     target.classList.add('on');
     // Onboarding screens use flex column layout — must override inline display:none
-    var flexScreens = ['auth-onboard1', 'auth-onboard2'];
+    var flexScreens = ['auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
     target.style.display = flexScreens.indexOf(screenId) !== -1 ? 'flex' : 'block';
   }
 
@@ -2929,7 +2941,8 @@ function showAuthScreen(screenId) {
 
 function hideAuthScreens() {
   _onboarding = false;
-  var authIds = ['auth-login', 'auth-register', 'auth-onboard1', 'auth-onboard2'];
+  var authIds = ['auth-login','auth-register',
+                 'auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
   authIds.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) { el.classList.remove('on'); el.style.display = ''; }
@@ -2945,13 +2958,14 @@ function hideAuthScreens() {
   if (secStrip) secStrip.style.visibility = '';
   if (sdesc)    sdesc.style.visibility    = '';
 
-  // Restore previous screen
+  // Restore previous screen — use goTo only when returning to app, not mid-onboarding
   if (typeof goTo === 'function') goTo(_prevScreenIdx);
 }
 
 // Navigate by screen ID — bridges auth screens with the existing goTo() system
 function goToScreen(screenId) {
-  var authIds = ['auth-login', 'auth-register', 'auth-onboard1', 'auth-onboard2'];
+  var authIds = ['auth-login','auth-register',
+                 'auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
   if (authIds.indexOf(screenId) !== -1) {
     showAuthScreen(screenId);
     return;
@@ -2981,22 +2995,23 @@ function showToast(msg, type) {
 
 /* ── phase-a-additions-2.js ── */
 /* ═══════════════════════════════════════════════════════════
-   PHASE A — PART 2: Teams · Bookmakers · Onboarding · Init
+   PHASE A — PART 2 (revised): Three-tier team onboarding
+   + Bookmakers + window load handler
    ═══════════════════════════════════════════════════════════ */
 
-/* ─────────────────────────────────────────
-   ONBOARDING STATE
-───────────────────────────────────────── */
-var selectedTeams     = [];
-var selectedBookmakers = [];
+/* ── Onboarding state ── */
+var selectedMyClub    = '';   // single string — auth-onboard1a
+var goesToMatches     = null; // boolean — auth-onboard1b Yes/No
+var selectedWatchLive = [];   // up to 5 — auth-onboard1b
+var selectedFollow    = [];   // up to 10 — auth-onboard1c
+var selectedBookmakers = [];  // auth-onboard2
 
 /* ─────────────────────────────────────────
    ALL_TEAMS
-   NOTE: These lists reflect the 2024/25 season.
+   NOTE: Reflects 2024/25 season.
    Review every summer — promotion/relegation
-   changes membership annually.
-   Long-term: replace with live call to the
-   API-Football /teams endpoint.
+   changes memberships annually.
+   Long-term: replace with API-Football /teams.
 ───────────────────────────────────────── */
 var ALL_TEAMS = {
   'PREMIER LEAGUE': [
@@ -3049,94 +3064,249 @@ var ALL_TEAMS = {
   ]
 };
 
-/* ─────────────────────────────────────────
-   TEAM ONBOARDING — render / toggle / save
-───────────────────────────────────────── */
-function renderTeamsList(filter) {
-  var list = document.getElementById('ob1-list');
-  if (!list) return;
+/* Helper: find which league a team belongs to */
+function leagueOf(team) {
+  var found = '';
+  Object.keys(ALL_TEAMS).forEach(function(lg) {
+    if (ALL_TEAMS[lg].indexOf(team) !== -1) found = lg;
+  });
+  return found;
+}
 
+/* Helper: safe HTML render of a team row */
+function teamRow(team, isSelected, isLocked, onclick) {
+  var sel  = isSelected || isLocked;
+  var icon = isLocked ? '🔒' : (isSelected ? '✓' : '');
+  return '<div class="ob-team-row' + (sel ? ' selected' : '') + '"' +
+    (isLocked ? '' : ' onclick="' + onclick + '"') + '>' +
+    '<span class="ob-team-name">' + team + '</span>' +
+    '<span class="ob-check">' + icon + '</span>' +
+    '</div>';
+}
+
+/* ─────────────────────────────────────────
+   ONBOARDING 1a — MY CLUB (single, mandatory)
+───────────────────────────────────────── */
+function renderMyClubList(filter) {
+  var list = document.getElementById('ob1a-list');
+  if (!list) return;
   var q = (filter || '').toLowerCase().trim();
   var html = '';
-  var anyResult = false;
-
-  Object.keys(ALL_TEAMS).forEach(function(league) {
-    var teams = ALL_TEAMS[league].filter(function(t) {
+  var any = false;
+  Object.keys(ALL_TEAMS).forEach(function(lg) {
+    var teams = ALL_TEAMS[lg].filter(function(t) {
       return !q || t.toLowerCase().indexOf(q) !== -1;
     });
     if (!teams.length) return;
-    anyResult = true;
-
-    html += '<div class="ob-league-hdr">'+league+'</div>';
+    any = true;
+    html += '<div class="ob-league-hdr">' + lg + '</div>';
     teams.forEach(function(team) {
-      var sel = selectedTeams.indexOf(team) !== -1;
-      html +=
-        '<div class="ob-team-row'+(sel?' selected':'')+'" onclick="toggleTeam(\''+team.replace(/'/g,"\\'")+'\')">' +
-          '<span class="ob-team-name">'+team+'</span>' +
-          '<span class="ob-check">'+(sel ? '✓' : '')+'</span>' +
-        '</div>';
+      var sel = selectedMyClub === team;
+      html += teamRow(team, sel, false,
+        'selectMyClub(\'' + team.replace(/'/g, "\\'") + '\')');
     });
   });
-
-  if (!anyResult) {
-    html = '<div class="ob-empty">No teams match "'+filter+'"</div>';
-  }
-
+  if (!any) html = '<div class="ob-empty">No teams match "' + filter + '"</div>';
   list.innerHTML = html;
-  updateTeamCounter();
+  updateMyClubCounter();
 }
 
-function filterTeams(val) {
-  renderTeamsList(val);
+function filterMyClub(val) { renderMyClubList(val); }
+
+function selectMyClub(team) {
+  selectedMyClub = team;
+  var searchEl = document.getElementById('ob1a-search');
+  renderMyClubList(searchEl ? searchEl.value : '');
 }
 
-function toggleTeam(team) {
-  var idx = selectedTeams.indexOf(team);
-  if (idx !== -1) {
-    selectedTeams.splice(idx, 1);
-  } else {
-    if (selectedTeams.length >= 5) {
-      showToast('Maximum 5 teams — remove one first', 'error');
-      return;
-    }
-    selectedTeams.push(team);
+function updateMyClubCounter() {
+  var el = document.getElementById('ob1a-counter');
+  if (el) el.textContent = selectedMyClub ? selectedMyClub : 'No club selected';
+  var btn = document.getElementById('ob1a-continue');
+  if (btn) {
+    btn.disabled = !selectedMyClub;
+    btn.textContent = selectedMyClub
+      ? 'Continue with ' + selectedMyClub + ' →'
+      : 'Select your club to continue →';
   }
-  // Re-render with current search value
-  var searchEl = document.getElementById('ob1-search');
-  renderTeamsList(searchEl ? searchEl.value : '');
 }
 
-function updateTeamCounter() {
-  var counter = document.getElementById('ob1-counter');
-  if (!counter) return;
-  var n = selectedTeams.length;
-  counter.textContent = n + ' of 5 selected';
-  counter.className = 'ob-counter' + (n === 5 ? ' full' : '');
-}
-
-function submitTeams() { saveTeams(); }
-
-function saveTeams() {
-  if (!sbClient || !authUser) {
-    // Offline / demo — just advance
-    showAuthScreen('auth-onboard2');
-    renderBookmakerList();
-    return;
-  }
-  sbClient
-    .from('user_profiles')
-    .update({ favourite_teams: selectedTeams, updated_at: new Date().toISOString() })
-    .eq('id', authUser.id)
-    .then(function(result) {
-      if (result.error) { showToast('Could not save teams — try again', 'error'); return; }
-      if (userProfile) userProfile.favourite_teams = selectedTeams.slice();
-      showAuthScreen('auth-onboard2');
-      renderBookmakerList();
-    });
+function submitMyClub() {
+  if (!selectedMyClub) { showToast('Please select your club first', 'error'); return; }
+  // Pre-seed follow list with My Club
+  if (selectedFollow.indexOf(selectedMyClub) === -1) selectedFollow.unshift(selectedMyClub);
+  // Pre-seed watch live with My Club
+  if (selectedWatchLive.indexOf(selectedMyClub) === -1) selectedWatchLive.unshift(selectedMyClub);
+  showAuthScreen('auth-onboard1b');
+  renderWatchLiveList('');
 }
 
 /* ─────────────────────────────────────────
-   ALL_BOOKMAKERS
+   ONBOARDING 1b — WATCH LIVE (up to 5, My Club locked)
+───────────────────────────────────────── */
+function answerGoesToMatches(yes) {
+  goesToMatches = yes;
+  // Highlight active button
+  var yBtn = document.getElementById('ob1b-yes');
+  var nBtn = document.getElementById('ob1b-no');
+  var activeStyle = 'background:var(--ink);color:var(--parchment);border-color:var(--ink);';
+  var idleStyle   = 'background:var(--card);color:var(--ink);border-color:var(--rule-strong);';
+  if (yBtn) yBtn.setAttribute('style',
+    'flex:1;padding:12px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:1.5px solid;cursor:pointer;' +
+    (yes ? activeStyle : idleStyle));
+  if (nBtn) nBtn.setAttribute('style',
+    'flex:1;padding:12px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:1.5px solid;cursor:pointer;' +
+    (!yes ? activeStyle : idleStyle));
+
+  if (!yes) {
+    // Skip straight to 1c — no live teams to pick
+    selectedWatchLive = [selectedMyClub];
+    showAuthScreen('auth-onboard1c');
+    renderFollowList('');
+    return;
+  }
+  // Show team picker
+  var teamsEl  = document.getElementById('ob1b-teams');
+  var footerEl = document.getElementById('ob1b-footer');
+  if (teamsEl)  teamsEl.style.display  = 'flex';
+  if (footerEl) footerEl.style.display = '';
+  renderWatchLiveList('');
+}
+
+function renderWatchLiveList(filter) {
+  var list = document.getElementById('ob1b-list');
+  if (!list) return;
+  var q = (filter || '').toLowerCase().trim();
+  var html = '';
+  var any = false;
+  Object.keys(ALL_TEAMS).forEach(function(lg) {
+    var teams = ALL_TEAMS[lg].filter(function(t) {
+      return !q || t.toLowerCase().indexOf(q) !== -1;
+    });
+    if (!teams.length) return;
+    any = true;
+    html += '<div class="ob-league-hdr">' + lg + '</div>';
+    teams.forEach(function(team) {
+      var locked = team === selectedMyClub;
+      var sel    = selectedWatchLive.indexOf(team) !== -1;
+      html += teamRow(team, sel, locked,
+        'toggleWatchLiveTeam(\'' + team.replace(/'/g, "\\'") + '\')');
+    });
+  });
+  if (!any) html = '<div class="ob-empty">No teams match "' + filter + '"</div>';
+  list.innerHTML = html;
+  updateWatchLiveCounter();
+}
+
+function filterWatchLive(val) { renderWatchLiveList(val); }
+
+function toggleWatchLiveTeam(team) {
+  if (team === selectedMyClub) { showToast('Your club is always included', 'info'); return; }
+  var idx = selectedWatchLive.indexOf(team);
+  if (idx !== -1) {
+    selectedWatchLive.splice(idx, 1);
+  } else {
+    if (selectedWatchLive.length >= 5) { showToast('Maximum 5 teams — remove one first', 'error'); return; }
+    selectedWatchLive.push(team);
+  }
+  var searchEl = document.getElementById('ob1b-search');
+  renderWatchLiveList(searchEl ? searchEl.value : '');
+}
+
+function updateWatchLiveCounter() {
+  var el = document.getElementById('ob1b-counter');
+  if (el) {
+    var n = selectedWatchLive.length;
+    el.textContent = n + ' of 5 selected';
+    el.className = 'ob-counter' + (n >= 5 ? ' full' : '');
+  }
+}
+
+function submitWatchLive() {
+  // Merge watch-live into follow list
+  selectedWatchLive.forEach(function(t) {
+    if (selectedFollow.indexOf(t) === -1) selectedFollow.push(t);
+  });
+  showAuthScreen('auth-onboard1c');
+  renderFollowList('');
+}
+
+/* ─────────────────────────────────────────
+   ONBOARDING 1c — FOLLOW TEAMS (up to 10)
+───────────────────────────────────────── */
+function renderFollowList(filter) {
+  var list = document.getElementById('ob1c-list');
+  if (!list) return;
+  var q = (filter || '').toLowerCase().trim();
+
+  // Build ordered league list: My Club's league first, then rest
+  var myLeague = leagueOf(selectedMyClub);
+  var leagues  = Object.keys(ALL_TEAMS);
+  if (myLeague) {
+    leagues = [myLeague].concat(leagues.filter(function(l) { return l !== myLeague; }));
+  }
+
+  var lockedTeams = [selectedMyClub].concat(
+    selectedWatchLive.filter(function(t) { return t !== selectedMyClub; })
+  );
+
+  var html = '';
+  var any  = false;
+  leagues.forEach(function(lg) {
+    var teams = ALL_TEAMS[lg].filter(function(t) {
+      return !q || t.toLowerCase().indexOf(q) !== -1;
+    });
+    if (!teams.length) return;
+    any = true;
+    html += '<div class="ob-league-hdr">' + lg + (lg === myLeague ? ' ★' : '') + '</div>';
+    teams.forEach(function(team) {
+      var locked = lockedTeams.indexOf(team) !== -1;
+      var sel    = selectedFollow.indexOf(team) !== -1;
+      html += teamRow(team, sel, locked,
+        'toggleFollowTeam(\'' + team.replace(/'/g, "\\'") + '\')');
+    });
+  });
+  if (!any) html = '<div class="ob-empty">No teams match "' + filter + '"</div>';
+  list.innerHTML = html;
+  updateFollowCounter();
+}
+
+function filterFollowTeams(val) { renderFollowList(val); }
+
+function toggleFollowTeam(team) {
+  var lockedTeams = [selectedMyClub].concat(
+    selectedWatchLive.filter(function(t) { return t !== selectedMyClub; })
+  );
+  if (lockedTeams.indexOf(team) !== -1) {
+    showToast('Already in your selection', 'info'); return;
+  }
+  var idx = selectedFollow.indexOf(team);
+  if (idx !== -1) {
+    selectedFollow.splice(idx, 1);
+  } else {
+    if (selectedFollow.length >= 10) { showToast('Maximum 10 teams — remove one first', 'error'); return; }
+    selectedFollow.push(team);
+  }
+  var searchEl = document.getElementById('ob1c-search');
+  renderFollowList(searchEl ? searchEl.value : '');
+}
+
+function updateFollowCounter() {
+  var el = document.getElementById('ob1c-counter');
+  if (el) {
+    var n = selectedFollow.length;
+    el.textContent = n + ' of 10 selected';
+    el.className = 'ob-counter' + (n >= 10 ? ' full' : '');
+  }
+}
+
+function submitFollowTeams() {
+  showAuthScreen('auth-onboard2');
+  renderBookmakerList();
+}
+
+/* ─────────────────────────────────────────
+   ALL_BOOKMAKERS (22 operators)
 ───────────────────────────────────────── */
 var ALL_BOOKMAKERS = [
   'Bet365','Sky Bet','Paddy Power','William Hill',
@@ -3148,78 +3318,76 @@ var ALL_BOOKMAKERS = [
 ];
 
 /* ─────────────────────────────────────────
-   BOOKMAKER ONBOARDING — render / toggle / save
+   ONBOARDING 2 — BOOKMAKERS
 ───────────────────────────────────────── */
 function renderBookmakerList() {
   var list = document.getElementById('ob2-list');
   if (!list) return;
-
-  // Pre-populate from saved profile if available
   if (userProfile && userProfile.bookmaker_accounts && !selectedBookmakers.length) {
     selectedBookmakers = (userProfile.bookmaker_accounts || []).slice();
   }
-
   var html = '';
   ALL_BOOKMAKERS.forEach(function(bookie) {
-    var on = selectedBookmakers.indexOf(bookie) !== -1;
-    html +=
-      '<div class="ob-bookie-row" onclick="toggleBookie(\''+bookie+'\')">'+
-        '<span class="ob-bookie-name">'+bookie+'</span>'+
-        '<div class="ob-toggle'+(on?' on':'')+'" id="ob-tog-'+bookie.replace(/\s/g,'_')+'">'+
-          '<div class="ob-toggle-dot"></div>'+
-        '</div>'+
-      '</div>';
+    var on  = selectedBookmakers.indexOf(bookie) !== -1;
+    var tid = 'ob-tog-' + bookie.replace(/\s/g,'_');
+    html += '<div class="ob-bookie-row" onclick="toggleBookie(\'' + bookie + '\')">' +
+      '<span class="ob-bookie-name">' + bookie + '</span>' +
+      '<div class="ob-toggle' + (on ? ' on' : '') + '" id="' + tid + '">' +
+        '<div class="ob-toggle-dot"></div>' +
+      '</div></div>';
   });
-
   list.innerHTML = html;
 }
 
 function toggleBookie(bookie) {
   var idx = selectedBookmakers.indexOf(bookie);
-  if (idx !== -1) {
-    selectedBookmakers.splice(idx, 1);
-  } else {
-    selectedBookmakers.push(bookie);
-  }
-  // Update just the toggle UI — no full re-render needed
-  var togId = 'ob-tog-' + bookie.replace(/\s/g,'_');
-  var tog = document.getElementById(togId);
-  if (tog) {
-    var on = selectedBookmakers.indexOf(bookie) !== -1;
-    tog.className = 'ob-toggle' + (on ? ' on' : '');
-  }
+  if (idx !== -1) { selectedBookmakers.splice(idx, 1); }
+  else            { selectedBookmakers.push(bookie); }
+  var tog = document.getElementById('ob-tog-' + bookie.replace(/\s/g,'_'));
+  if (tog) tog.className = 'ob-toggle' + (selectedBookmakers.indexOf(bookie) !== -1 ? ' on' : '');
 }
 
-function submitBookmakers(skip) { saveBookmakers(skip); }
+function submitBookmakers(skip) { saveAllOnboardingData(skip); }
 
-function saveBookmakers(skip) {
-  var toSave = skip ? [] : selectedBookmakers.slice();
+/* ─────────────────────────────────────────
+   SAVE — write all four fields at once
+───────────────────────────────────────── */
+function saveAllOnboardingData(skipBookmakers) {
+  var bookiesToSave = skipBookmakers ? [] : selectedBookmakers.slice();
 
   if (!sbClient || !authUser) {
-    // Offline / demo — go straight to profile
     hideAuthScreens();
     if (typeof goTo === 'function') goTo(13);
     return;
   }
 
-  sbClient
-    .from('user_profiles')
-    .update({ bookmaker_accounts: toSave, updated_at: new Date().toISOString() })
-    .eq('id', authUser.id)
-    .then(function(result) {
-      if (result.error) { showToast('Could not save — try again', 'error'); return; }
-      if (userProfile) userProfile.bookmaker_accounts = toSave;
-      showToast('Setup complete!', 'success');
-      hideAuthScreens();
-      updateProfileScreen();
-      if (typeof goTo === 'function') goTo(13);
-    });
+  sbClient.from('user_profiles').update({
+    my_club:            selectedMyClub,
+    watch_live_teams:   selectedWatchLive.slice(),
+    follow_teams:       selectedFollow.slice(),
+    bookmaker_accounts: bookiesToSave,
+    updated_at:         new Date().toISOString()
+  }).eq('id', authUser.id).then(function(result) {
+    if (result.error) {
+      console.warn('saveAllOnboardingData error:', result.error.message);
+      showToast('Could not save — please try again', 'error');
+      return;
+    }
+    if (userProfile) {
+      userProfile.my_club            = selectedMyClub;
+      userProfile.watch_live_teams   = selectedWatchLive.slice();
+      userProfile.follow_teams       = selectedFollow.slice();
+      userProfile.bookmaker_accounts = bookiesToSave;
+    }
+    showToast('Setup complete!', 'success');
+    hideAuthScreens();
+    updateProfileScreen();
+    if (typeof goTo === 'function') goTo(13);
+  });
 }
 
 /* ─────────────────────────────────────────
-   WINDOW LOAD HANDLER
-   Must run after the existing script block
-   has defined goTo() and built the DOM.
+   WINDOW LOAD — runs after existing script
 ───────────────────────────────────────── */
 window.addEventListener('load', function() {
   initAgeGate();

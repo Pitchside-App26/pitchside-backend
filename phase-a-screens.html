@@ -1,33 +1,21 @@
 <!-- ═══════════════════════════════════════════════════════════
-     PHASE A — NEW HTML FRAGMENTS ONLY
-     These five divs are inserted into the phone shell by build.py
+     PHASE A — HTML FRAGMENTS (revised)
+     Inserted into phone shell by build.py
+     NO inline display:none on .screen divs — CSS class handles hiding
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ① AGE GATE OVERLAY — sits above all screens, z-index 500 -->
+<!-- ① AGE GATE OVERLAY — position:absolute, not a .screen, z-index 500 -->
 <div id="ageGate" style="display:none;position:absolute;inset:0;z-index:500;background:var(--parchment);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
-  <div style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--ink);margin-bottom:4px">The Run<em style="color:var(--live);font-style:italic">down</em></div>
-  <div style="font-family:var(--fm);font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink5);margin-bottom:28px">Sports companion</div>
-
-  <div style="font-size:36px;margin-bottom:14px">🎟️</div>
-  <div style="font-family:var(--fd);font-size:24px;font-weight:800;color:var(--ink);line-height:1.2;margin-bottom:10px">Are you 18<br>or over?</div>
-  <div style="font-family:var(--fs);font-size:12px;color:var(--ink4);line-height:1.6;margin-bottom:28px;max-width:250px">This app contains betting odds, affiliate offers and gambling content. You must be 18 or over to continue.</div>
-
-  <button onclick="ageGatePass()" style="width:100%;background:var(--ink);color:var(--parchment);padding:14px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px">Yes, I am 18 or over</button>
-  <button onclick="ageGateFail()" style="width:100%;background:transparent;color:var(--ink4);padding:13px;border-radius:10px;font-family:var(--fs);font-size:13px;font-weight:600;border:1.5px solid var(--rule-strong);cursor:pointer">No, take me away</button>
-
-  <div style="font-family:var(--fm);font-size:8px;color:var(--ink5);margin-top:20px;line-height:1.6">18+ · BeGambleAware.org · GamStop.co.uk<br>UKGC Licensed operators only</div>
+  <!-- Content injected by initAgeGate() in phase-a-additions.js -->
 </div>
 
-<!-- ② LOGIN SCREEN -->
+<!-- ② LOGIN -->
 <div class="screen auth-screen" id="auth-login">
-  <!-- Dark hero -->
   <div class="auth-hero">
     <div class="auth-wordmark">The Run<em>down</em></div>
     <div class="auth-hero-title">Welcome<br>back.</div>
-    <div class="auth-hero-sub">Sign in to access your teams,<br>bets and fan reports.</div>
+    <div class="auth-hero-sub">Sign in to access your account.</div>
   </div>
-
-  <!-- Form -->
   <div class="auth-form">
     <div class="auth-field">
       <label class="auth-field-label" for="login-email">Email address</label>
@@ -39,30 +27,24 @@
     </div>
     <div class="auth-error" id="login-error"></div>
     <button class="auth-btn" id="login-btn" data-label="Sign In" onclick="doLogin()">Sign In</button>
-    <button class="auth-btn ghost" onclick="goToScreen('n0')">Browse without an account</button>
     <div class="auth-link-row">
-      <span class="auth-link-text">No account yet?</span>
-      <button class="auth-link-btn" onclick="goToScreen('auth-register')">Create one</button>
+      <span class="auth-link-text">No account?</span>
+      <button class="auth-link-btn" onclick="showAuthScreen('auth-register')">Create one</button>
     </div>
   </div>
-
-  <!-- Supabase not connected warning (shown by JS when needed) -->
   <div id="login-no-sb" style="display:none;margin:0 16px;padding:11px 14px;background:var(--gold-bg);border-radius:10px;border:1px solid rgba(139,105,20,0.2)">
     <div style="font-family:var(--fs);font-size:12px;font-weight:700;color:var(--gold);margin-bottom:3px">Supabase not connected</div>
     <div style="font-family:var(--fs);font-size:11px;color:var(--ink4)">Open Profile and enter your Supabase URL and anon key first.</div>
   </div>
 </div>
 
-<!-- ③ REGISTER SCREEN -->
+<!-- ③ REGISTER -->
 <div class="screen auth-screen" id="auth-register">
-  <!-- Dark hero -->
   <div class="auth-hero">
     <div class="auth-wordmark">The Run<em>down</em></div>
     <div class="auth-hero-title">Create your<br>account.</div>
-    <div class="auth-hero-sub">Free forever. No spam.<br>Cancel any time.</div>
+    <div class="auth-hero-sub">Free forever. Takes 60 seconds.</div>
   </div>
-
-  <!-- Form -->
   <div class="auth-form">
     <div class="auth-field">
       <label class="auth-field-label" for="reg-email">Email address</label>
@@ -76,71 +58,99 @@
       <label class="auth-field-label" for="reg-pw2">Confirm password</label>
       <input class="auth-input" id="reg-pw2" type="password" autocomplete="new-password" placeholder="Repeat your password"/>
     </div>
-
-    <!-- GDPR consent — mandatory -->
     <div class="gdpr-row">
       <input class="gdpr-checkbox" type="checkbox" id="reg-gdpr"/>
       <label class="gdpr-label" for="reg-gdpr">
-        I agree to the <a href="#" onclick="return false">Privacy Policy</a> and <a href="#" onclick="return false">Cookie Policy</a>. I understand my data is stored securely and will not be shared with third parties without my consent.
+        I agree to the <a href="#" onclick="return false">Privacy Policy</a> and <a href="#" onclick="return false">Cookie Policy</a>. I am 18 or over.
       </label>
     </div>
-
     <div class="auth-error" id="reg-error"></div>
     <button class="auth-btn" id="reg-btn" data-label="Create Account" onclick="doRegister()" style="margin-top:14px">Create Account</button>
     <div class="auth-link-row">
       <span class="auth-link-text">Already have an account?</span>
-      <button class="auth-link-btn" onclick="goToScreen('auth-login')">Sign in</button>
+      <button class="auth-link-btn" onclick="showAuthScreen('auth-login')">Sign in</button>
     </div>
   </div>
 </div>
 
-<!-- ④ ONBOARDING SCREEN 1 — FAVOURITE TEAMS -->
-<!--
-  NOTE: Team lists reflect the 2024/25 season.
-  Review these arrays each summer — promotion/relegation changes membership annually.
-  Long-term: pull from API-Football /teams endpoint to automate updates.
--->
-<div class="screen" id="auth-onboard1" style="display:none;flex-direction:column;">
-  <!-- Dark hero -->
+<!-- ④ ONBOARDING 1a — MY CLUB (single, mandatory) -->
+<div class="screen" id="auth-onboard1a">
   <div class="ob-hero">
-    <div class="ob-step">Step 1 of 2</div>
-    <div class="ob-title">Pick your teams.</div>
-    <div class="ob-sub">Choose up to 5 teams across any leagues. We'll personalise your scores and alerts.</div>
-    <div class="ob-counter" id="ob1-counter">0 of 5 selected</div>
+    <div class="ob-step">Step 1 of 4 — My Club</div>
+    <div class="ob-title">Which team do<br>you support?</div>
+    <div class="ob-sub">Choose one club. This is your primary team — it unlocks personalised scores, alerts and match day info.</div>
+    <div class="ob-counter" id="ob1a-counter">No club selected</div>
   </div>
-
-  <!-- Sticky search -->
   <div class="ob-search-wrap">
-    <input class="ob-search" id="ob1-search" type="text" placeholder="Search all leagues…" oninput="filterTeams(this.value)"/>
+    <input class="ob-search" id="ob1a-search" type="text" placeholder="Search all leagues…" oninput="filterMyClub(this.value)"/>
   </div>
-
-  <!-- Team list — populated by renderTeamsList() -->
-  <div id="ob1-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;">
-    <!-- JS renders league headers + team rows here -->
-  </div>
-
-  <!-- Sticky footer -->
+  <div id="ob1a-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
   <div class="ob-footer">
-    <button class="ob-continue" id="ob1-continue" onclick="submitTeams()">Continue →</button>
+    <button class="ob-continue" id="ob1a-continue" onclick="submitMyClub()" disabled>Select your club to continue →</button>
   </div>
 </div>
 
-<!-- ⑤ ONBOARDING SCREEN 2 — BOOKMAKER ACCOUNTS -->
-<div class="screen" id="auth-onboard2" style="display:none;flex-direction:column;">
-  <!-- Dark hero -->
+<!-- ⑤ ONBOARDING 1b — WATCH LIVE (up to 5, My Club locked) -->
+<div class="screen" id="auth-onboard1b">
   <div class="ob-hero">
-    <div class="ob-step">Step 2 of 2</div>
-    <div class="ob-title">Your bookmaker accounts.</div>
+    <div class="ob-step">Step 2 of 4 — Live Matches</div>
+    <div class="ob-title">Do you attend<br>matches in person?</div>
+    <div class="ob-sub">We'll show pub and transport info for games you attend.</div>
+  </div>
+
+  <!-- Yes / No choice -->
+  <div id="ob1b-yn" style="display:flex;gap:10px;padding:14px 16px;background:var(--parchment);border-bottom:1px solid var(--rule-strong);">
+    <button id="ob1b-yes" onclick="answerGoesToMatches(true)"
+      style="flex:1;padding:12px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:1.5px solid var(--rule-strong);background:var(--card);color:var(--ink);cursor:pointer;">
+      Yes
+    </button>
+    <button id="ob1b-no" onclick="answerGoesToMatches(false)"
+      style="flex:1;padding:12px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:1.5px solid var(--rule-strong);background:var(--card);color:var(--ink);cursor:pointer;">
+      No — skip this
+    </button>
+  </div>
+
+  <!-- Team list — shown only when Yes is selected -->
+  <div id="ob1b-teams" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+    <div style="padding:8px 16px 4px;font-family:var(--fs);font-size:11px;color:var(--ink4)">Select up to 5 teams you attend live. Your club is pre-selected.</div>
+    <div class="ob-counter" id="ob1b-counter" style="margin:0 16px 8px;">1 of 5 selected</div>
+    <div class="ob-search-wrap" style="position:static;">
+      <input class="ob-search" id="ob1b-search" type="text" placeholder="Search teams…" oninput="filterWatchLive(this.value)"/>
+    </div>
+    <div id="ob1b-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
+  </div>
+
+  <div class="ob-footer" id="ob1b-footer" style="display:none;">
+    <button class="ob-continue" id="ob1b-continue" onclick="submitWatchLive()">Continue →</button>
+  </div>
+</div>
+
+<!-- ⑥ ONBOARDING 1c — FOLLOW TEAMS (up to 10, pre-seeded) -->
+<div class="screen" id="auth-onboard1c">
+  <div class="ob-hero">
+    <div class="ob-step">Step 3 of 4 — Score Tracking</div>
+    <div class="ob-title">Which teams do<br>you follow?</div>
+    <div class="ob-sub">Up to 10 teams. We'll surface their scores and tables on your home screen.</div>
+    <div class="ob-counter" id="ob1c-counter">0 of 10 selected</div>
+  </div>
+  <div class="ob-search-wrap">
+    <input class="ob-search" id="ob1c-search" type="text" placeholder="Search teams…" oninput="filterFollowTeams(this.value)"/>
+  </div>
+  <div id="ob1c-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
+  <div class="ob-footer">
+    <button class="ob-continue" id="ob1c-continue" onclick="submitFollowTeams()">Continue →</button>
+  </div>
+</div>
+
+<!-- ⑦ ONBOARDING 2 — BOOKMAKERS (unchanged) -->
+<div class="screen" id="auth-onboard2">
+  <div class="ob-hero">
+    <div class="ob-step">Step 4 of 4 — Bookmaker Accounts</div>
+    <div class="ob-title">Your bookmaker<br>accounts.</div>
     <div class="ob-sub">Toggle on the ones you already have. We'll highlight your best available odds in Bet Builder.</div>
-    <div style="font-family:var(--fm);font-size:9px;color:rgba(255,255,255,0.3);margin-top:8px">Optional — you can update this any time in Profile.</div>
+    <div style="font-family:var(--fm);font-size:9px;color:rgba(255,255,255,0.3);margin-top:8px">Optional — update any time in Profile.</div>
   </div>
-
-  <!-- Bookmaker toggle list — populated by renderBookmakerList() -->
-  <div id="ob2-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:100px;">
-    <!-- JS renders bookie rows here -->
-  </div>
-
-  <!-- Sticky footer -->
+  <div id="ob2-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:100px;"></div>
   <div class="ob-footer">
     <button class="ob-continue" id="ob2-continue" onclick="submitBookmakers()">Finish setup →</button>
     <span class="ob-skip" onclick="submitBookmakers(true)">Skip for now</span>

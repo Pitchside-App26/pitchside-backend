@@ -116,6 +116,8 @@ function ageGatePass() {
   localStorage.setItem('rundown_age_verified', '1');
   var gate = document.getElementById('ageGate');
   if (gate) gate.style.display = 'none';
+  // Registration is mandatory — go straight to register screen
+  showAuthScreen('auth-register');
 }
 
 function ageGateFail() {
@@ -231,7 +233,7 @@ function updateProfileScreen() {
 
   var teamRows = teams.length
     ? teams.map(function(t){ return '<div class="profile-row"><div class="profile-row-icon" style="background:var(--live-bg)">⚽</div><div class="profile-row-label">'+t+'</div><div class="profile-row-arrow">›</div></div>'; }).join('')
-    : '<div style="padding:12px 16px;font-family:var(--fs);font-size:12px;color:var(--ink4)">No teams selected yet. <span style="color:var(--ink);font-weight:700;cursor:pointer" onclick="showAuthScreen(\'auth-onboard1\')">Add teams →</span></div>';
+    : '<div style="padding:12px 16px;font-family:var(--fs);font-size:12px;color:var(--ink4)">No teams selected yet. <span style="color:var(--ink);font-weight:700;cursor:pointer" onclick="showAuthScreen(\'auth-onboard1a\')">Add teams →</span></div>';
 
   var bookieRows = bookies.length
     ? bookies.map(function(b){ return '<div class="bookie-row"><div class="bookie-name">'+b+'</div><div class="bookie-toggle on"><div class="bookie-toggle-dot"></div></div></div>'; }).join('')
@@ -328,8 +330,8 @@ function doRegister() {
       showToast('Account created!', 'success');
       // Go directly to onboarding — do NOT call hideAuthScreens() first
       // (that would trigger goTo() and show the profile screen)
-      showAuthScreen('auth-onboard1');
-      if (typeof renderTeamsList === 'function') renderTeamsList('');
+      showAuthScreen('auth-onboard1a');
+      if (typeof renderMyClubList === 'function') renderMyClubList('');
     });
   });
 }
@@ -403,7 +405,7 @@ function showAuthScreen(screenId) {
   if (target) {
     target.classList.add('on');
     // Onboarding screens use flex column layout — must override inline display:none
-    var flexScreens = ['auth-onboard1', 'auth-onboard2'];
+    var flexScreens = ['auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
     target.style.display = flexScreens.indexOf(screenId) !== -1 ? 'flex' : 'block';
   }
 
@@ -424,7 +426,8 @@ function showAuthScreen(screenId) {
 
 function hideAuthScreens() {
   _onboarding = false;
-  var authIds = ['auth-login', 'auth-register', 'auth-onboard1', 'auth-onboard2'];
+  var authIds = ['auth-login','auth-register',
+                 'auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
   authIds.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) { el.classList.remove('on'); el.style.display = ''; }
@@ -440,13 +443,14 @@ function hideAuthScreens() {
   if (secStrip) secStrip.style.visibility = '';
   if (sdesc)    sdesc.style.visibility    = '';
 
-  // Restore previous screen
+  // Restore previous screen — use goTo only when returning to app, not mid-onboarding
   if (typeof goTo === 'function') goTo(_prevScreenIdx);
 }
 
 // Navigate by screen ID — bridges auth screens with the existing goTo() system
 function goToScreen(screenId) {
-  var authIds = ['auth-login', 'auth-register', 'auth-onboard1', 'auth-onboard2'];
+  var authIds = ['auth-login','auth-register',
+                 'auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
   if (authIds.indexOf(screenId) !== -1) {
     showAuthScreen(screenId);
     return;
