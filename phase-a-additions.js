@@ -3,9 +3,10 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* ── Shared state ── */
-var sbClient   = null;   // Supabase client instance
-var authUser   = null;   // supabase auth user object
-var userProfile = null;  // user_profiles row
+var sbClient    = null;   // Supabase client instance
+var authUser    = null;   // supabase auth user object
+var userProfile = null;   // user_profiles row
+var _onboarding = false;  // true while user is in onboarding — suppresses profile re-render
 
 /* ─────────────────────────────────────────
    SUPABASE INITIALISATION
@@ -28,8 +29,9 @@ function initSupabase() {
   sbClient.auth.onAuthStateChange(function(event, session) {
     authUser = session ? session.user : null;
     if (authUser) {
-      loadUserProfile();
+      if (!_onboarding) loadUserProfile(); // skip during onboarding flow
     } else {
+      _onboarding = false;
       userProfile = null;
       updateBettingGates();
       updateProfileScreen();
@@ -306,6 +308,7 @@ function doRegister() {
     if (result.error) { setErr(result.error.message); return; }
 
     authUser = result.data.user;
+    _onboarding = true; // suppress onAuthStateChange → updateProfileScreen during onboarding
 
     // Create user_profiles row
     var now = new Date().toISOString();
@@ -316,11 +319,15 @@ function doRegister() {
       trust_tier:         'New Fan',
       gdpr_consent:       true,
       gdpr_consent_at:    now
-    }).then(function() {
+    }).then(function(insResult) {
+      if (insResult.error) {
+        // Row may already exist (e.g. re-registration) — log but don't block
+        console.warn('user_profiles insert:', insResult.error.message);
+      }
       userProfile = { id: authUser.id, favourite_teams: [], bookmaker_accounts: [], trust_tier: 'New Fan', gdpr_consent: true };
       showToast('Account created!', 'success');
-      // Proceed to onboarding
-      hideAuthScreens();
+      // Go directly to onboarding — do NOT call hideAuthScreens() first
+      // (that would trigger goTo() and show the profile screen)
       showAuthScreen('auth-onboard1');
       if (typeof renderTeamsList === 'function') renderTeamsList('');
     });
@@ -386,11 +393,19 @@ function showAuthScreen(screenId) {
   // Store current position so we can return
   if (typeof cur !== 'undefined') _prevScreenIdx = cur;
 
-  // Hide all .screen divs
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('on'); });
+  // Hide all .screen divs and clear any inline display overrides
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('on');
+    s.style.display = '';
+  });
 
   var target = document.getElementById(screenId);
-  if (target) target.classList.add('on');
+  if (target) {
+    target.classList.add('on');
+    // Onboarding screens use flex column layout — must override inline display:none
+    var flexScreens = ['auth-onboard1', 'auth-onboard2'];
+    target.style.display = flexScreens.indexOf(screenId) !== -1 ? 'flex' : 'block';
+  }
 
   // Hide prototype chrome while in auth flow
   var jumpBar = document.getElementById('jumpBar');
@@ -408,10 +423,11 @@ function showAuthScreen(screenId) {
 }
 
 function hideAuthScreens() {
+  _onboarding = false;
   var authIds = ['auth-login', 'auth-register', 'auth-onboard1', 'auth-onboard2'];
   authIds.forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.classList.remove('on');
+    if (el) { el.classList.remove('on'); el.style.display = ''; }
   });
 
   // Restore prototype chrome
