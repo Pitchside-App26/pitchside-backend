@@ -1581,6 +1581,13 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
         </div>
       </div>
       <div class="ai-disclaimer">Data-driven analysis only. Not financial advice. Please gamble responsibly. 18+ · BeGambleAware.org</div>
+      <div class="betting-compliance-strip">
+        <span>18+</span>
+        <a href="https://www.begambleaware.org" target="_blank">BeGambleAware.org</a>
+        <span>·</span>
+        <a href="https://www.gamstop.co.uk" target="_blank">GamStop.co.uk</a>
+        <span>· 0808 802 0133</span>
+      </div>
       <div style="height:10px"></div>
     </div>
   </div>
@@ -1598,7 +1605,8 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
       </div>
       <div class="slip-count">4 legs</div>
     </div>
-    <div class="scroll" style="height:702px">
+    <div id="odds-match-title" style="padding:9px 16px;background:var(--parchment2);border-bottom:1px solid var(--rule);font-family:var(--fs);font-size:12px;font-weight:600;color:var(--ink4)">Select a match to compare odds</div>
+    <div class="scroll" style="height:693px">
       <div class="slip-leg">
         <div class="slip-leg-bar" style="background:var(--forest)"></div>
         <div style="flex:1">
@@ -1661,37 +1669,32 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
       </div>
 
       <!-- Odds comparison -->
+      <div class="mkt-tabs" id="market-tabs">
+        <div class="mkt-tab active" data-market="h2h">Result</div>
+        <div class="mkt-tab" data-market="btts">BTTS</div>
+        <div class="mkt-tab" data-market="over_25">Over 2.5</div>
+        <div class="mkt-tab" data-market="handicap">Handicap</div>
+      </div>
       <div class="odds-comparison">
         <div class="odds-comp-header">
           <span class="odds-comp-title">Compare Odds · Best Price First</span>
-          <span style="font-family:var(--fm);font-size:8px;color:var(--ink5)">Updated 2 min ago</span>
+          <span class="odds-updated" id="odds-updated-time">Updated live</span>
         </div>
-        <div class="odds-row">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--forest);flex-shrink:0"></div>
-          <div class="odds-bookie">Bet365 <span class="odds-badge" style="background:var(--forest-bg);color:var(--forest)">Best price</span></div>
-          <div class="odds-price best">14/1</div>
-          <div class="odds-arrow">›</div>
-        </div>
-        <div class="odds-row">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--forest);flex-shrink:0"></div>
-          <div class="odds-bookie">Sky Bet <span class="odds-badge" style="background:rgba(26,23,20,0.06);color:var(--ink4)">✓ Account</span></div>
-          <div class="odds-price mid">13/1</div>
-          <div class="odds-arrow">›</div>
-        </div>
-        <div class="odds-row">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--ink5);flex-shrink:0"></div>
-          <div class="odds-bookie">Paddy Power <span class="odds-badge" style="background:var(--live-bg);color:var(--live)">🏷 New: £20 Free</span></div>
-          <div class="odds-price mid">12/1</div>
-          <div class="odds-arrow">›</div>
-        </div>
-        <div class="odds-row">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--ink5);flex-shrink:0"></div>
-          <div class="odds-bookie">William Hill</div>
-          <div class="odds-price worst">11/1</div>
-          <div class="odds-arrow">›</div>
+        <div id="odds-comparison-rows">
+          <!-- populated by renderOddsComparison() -->
+          <div style="padding:20px;text-align:center;font-family:var(--fs);font-size:13px;color:var(--ink4)">
+            Tap a match on the Today screen to compare odds
+          </div>
         </div>
       </div>
-      <div style="margin:0 16px 10px;padding:9px 14px;background:var(--parchment2);border-radius:10px;border:1px solid var(--rule);font-family:var(--fm);font-size:8px;color:var(--ink5);text-align:center;line-height:1.5">18+ only · All operators are UKGC licensed · BeGambleAware.org · GamStop.co.uk</div>
+      <div style="margin:0 16px 6px;padding:6px 14px;font-family:var(--fm);font-size:8px;color:var(--ink5);text-align:center">Best odds guaranteed · Prices update every 30 seconds</div>
+      <div class="betting-compliance-strip">
+        <span>18+</span>
+        <a href="https://www.begambleaware.org" target="_blank">BeGambleAware.org</a>
+        <span>·</span>
+        <a href="https://www.gamstop.co.uk" target="_blank">GamStop.co.uk</a>
+        <span>· 0808 802 0133</span>
+      </div>
       <div style="height:10px"></div>
     </div>
   </div>
@@ -1795,6 +1798,13 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
         </div>
         <div style="font-family:var(--fm);font-size:11px;color:var(--forest);font-weight:700">+£13.00</div>
       </div>
+      <div class="betting-compliance-strip">
+        <span>18+</span>
+        <a href="https://www.begambleaware.org" target="_blank">BeGambleAware.org</a>
+        <span>·</span>
+        <a href="https://www.gamstop.co.uk" target="_blank">GamStop.co.uk</a>
+        <span>· 0808 802 0133</span>
+      </div>
       <div style="height:78px"></div>
     </div>
     <div class="tabs">
@@ -1820,24 +1830,30 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
         </div>
       </div>
       <div class="scroll" style="height:724px">
-        <div class="offer-hero">
-          <div class="oh-glow"></div>
-          <div class="oh-eye">Tonight's Featured Offer</div>
-          <div class="oh-title">Up to £50 in Free Bets</div>
-          <div class="oh-btn">Get Offer ↗</div>
+        <div id="featured-offer-container">
+          <!-- populated by loadOffers() -->
         </div>
-        <div class="sec-hdr">Betting Offers · 2</div>
-        <!-- Bet365 -->
-        <div class="offer-card"><div class="oc-accent" style="background:linear-gradient(90deg,#0070CC,#0050A0)"></div><div class="oc-body"><div class="oc-hdr"><div><div class="oc-op">Bet365</div><div class="oc-type">Free Bet</div></div><div class="oc-badge" style="color:#0070CC;background:rgba(0,112,204,0.1)">Free Bet</div></div><div class="oc-title">Bet £10, Get £30 in Free Bets</div><div class="oc-sub">New UK customers. Min odds 1/5.</div><div class="oc-terms"><div class="oc-term"><div class="oct-lbl">Min Deposit</div><div class="oct-val">£10</div></div><div class="oc-term"><div class="oct-lbl">Wagering</div><div class="oct-val">1×</div></div><div class="oc-term"><div class="oct-lbl">Min Odds</div><div class="oct-val">1/5</div></div><div class="oc-term"><div class="oct-lbl">Expires</div><div class="oct-val">30 days</div></div></div><div class="oc-ctas"><div class="btn-claim">Claim Offer ↗</div><div class="btn-rev">Review</div></div></div><div class="oc-foot"><span class="oc-tc">New customers only. 18+. T&Cs apply.</span><div class="ukgc"><div class="ukgc-dot"></div>UKGC 39563</div></div></div>
-        <!-- Paddy Power -->
-        <div class="offer-card"><div class="oc-accent" style="background:linear-gradient(90deg,#007A3D,#005C2E)"></div><div class="oc-body"><div class="oc-hdr"><div><div class="oc-op">Paddy Power</div><div class="oc-type">Cashback</div></div><div class="oc-badge" style="color:#007A3D;background:rgba(0,122,61,0.1)">Cashback</div></div><div class="oc-title">Money Back as Cash Up To £20</div><div class="oc-sub">If your first bet loses.</div><div class="oc-terms"><div class="oc-term"><div class="oct-lbl">Min Deposit</div><div class="oct-val">£5</div></div><div class="oc-term"><div class="oct-lbl">Wagering</div><div class="oct-val">N/A</div></div><div class="oc-term"><div class="oct-lbl">Min Odds</div><div class="oct-val">1/5</div></div><div class="oc-term"><div class="oct-lbl">Expires</div><div class="oct-val">Ongoing</div></div></div><div class="oc-ctas"><div class="btn-claim">Claim Offer ↗</div><div class="btn-rev">Review</div></div></div><div class="oc-foot"><span class="oc-tc">New UK customers. Max refund £20. 18+.</span><div class="ukgc"><div class="ukgc-dot"></div>UKGC 44540</div></div></div>
-        <div class="sec-hdr">Ticket Resale · 1</div>
-        <div class="offer-card"><div class="oc-accent" style="background:linear-gradient(90deg,#E31837,#A01020)"></div><div class="oc-body"><div class="oc-hdr"><div><div class="oc-op">StubHub</div><div class="oc-type">Last Minute Entry</div></div><div class="oc-badge" style="color:#E31837;background:rgba(227,24,55,0.1)">Global</div></div><div class="oc-title">Last Minute Seats — From £35</div><div class="oc-sub">Buyer guarantee on all purchases.</div><div class="oc-ctas" style="margin-top:8px"><div class="btn-claim">Find Seats ↗</div><div class="btn-rev">Details</div></div></div><div class="oc-foot"><span class="oc-tc">Prices vary by event. Buyer guarantee applies.</span><span style="font-family:var(--fm);font-size:7px;color:var(--ink5)">🌍 Global</span></div></div>
+        <div class="offer-filter-tabs" id="offer-filter-tabs">
+          <div class="offer-filter-tab active" data-filter="all">All</div>
+          <div class="offer-filter-tab" data-filter="welcome">Free Bets</div>
+          <div class="offer-filter-tab" data-filter="enhanced_odds">Enhanced Odds</div>
+          <div class="offer-filter-tab" data-filter="cashback">Cashback</div>
+        </div>
+        <div id="offer-cards-container">
+          <!-- populated by renderOfferCards() -->
+        </div>
         <!-- Compliance footer -->
         <div class="comp-footer">
           <div class="cf-row1"><span style="font-size:12px">🛡️</span><span class="cf-t">18+ only · All operators UKGC licensed</span></div>
           <div class="cf-2">BeGambleAware.org · GamStop.co.uk · 0808 802 0133</div>
           <div class="cf-3">18+ · BeGambleAware.org · GamStop.co.uk · UKGC Licensed · T&Cs Apply · Gamble Responsibly</div>
+        </div>
+        <div class="betting-compliance-strip">
+          <span>18+</span>
+          <a href="https://www.begambleaware.org" target="_blank">BeGambleAware.org</a>
+          <span>·</span>
+          <a href="https://www.gamstop.co.uk" target="_blank">GamStop.co.uk</a>
+          <span>· 0808 802 0133</span>
         </div>
         <div style="height:78px"></div>
       </div>
