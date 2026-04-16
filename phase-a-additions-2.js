@@ -612,5 +612,4 @@ function saveAllOnboardingData(skipBookmakers) {
 window.addEventListener('load', function() {
   initAgeGate();
   initSupabase();
-  if (typeof initRegDobDropdowns === 'function') initRegDobDropdowns();
 });

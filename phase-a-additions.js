@@ -113,6 +113,7 @@ function checkAgeGate() {
     return;
   }
 
+  localStorage.setItem('rundown_dob', y + '-' + m + '-' + d);
   ageGatePass();
 }
 
@@ -293,21 +294,26 @@ function doRegister() {
 
   if (!sbClient) { setErr('Connection error — please refresh and try again'); return; }
 
-  var email = (document.getElementById('reg-email') || {}).value || '';
-  var pw    = (document.getElementById('reg-pw')    || {}).value || '';
-  var pw2   = (document.getElementById('reg-pw2')   || {}).value || '';
-  var gdpr  = (document.getElementById('reg-gdpr')  || {}).checked;
+  var firstName = ((document.getElementById('reg-firstname') || {}).value || '').trim();
+  var lastName  = ((document.getElementById('reg-lastname')  || {}).value || '').trim();
+  var email     = ((document.getElementById('reg-email')     || {}).value || '').trim();
+  var pw        = (document.getElementById('reg-pw')         || {}).value || '';
+  var pw2       = (document.getElementById('reg-pw2')        || {}).value || '';
+  var gdpr      = (document.getElementById('reg-gdpr')       || {}).checked;
 
-  email = email.trim();
+  // Parse DOB from localStorage (set by age gate, format "YYYY-M-D")
+  var dobStored = localStorage.getItem('rundown_dob');
+  var dobParts  = dobStored ? dobStored.split('-') : [];
+  var dobY = parseInt(dobParts[0] || '0');
+  var dobM = parseInt(dobParts[1] || '0');
+  var dobD = parseInt(dobParts[2] || '0');
 
-  var dobD = parseInt((document.getElementById('reg-dob-d') || {}).value || '0');
-  var dobM = parseInt((document.getElementById('reg-dob-m') || {}).value || '0');
-  var dobY = parseInt((document.getElementById('reg-dob-y') || {}).value || '0');
-
-  if (!email || !pw || !pw2) { setErr('Please fill in all fields.'); return; }
-  if (pw !== pw2)             { setErr('Passwords do not match.'); return; }
-  if (pw.length < 6)          { setErr('Password must be at least 6 characters.'); return; }
-  if (!dobD || !dobM || !dobY){ setErr('Please enter your date of birth.'); return; }
+  if (!firstName)              { setErr('Please enter your first name.'); return; }
+  if (!lastName)               { setErr('Please enter your last name.'); return; }
+  if (!email || !pw || !pw2)   { setErr('Please fill in all fields.'); return; }
+  if (pw !== pw2)              { setErr('Passwords do not match.'); return; }
+  if (pw.length < 6)           { setErr('Password must be at least 6 characters.'); return; }
+  if (!dobY || !dobM || !dobD) { setErr('Please complete age verification first.'); return; }
   var dobDate = new Date(dobY, dobM - 1, dobD);
   var ageNow  = new Date();
   var ageYrs  = ageNow.getFullYear() - dobDate.getFullYear();
@@ -315,6 +321,8 @@ function doRegister() {
   if (ageYrs < 18) { setErr('You must be 18 or over to register.'); return; }
   if (!gdpr)       { setErr('You must agree to the Privacy Policy to continue.'); return; }
   if (errEl) errEl.classList.remove('show');
+
+  var dobStr = dobY + '-' + String(dobM).padStart(2,'0') + '-' + String(dobD).padStart(2,'0');
 
   var btn = document.getElementById('reg-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
@@ -330,6 +338,9 @@ function doRegister() {
     var now = new Date().toISOString();
     sbClient.from('user_profiles').insert({
       id:                 authUser.id,
+      first_name:         firstName,
+      last_name:          lastName,
+      date_of_birth:      dobStr,
       favourite_teams:    [],
       bookmaker_accounts: [],
       trust_tier:         'New Fan',
@@ -340,7 +351,7 @@ function doRegister() {
         // Row may already exist (e.g. re-registration) — log but don't block
         console.warn('user_profiles insert:', insResult.error.message);
       }
-      userProfile = { id: authUser.id, favourite_teams: [], bookmaker_accounts: [], trust_tier: 'New Fan', gdpr_consent: true };
+      userProfile = { id: authUser.id, first_name: firstName, last_name: lastName, favourite_teams: [], bookmaker_accounts: [], trust_tier: 'New Fan', gdpr_consent: true };
       showToast('Account created!', 'success');
       // Go directly to onboarding — do NOT call hideAuthScreens() first
       // (that would trigger goTo() and show the profile screen)
@@ -348,29 +359,6 @@ function doRegister() {
       if (typeof renderMyClubList === 'function') renderMyClubList('');
     });
   });
-}
-
-/* ─────────────────────────────────────────
-   REGISTER — DOB DROPDOWN INIT
-───────────────────────────────────────── */
-function initRegDobDropdowns() {
-  var dayEl  = document.getElementById('reg-dob-d');
-  var yearEl = document.getElementById('reg-dob-y');
-  if (dayEl && dayEl.options.length <= 1) {
-    for (var d = 1; d <= 31; d++) {
-      var o = document.createElement('option');
-      o.value = d; o.text = d;
-      dayEl.appendChild(o);
-    }
-  }
-  if (yearEl && yearEl.options.length <= 1) {
-    var cur = new Date().getFullYear();
-    for (var y = cur; y >= cur - 100; y--) {
-      var o2 = document.createElement('option');
-      o2.value = y; o2.text = y;
-      yearEl.appendChild(o2);
-    }
-  }
 }
 
 /* ─────────────────────────────────────────
