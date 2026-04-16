@@ -92,6 +92,9 @@ function teamRow(team, isSelected, isLocked, onclick) {
    ONBOARDING 1a — MY CLUB (single, mandatory)
 ───────────────────────────────────────── */
 function renderMyClubList(filter) {
+  console.log('[Phase A] renderMyClubList — filter:', filter,
+    '| ALL_TEAMS:', typeof ALL_TEAMS !== 'undefined' ? Object.keys(ALL_TEAMS).length + ' leagues' : 'UNDEFINED',
+    '| #ob1a-list:', !!document.getElementById('ob1a-list'));
   var list = document.getElementById('ob1a-list');
   if (!list) return;
   var q = (filter || '').toLowerCase().trim();

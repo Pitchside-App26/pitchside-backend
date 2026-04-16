@@ -399,6 +399,9 @@ function showAuthScreen(screenId) {
   // Store current position so we can return
   if (typeof cur !== 'undefined') _prevScreenIdx = cur;
 
+  // Expand phone to full viewport and hide shell chrome
+  document.body.classList.add('auth-mode');
+
   // Hide all .screen divs and clear any inline display overrides
   document.querySelectorAll('.screen').forEach(function(s) {
     s.classList.remove('on');
@@ -413,15 +416,10 @@ function showAuthScreen(screenId) {
     target.style.display = flexScreens.indexOf(screenId) !== -1 ? 'flex' : 'block';
   }
 
-  // Hide prototype chrome while in auth flow
-  var jumpBar = document.getElementById('jumpBar');
-  var controls = document.querySelector('.controls');
-  var secStrip = document.querySelector('.section-strip');
-  var sdesc    = document.getElementById('sdesc');
-  if (jumpBar)  jumpBar.style.visibility  = 'hidden';
-  if (controls) controls.style.visibility = 'hidden';
-  if (secStrip) secStrip.style.visibility = 'hidden';
-  if (sdesc)    sdesc.style.visibility    = 'hidden';
+  // Populate My Club list whenever that screen is shown
+  if (screenId === 'auth-onboard1a' && typeof renderMyClubList === 'function') {
+    renderMyClubList('');
+  }
 
   // Show/hide Supabase warning on login screen
   var noSbWarn = document.getElementById('login-no-sb');
@@ -430,22 +428,16 @@ function showAuthScreen(screenId) {
 
 function hideAuthScreens() {
   _onboarding = false;
+
+  // Restore phone shell chrome
+  document.body.classList.remove('auth-mode');
+
   var authIds = ['auth-login','auth-register',
                  'auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
   authIds.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) { el.classList.remove('on'); el.style.display = ''; }
   });
-
-  // Restore prototype chrome
-  var jumpBar  = document.getElementById('jumpBar');
-  var controls = document.querySelector('.controls');
-  var secStrip = document.querySelector('.section-strip');
-  var sdesc    = document.getElementById('sdesc');
-  if (jumpBar)  jumpBar.style.visibility  = '';
-  if (controls) controls.style.visibility = '';
-  if (secStrip) secStrip.style.visibility = '';
-  if (sdesc)    sdesc.style.visibility    = '';
 
   // Restore previous screen — use goTo only when returning to app, not mid-onboarding
   if (typeof goTo === 'function') goTo(_prevScreenIdx);

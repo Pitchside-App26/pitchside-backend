@@ -295,3 +295,25 @@
 .toast.success { background: var(--forest); }
 .toast.error   { background: var(--live); }
 .toast.info    { background: var(--gold); }
+
+/* ── Auth mode — expand phone to full viewport, strip shell chrome ── */
+body.auth-mode {
+  padding: 0 !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+}
+body.auth-mode .scene {
+  max-width: 100% !important;
+  width: 100% !important;
+  height: 100vh !important;
+  gap: 0 !important;
+}
+body.auth-mode .phone {
+  width: 100% !important;
+  height: 100vh !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+body.auth-mode .phone::before { display: none !important; }
+body.auth-mode .status-bar    { display: none !important; }
