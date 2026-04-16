@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════════════════
+   PHASE B — CSS
+   Injected after phase-a-styles.css by build.py
+   All class names prefixed to avoid collisions.
+   ═══════════════════════════════════════════════════ */
+
+/* ── Market switcher tabs (n10 top of odds comparison) ── */
+.mkt-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1.5px solid var(--rule-strong);
+  background: var(--parchment2);
+  overflow-x: auto; scrollbar-width: none;
+}
+.mkt-tabs::-webkit-scrollbar { display: none; }
+.mkt-tab {
+  flex-shrink: 0; padding: 10px 16px;
+  font-family: var(--fm); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--ink4); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.1s;
+}
+.mkt-tab.active {
+  color: var(--ink); border-bottom-color: var(--ink);
+}
+
+/* ── Odds row: licence number sub-line ── */
+.odds-bookie-wrap { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.odds-bookie-name {
+  font-family: var(--fs); font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.odds-licence {
+  font-family: var(--fm); font-size: 7px; color: var(--ink5);
+  margin-top: 1px; letter-spacing: 0.04em;
+}
+
+/* ── Account / offer badges inside odds rows ── */
+.odds-acct-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-family: var(--fm); font-size: 7px; font-weight: 700;
+  letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px;
+  background: var(--forest-bg); color: var(--forest);
+  white-space: nowrap; margin-left: 5px; flex-shrink: 0;
+}
+.odds-new-badge {
+  display: inline-flex; align-items: center;
+  font-family: var(--fm); font-size: 7px; font-weight: 700;
+  letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px;
+  background: var(--gold-bg); color: var(--gold);
+  white-space: nowrap; margin-left: 5px; flex-shrink: 0;
+}
+.odds-best-label {
+  font-family: var(--fm); font-size: 7px; font-weight: 700;
+  letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px;
+  background: var(--forest-bg); color: var(--forest);
+  margin-left: 5px; flex-shrink: 0;
+}
+
+/* ── Odds row: best price dot ── */
+.odds-dot-best  { width: 6px; height: 6px; border-radius: 50%; background: var(--forest); flex-shrink: 0; }
+.odds-dot-other { width: 6px; height: 6px; border-radius: 50%; background: var(--ink5);   flex-shrink: 0; }
+
+/* ── Dynamic odds section header ── */
+.odds-updated {
+  font-family: var(--fm); font-size: 8px; color: var(--ink5);
+}
+
+/* ── Offer filter tabs (n12) ── */
+.offer-filter-tabs {
+  display: flex; gap: 0; padding: 8px 16px;
+  background: var(--parchment); border-bottom: 1px solid var(--rule-strong);
+  overflow-x: auto; scrollbar-width: none;
+}
+.offer-filter-tabs::-webkit-scrollbar { display: none; }
+.offer-filter-tab {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 20px;
+  font-family: var(--fm); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink4); cursor: pointer; margin-right: 5px;
+  border: 1.5px solid transparent; transition: all 0.1s;
+}
+.offer-filter-tab.active {
+  color: var(--ink); background: var(--card);
+  border-color: var(--rule-strong);
+}
+
+/* ── New Customer badge on offer cards ── */
+.oc-new-badge {
+  display: inline-block; font-family: var(--fm); font-size: 7px;
+  font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 4px;
+  background: var(--gold-bg); color: var(--gold);
+  margin-left: 6px;
+}
+
+/* ── Spreadex warning banner ── */
+.spreadex-warning {
+  margin: 0 16px 6px; padding: 8px 12px;
+  background: rgba(176,42,24,0.07); border: 1px solid rgba(176,42,24,0.18);
+  border-radius: 8px;
+  font-family: var(--fs); font-size: 10px; font-weight: 600;
+  color: var(--live); line-height: 1.4;
+}
+
+/* ── Compliance strip (n9, n10, n11, n12 scroll footer) ── */
+.betting-compliance-strip {
+  margin: 8px 16px 14px; padding: 10px 14px;
+  background: var(--parchment2); border: 1px solid var(--rule);
+  border-radius: 10px; text-align: center;
+}
+.betting-compliance-strip p {
+  font-family: var(--fm); font-size: 8px; color: var(--ink5);
+  line-height: 1.6; margin: 0;
+}
+.betting-compliance-strip a {
+  color: var(--ink4); text-decoration: underline;
+}
+.betting-compliance-strip .bcs-bold {
+  font-weight: 700; color: var(--ink3);
+}
+
+/* ── Loading skeleton for dynamic content ── */
+.odds-loading, .offers-loading {
+  padding: 22px 16px; text-align: center;
+  font-family: var(--fs); font-size: 12px; color: var(--ink5);
+}
