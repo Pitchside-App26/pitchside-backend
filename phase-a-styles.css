@@ -113,6 +113,11 @@
 .auth-error.show { display: block; }
 
 /* ── Onboarding screens ── */
+#auth-onboard1a,
+#auth-onboard1b,
+#auth-onboard1c,
+#auth-onboard2 { flex-direction: column !important; overflow: hidden; }
+
 .ob-hero {
   background: var(--ink); padding: 44px 16px 16px;
 }

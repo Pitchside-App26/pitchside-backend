@@ -411,9 +411,14 @@ function showAuthScreen(screenId) {
   var target = document.getElementById(screenId);
   if (target) {
     target.classList.add('on');
-    // Onboarding screens use flex column layout — must override inline display:none
     var flexScreens = ['auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
-    target.style.display = flexScreens.indexOf(screenId) !== -1 ? 'flex' : 'block';
+    if (flexScreens.indexOf(screenId) !== -1) {
+      target.style.display       = 'flex';
+      target.style.flexDirection = 'column';
+    } else {
+      target.style.display       = 'block';
+      target.style.flexDirection = '';
+    }
   }
 
   // Populate My Club list whenever that screen is shown
