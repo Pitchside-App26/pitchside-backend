@@ -14,8 +14,12 @@ var _onboarding = false;  // true while user is in onboarding — suppresses pro
    (set by the connection panel in Profile)
 ───────────────────────────────────────── */
 function initSupabase() {
-  var url = localStorage.getItem('sb_url');
-  var key = localStorage.getItem('sb_key');
+  // Hardcoded fallbacks for testing — remove before production
+  const SUPABASE_URL = 'YOUR_URL_HERE';
+  const SUPABASE_KEY = 'YOUR_KEY_HERE';
+
+  var url = localStorage.getItem('sb_url') || SUPABASE_URL;
+  var key = localStorage.getItem('sb_key') || SUPABASE_KEY;
   if (!url || !key) return;
 
   try {
