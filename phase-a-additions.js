@@ -300,10 +300,20 @@ function doRegister() {
 
   email = email.trim();
 
+  var dobD = parseInt((document.getElementById('reg-dob-d') || {}).value || '0');
+  var dobM = parseInt((document.getElementById('reg-dob-m') || {}).value || '0');
+  var dobY = parseInt((document.getElementById('reg-dob-y') || {}).value || '0');
+
   if (!email || !pw || !pw2) { setErr('Please fill in all fields.'); return; }
   if (pw !== pw2)             { setErr('Passwords do not match.'); return; }
   if (pw.length < 6)          { setErr('Password must be at least 6 characters.'); return; }
-  if (!gdpr)                  { setErr('You must agree to the Privacy Policy to continue.'); return; }
+  if (!dobD || !dobM || !dobY){ setErr('Please enter your date of birth.'); return; }
+  var dobDate = new Date(dobY, dobM - 1, dobD);
+  var ageNow  = new Date();
+  var ageYrs  = ageNow.getFullYear() - dobDate.getFullYear();
+  if (ageNow < new Date(ageNow.getFullYear(), dobDate.getMonth(), dobDate.getDate())) ageYrs--;
+  if (ageYrs < 18) { setErr('You must be 18 or over to register.'); return; }
+  if (!gdpr)       { setErr('You must agree to the Privacy Policy to continue.'); return; }
   if (errEl) errEl.classList.remove('show');
 
   var btn = document.getElementById('reg-btn');
@@ -338,6 +348,29 @@ function doRegister() {
       if (typeof renderMyClubList === 'function') renderMyClubList('');
     });
   });
+}
+
+/* ─────────────────────────────────────────
+   REGISTER — DOB DROPDOWN INIT
+───────────────────────────────────────── */
+function initRegDobDropdowns() {
+  var dayEl  = document.getElementById('reg-dob-d');
+  var yearEl = document.getElementById('reg-dob-y');
+  if (dayEl && dayEl.options.length <= 1) {
+    for (var d = 1; d <= 31; d++) {
+      var o = document.createElement('option');
+      o.value = d; o.text = d;
+      dayEl.appendChild(o);
+    }
+  }
+  if (yearEl && yearEl.options.length <= 1) {
+    var cur = new Date().getFullYear();
+    for (var y = cur; y >= cur - 100; y--) {
+      var o2 = document.createElement('option');
+      o2.value = y; o2.text = y;
+      yearEl.appendChild(o2);
+    }
+  }
 }
 
 /* ─────────────────────────────────────────
@@ -402,10 +435,18 @@ function showAuthScreen(screenId) {
   // Expand phone to full viewport and hide shell chrome
   document.body.classList.add('auth-mode');
 
-  // Hide all .screen divs and clear any inline display overrides
+  // Explicitly hide every auth screen (prevents bleed-through from z-index stacking)
+  ['auth-login','auth-register','auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.classList.remove('on'); el.style.display = 'none'; }
+  });
+
+  // Also clear inline display on any other .screen divs
   document.querySelectorAll('.screen').forEach(function(s) {
-    s.classList.remove('on');
-    s.style.display = '';
+    if (['auth-login','auth-register','auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'].indexOf(s.id) === -1) {
+      s.classList.remove('on');
+      s.style.display = '';
+    }
   });
 
   var target = document.getElementById(screenId);
@@ -421,10 +462,33 @@ function showAuthScreen(screenId) {
     }
   }
 
-  // Populate My Club screen whenever shown
+  // Per-screen init
   if (screenId === 'auth-onboard1a') {
     if (typeof renderLeaguePanel === 'function') renderLeaguePanel();
     if (typeof renderMyClubList  === 'function') renderMyClubList('');
+  }
+
+  if (screenId === 'auth-onboard1b') {
+    // Reset Yes/No choice state whenever screen is (re-)shown
+    var idleSt = 'flex:1;padding:10px;border-radius:9px;font-family:var(--fs);font-size:13px;font-weight:700;border:1.5px solid rgba(255,255,255,0.28);background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;';
+    var yBtn = document.getElementById('ob1b-yes');
+    var nBtn = document.getElementById('ob1b-no');
+    if (yBtn) yBtn.setAttribute('style', idleSt);
+    if (nBtn) nBtn.setAttribute('style', idleSt);
+    var bodyEl    = document.getElementById('ob1b-body');
+    var footerEl  = document.getElementById('ob1b-footer');
+    var counterEl = document.getElementById('ob1b-counter');
+    if (bodyEl)    bodyEl.style.display    = 'none';
+    if (footerEl)  footerEl.style.display  = 'none';
+    if (counterEl) counterEl.style.display = 'none';
+    if (typeof goesToMatches !== 'undefined') goesToMatches = null;
+  }
+
+  if (screenId === 'auth-onboard1c') {
+    var myLg = (typeof leagueOf === 'function' && typeof selectedMyClub !== 'undefined') ? leagueOf(selectedMyClub) : '';
+    if (myLg && typeof selectedLeague1c !== 'undefined') selectedLeague1c = myLg;
+    if (typeof renderLeaguePanel1c === 'function') renderLeaguePanel1c();
+    if (typeof renderFollowList    === 'function') renderFollowList('');
   }
 
   // Show/hide Supabase warning on login screen

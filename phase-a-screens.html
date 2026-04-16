@@ -61,6 +61,20 @@
       <label class="auth-field-label" for="reg-pw2">Confirm password</label>
       <input class="auth-input" id="reg-pw2" type="password" autocomplete="new-password" placeholder="Repeat your password"/>
     </div>
+    <div class="auth-field">
+      <label class="auth-field-label">Date of birth <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">— required, must be 18 or over</span></label>
+      <div class="auth-dob-row">
+        <select class="auth-dob-select" id="reg-dob-d"><option value="">Day</option></select>
+        <select class="auth-dob-select" id="reg-dob-m">
+          <option value="">Month</option>
+          <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+          <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+          <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+          <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+        </select>
+        <select class="auth-dob-select" id="reg-dob-y"><option value="">Year</option></select>
+      </div>
+    </div>
     <div class="gdpr-row">
       <input class="gdpr-checkbox" type="checkbox" id="reg-gdpr"/>
       <label class="gdpr-label" for="reg-gdpr">
@@ -101,34 +115,32 @@
 
 <!-- ⑤ ONBOARDING 1b — WATCH LIVE (up to 5, My Club locked) -->
 <div class="screen" id="auth-onboard1b">
-  <div class="ob-hero">
+  <div class="ob-hero" style="padding:16px 16px 14px;">
     <div class="ob-step">Step 2 of 4 — Live Matches</div>
-    <div class="ob-title">Do you attend<br>matches in person?</div>
+    <div class="ob-title" style="font-size:20px;margin-bottom:4px;">Do you attend<br>matches in person?</div>
     <div class="ob-sub">We'll show pub and transport info for games you attend.</div>
-  </div>
-
-  <!-- Yes / No choice -->
-  <div id="ob1b-yn" style="display:flex;gap:10px;padding:14px 16px;background:var(--parchment);border-bottom:1px solid var(--rule-strong);">
-    <button id="ob1b-yes" onclick="answerGoesToMatches(true)"
-      style="flex:1;padding:12px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:1.5px solid var(--rule-strong);background:var(--card);color:var(--ink);cursor:pointer;">
-      Yes
-    </button>
-    <button id="ob1b-no" onclick="answerGoesToMatches(false)"
-      style="flex:1;padding:12px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;border:1.5px solid var(--rule-strong);background:var(--card);color:var(--ink);cursor:pointer;">
-      No — skip this
-    </button>
-  </div>
-
-  <!-- Team list — shown only when Yes is selected -->
-  <div id="ob1b-teams" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
-    <div style="padding:8px 16px 4px;font-family:var(--fs);font-size:11px;color:var(--ink4)">Select up to 5 teams you attend live. Your club is pre-selected.</div>
-    <div class="ob-counter" id="ob1b-counter" style="margin:0 16px 8px;">1 of 5 selected</div>
-    <div class="ob-search-wrap" style="position:static;">
-      <input class="ob-search" id="ob1b-search" type="text" placeholder="Search teams…" oninput="filterWatchLive(this.value)"/>
+    <div id="ob1b-yn" style="display:flex;gap:10px;margin-top:12px;">
+      <button id="ob1b-yes" onclick="answerGoesToMatches(true)"
+        style="flex:1;padding:10px;border-radius:9px;font-family:var(--fs);font-size:13px;font-weight:700;border:1.5px solid rgba(255,255,255,0.28);background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;">
+        Yes
+      </button>
+      <button id="ob1b-no" onclick="answerGoesToMatches(false)"
+        style="flex:1;padding:10px;border-radius:9px;font-family:var(--fs);font-size:13px;font-weight:700;border:1.5px solid rgba(255,255,255,0.28);background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;">
+        No — skip this
+      </button>
     </div>
-    <div id="ob1b-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
+    <div class="ob-counter" id="ob1b-counter" style="display:none;">1 of 5 selected</div>
   </div>
-
+  <!-- Master/detail body — revealed after "Yes" -->
+  <div id="ob1b-body" class="ob1a-body" style="display:none;">
+    <div class="ob1a-leagues" id="ob1b-leagues"></div>
+    <div class="ob1a-teams-panel">
+      <div class="ob1a-search-row">
+        <input class="ob1a-search-input" id="ob1b-search" type="text" placeholder="Search teams…" oninput="filterWatchLive(this.value)"/>
+      </div>
+      <div id="ob1b-list" class="ob1a-team-list"></div>
+    </div>
+  </div>
   <div class="ob-footer" id="ob1b-footer" style="display:none;">
     <button class="ob-continue" id="ob1b-continue" onclick="submitWatchLive()">Continue →</button>
   </div>
@@ -136,18 +148,24 @@
 
 <!-- ⑥ ONBOARDING 1c — FOLLOW TEAMS (up to 10, pre-seeded) -->
 <div class="screen" id="auth-onboard1c">
-  <div class="ob-hero">
+  <div class="ob-hero" style="padding:16px 16px 12px;">
     <div class="ob-step">Step 3 of 4 — Score Tracking</div>
-    <div class="ob-title">Which teams do<br>you follow?</div>
-    <div class="ob-sub">Up to 10 teams. We'll surface their scores and tables on your home screen.</div>
+    <div class="ob-title" style="font-size:20px;margin-bottom:4px;">Which teams do<br>you follow?</div>
+    <div class="ob-sub">Up to 10 teams — shown on your home screen.<br><span style="opacity:0.55">(Showing your club's league first)</span></div>
     <div class="ob-counter" id="ob1c-counter">0 of 10 selected</div>
   </div>
-  <div class="ob-search-wrap">
-    <input class="ob-search" id="ob1c-search" type="text" placeholder="Search teams…" oninput="filterFollowTeams(this.value)"/>
+  <div class="ob1a-body">
+    <div class="ob1a-leagues" id="ob1c-leagues"></div>
+    <div class="ob1a-teams-panel">
+      <div class="ob1a-search-row">
+        <input class="ob1a-search-input" id="ob1c-search" type="text" placeholder="Search teams…" oninput="filterFollowTeams(this.value)"/>
+      </div>
+      <div id="ob1c-list" class="ob1a-team-list"></div>
+    </div>
   </div>
-  <div id="ob1c-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
   <div class="ob-footer">
     <button class="ob-continue" id="ob1c-continue" onclick="submitFollowTeams()">Continue →</button>
+    <span class="ob-skip" onclick="submitFollowTeams(true)">Skip for now</span>
   </div>
 </div>
 

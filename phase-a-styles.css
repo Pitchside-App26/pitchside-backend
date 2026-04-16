@@ -111,6 +111,17 @@
   text-align: center; padding: 6px 0; display: none;
 }
 .auth-error.show { display: block; }
+.auth-dob-row { display: flex; gap: 8px; }
+.auth-dob-select {
+  flex: 1; background: var(--card);
+  border: 1.5px solid var(--rule-strong); border-radius: 10px;
+  padding: 12px 24px 12px 10px; font-family: var(--fs); font-size: 13px;
+  color: var(--ink); outline: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23A09890' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+  min-width: 0;
+}
+.auth-dob-select:focus { border-color: var(--ink); }
 
 /* ── Onboarding screens ── */
 #auth-onboard1a,
