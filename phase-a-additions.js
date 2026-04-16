@@ -421,9 +421,10 @@ function showAuthScreen(screenId) {
     }
   }
 
-  // Populate My Club list whenever that screen is shown
-  if (screenId === 'auth-onboard1a' && typeof renderMyClubList === 'function') {
-    renderMyClubList('');
+  // Populate My Club screen whenever shown
+  if (screenId === 'auth-onboard1a') {
+    if (typeof renderLeaguePanel === 'function') renderLeaguePanel();
+    if (typeof renderMyClubList  === 'function') renderMyClubList('');
   }
 
   // Show/hide Supabase warning on login screen

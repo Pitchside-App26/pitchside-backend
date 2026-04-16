@@ -77,43 +77,142 @@ function leagueOf(team) {
   return found;
 }
 
-/* Helper: safe HTML render of a team row */
-function teamRow(team, isSelected, isLocked, onclick) {
-  var sel  = isSelected || isLocked;
-  var icon = isLocked ? '🔒' : (isSelected ? '✓' : '');
-  return '<div class="ob-team-row' + (sel ? ' selected' : '') + '"' +
-    (isLocked ? '' : ' onclick="' + onclick + '"') + '>' +
-    '<span class="ob-team-name">' + team + '</span>' +
-    '<span class="ob-check">' + icon + '</span>' +
-    '</div>';
+/* ─────────────────────────────────────────
+   MY CLUB — MASTER/DETAIL PANEL DATA
+───────────────────────────────────────── */
+var selectedLeague1a = 'PREMIER LEAGUE';
+
+var LEAGUE_INFO = {
+  'PREMIER LEAGUE':        { chip: 'PL',     label: 'Premier League',      color: '#38003C' },
+  'CHAMPIONSHIP':          { chip: 'CHAMP',  label: 'Championship',         color: '#EE2E24' },
+  'LEAGUE ONE':            { chip: 'L1',     label: 'League One',            color: '#00A650' },
+  'LEAGUE TWO':            { chip: 'L2',     label: 'League Two',            color: '#00A0DC' },
+  'SCOTTISH PREMIERSHIP':  { chip: 'SPL',    label: 'Scottish Prem.',       color: '#003F7F' },
+  'SCOTTISH CHAMPIONSHIP': { chip: 'SCHAMP', label: 'Scot. Champ.',         color: '#003F7F' },
+  'SCOTTISH LEAGUE ONE':   { chip: 'SL1',    label: 'Scot. L1',             color: '#003F7F' },
+  'SCOTTISH LEAGUE TWO':   { chip: 'SL2',    label: 'Scot. L2',             color: '#003F7F' }
+};
+
+/* API-Football team IDs → badge URL: https://media.api-sports.io/football/teams/{id}.png */
+var TEAM_IDS = {
+  /* Premier League */
+  'Arsenal':42,'Aston Villa':66,'Bournemouth':35,'Brentford':55,
+  'Brighton':51,'Chelsea':49,'Crystal Palace':52,'Everton':45,
+  'Fulham':36,'Ipswich Town':57,'Leicester City':46,'Liverpool':40,
+  'Manchester City':50,'Manchester United':33,'Newcastle United':34,
+  'Nottingham Forest':65,'Southampton':41,'Tottenham Hotspur':47,
+  'West Ham United':48,'Wolverhampton Wanderers':39,
+  /* Championship */
+  'Burnley':44,'Leeds United':63,'Norwich City':43,'Sheffield United':62,
+  'Watford':38,'West Bromwich Albion':67,'Middlesbrough':89,
+  'Blackburn Rovers':69,'Hull City':85,'Millwall':90,'Cardiff City':72,
+  'Coventry City':75,'Derby County':77,'Stoke City':100,'Swansea City':103,
+  'Bristol City':70,'Preston North End':73,'Birmingham City':60,
+  'Luton Town':232,'Blackpool':71,'Oxford United':162,'Portsmouth':97,
+  'Sheffield Wednesday':68,'Queens Park Rangers':98,'Sunderland':102,
+  'Plymouth Argyle':95,
+  /* League One */
+  'Barnsley':74,'Bolton Wanderers':80,'Charlton Athletic':83,
+  'Peterborough United':94,'Reading':99,'Wigan Athletic':104,
+  'Rotherham United':96,'Exeter City':84,'Leyton Orient':86,'Lincoln City':91,
+  /* League Two */
+  'Bradford City':79,'Carlisle United':82,'Colchester United':76,
+  'Crewe Alexandra':78,'Swindon Town':105,'Tranmere Rovers':107,'Walsall':109,
+  /* Scottish */
+  'Celtic':485,'Rangers':489,'Aberdeen':700,
+  'Heart of Midlothian':703,'Hibernian':704
+};
+
+function getInitials(name) {
+  var words = name.replace(/[&']/g,'').split(/\s+/).filter(function(w) {
+    return w.length > 1 && !/^(of|the|and|fc|afc)$/i.test(w);
+  });
+  if (!words.length) return name.substring(0,2).toUpperCase();
+  if (words.length === 1) return words[0].substring(0,2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+function badgeHtml(team, lgColor) {
+  var id  = TEAM_IDS[team];
+  var ini = getInitials(team);
+  var fb  = '<span class="team-badge-fb" style="background:' + lgColor + '">' + ini + '</span>';
+  if (!id) return fb;
+  return '<span class="team-badge-wrap">' +
+    '<img class="team-badge-img" src="https://media.api-sports.io/football/teams/' + id + '.png" ' +
+    'loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+    '<span class="team-badge-fb" style="background:' + lgColor + ';display:none">' + ini + '</span>' +
+    '</span>';
+}
+
+function renderLeaguePanel() {
+  var el = document.getElementById('ob1a-leagues');
+  if (!el) return;
+  var selLg = selectedMyClub ? leagueOf(selectedMyClub) : '';
+  var html = '';
+  Object.keys(LEAGUE_INFO).forEach(function(lg) {
+    var info    = LEAGUE_INFO[lg];
+    var isActive = lg === selectedLeague1a;
+    var hasPick  = selLg === lg;
+    html +=
+      '<div class="ob1a-league-item' + (isActive ? ' active' : '') +
+      '" onclick="selectLeague1a(\'' + lg.replace(/'/g,"\\'") + '\')">' +
+      '<span class="ob1a-league-chip" style="background:' + info.color + '">' + info.chip + '</span>' +
+      '<span class="ob1a-league-label">' + info.label + (hasPick ? ' ✓' : '') + '</span>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function selectLeague1a(lg) {
+  selectedLeague1a = lg;
+  var s = document.getElementById('ob1a-search');
+  if (s) s.value = '';
+  renderLeaguePanel();
+  renderMyClubList('');
 }
 
 /* ─────────────────────────────────────────
    ONBOARDING 1a — MY CLUB (single, mandatory)
 ───────────────────────────────────────── */
+function teamCard1a(team, lgColor) {
+  var sel = selectedMyClub === team;
+  return '<div class="ob1a-team-card' + (sel ? ' selected' : '') +
+    '" onclick="selectMyClub(\'' + team.replace(/'/g,"\\'") + '\')">' +
+    badgeHtml(team, lgColor) +
+    '<span class="ob1a-team-name">' + team + '</span>' +
+    '<span class="ob1a-tick">' + (sel ? '✓' : '') + '</span>' +
+    '</div>';
+}
+
 function renderMyClubList(filter) {
-  console.log('[Phase A] renderMyClubList — filter:', filter,
-    '| ALL_TEAMS:', typeof ALL_TEAMS !== 'undefined' ? Object.keys(ALL_TEAMS).length + ' leagues' : 'UNDEFINED',
-    '| #ob1a-list:', !!document.getElementById('ob1a-list'));
   var list = document.getElementById('ob1a-list');
   if (!list) return;
-  var q = (filter || '').toLowerCase().trim();
+  var q      = (filter || '').toLowerCase().trim();
+  var lgInfo = LEAGUE_INFO[selectedLeague1a] || {};
+  var lgColor = lgInfo.color || '#666';
   var html = '';
-  var any = false;
-  Object.keys(ALL_TEAMS).forEach(function(lg) {
-    var teams = ALL_TEAMS[lg].filter(function(t) {
-      return !q || t.toLowerCase().indexOf(q) !== -1;
+
+  if (q) {
+    /* Search mode — show matching teams across all leagues */
+    var any = false;
+    Object.keys(ALL_TEAMS).forEach(function(lg) {
+      var c = (LEAGUE_INFO[lg] || {}).color || '#666';
+      var matches = ALL_TEAMS[lg].filter(function(t) {
+        return t.toLowerCase().indexOf(q) !== -1;
+      });
+      if (!matches.length) return;
+      any = true;
+      html += '<div class="ob1a-search-lg-hdr">' + lg + '</div>';
+      matches.forEach(function(t) { html += teamCard1a(t, c); });
     });
-    if (!teams.length) return;
-    any = true;
-    html += '<div class="ob-league-hdr">' + lg + '</div>';
-    teams.forEach(function(team) {
-      var sel = selectedMyClub === team;
-      html += teamRow(team, sel, false,
-        'selectMyClub(\'' + team.replace(/'/g, "\\'") + '\')');
-    });
-  });
-  if (!any) html = '<div class="ob-empty">No teams match "' + filter + '"</div>';
+    if (!any) html = '<div class="ob-empty">No teams match "' + q + '"</div>';
+  } else {
+    /* League mode — show teams for selected league */
+    var teams = ALL_TEAMS[selectedLeague1a] || [];
+    teams.forEach(function(t) { html += teamCard1a(t, lgColor); });
+    if (!teams.length) html = '<div class="ob-empty">No teams</div>';
+  }
+
   list.innerHTML = html;
   updateMyClubCounter();
 }
@@ -122,8 +221,22 @@ function filterMyClub(val) { renderMyClubList(val); }
 
 function selectMyClub(team) {
   selectedMyClub = team;
+  var lg = leagueOf(team);
+  if (lg) selectedLeague1a = lg;
   var searchEl = document.getElementById('ob1a-search');
+  renderLeaguePanel();
   renderMyClubList(searchEl ? searchEl.value : '');
+}
+
+/* Helper: safe HTML render of a team row (used by 1b + 1c screens) */
+function teamRow(team, isSelected, isLocked, onclick) {
+  var sel  = isSelected || isLocked;
+  var icon = isLocked ? '🔒' : (isSelected ? '✓' : '');
+  return '<div class="ob-team-row' + (sel ? ' selected' : '') + '"' +
+    (isLocked ? '' : ' onclick="' + onclick + '"') + '>' +
+    '<span class="ob-team-name">' + team + '</span>' +
+    '<span class="ob-check">' + icon + '</span>' +
+    '</div>';
 }
 
 function updateMyClubCounter() {

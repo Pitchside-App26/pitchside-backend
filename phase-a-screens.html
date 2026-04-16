@@ -78,16 +78,22 @@
 
 <!-- ④ ONBOARDING 1a — MY CLUB (single, mandatory) -->
 <div class="screen" id="auth-onboard1a">
-  <div class="ob-hero">
+  <div class="ob-hero" style="padding:16px 16px 12px;">
     <div class="ob-step">Step 1 of 4 — My Club</div>
-    <div class="ob-title">Which team do<br>you support?</div>
-    <div class="ob-sub">Choose one club. This is your primary team — it unlocks personalised scores, alerts and match day info.</div>
+    <div class="ob-title" style="font-size:20px;margin-bottom:4px;">Which club do you support?</div>
     <div class="ob-counter" id="ob1a-counter">No club selected</div>
   </div>
-  <div class="ob-search-wrap">
-    <input class="ob-search" id="ob1a-search" type="text" placeholder="Search all leagues…" oninput="filterMyClub(this.value)"/>
+  <div class="ob1a-body">
+    <!-- Left 35%: league selector -->
+    <div class="ob1a-leagues" id="ob1a-leagues"></div>
+    <!-- Right 65%: team list for selected league -->
+    <div class="ob1a-teams-panel">
+      <div class="ob1a-search-row">
+        <input class="ob1a-search-input" id="ob1a-search" type="text" placeholder="Search teams…" oninput="filterMyClub(this.value)"/>
+      </div>
+      <div id="ob1a-list" class="ob1a-team-list"></div>
+    </div>
   </div>
-  <div id="ob1a-list" style="flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:90px;"></div>
   <div class="ob-footer">
     <button class="ob-continue" id="ob1a-continue" onclick="submitMyClub()" disabled>Select your club to continue →</button>
   </div>
