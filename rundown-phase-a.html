@@ -2262,7 +2262,10 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
      NO inline display:none on .screen divs — CSS class handles hiding
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ① AGE GATE OVERLAY — position:absolute, not a .screen, z-index 500 -->
+<!-- ① TOAST NOTIFICATION — position:fixed, appended once, used globally -->
+<div id="toast" class="toast"></div>
+
+<!-- ② AGE GATE OVERLAY — position:absolute, not a .screen, z-index 500 -->
 <div id="ageGate" style="display:none;position:absolute;inset:0;z-index:500;background:var(--parchment);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
   <!-- Content injected by initAgeGate() in phase-a-additions.js -->
 </div>
@@ -2796,20 +2799,20 @@ function saveSupabaseCredentials() {
    REGISTRATION
 ───────────────────────────────────────── */
 function doRegister() {
-  if (!sbClient) { showToast('Supabase not connected', 'error'); return; }
+  var errEl = document.getElementById('reg-error');
+  function setErr(msg) {
+    if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
+    else showToast(msg, 'error');
+  }
+
+  if (!sbClient) { setErr('Connection error — please refresh and try again'); return; }
 
   var email = (document.getElementById('reg-email') || {}).value || '';
   var pw    = (document.getElementById('reg-pw')    || {}).value || '';
   var pw2   = (document.getElementById('reg-pw2')   || {}).value || '';
   var gdpr  = (document.getElementById('reg-gdpr')  || {}).checked;
-  var errEl = document.getElementById('reg-error');
 
   email = email.trim();
-
-  function setErr(msg) {
-    if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
-    else showToast(msg, 'error');
-  }
 
   if (!email || !pw || !pw2) { setErr('Please fill in all fields.'); return; }
   if (pw !== pw2)             { setErr('Passwords do not match.'); return; }

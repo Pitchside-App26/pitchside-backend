@@ -4,7 +4,10 @@
      NO inline display:none on .screen divs — CSS class handles hiding
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ① AGE GATE OVERLAY — position:absolute, not a .screen, z-index 500 -->
+<!-- ① TOAST NOTIFICATION — position:fixed, appended once, used globally -->
+<div id="toast" class="toast"></div>
+
+<!-- ② AGE GATE OVERLAY — position:absolute, not a .screen, z-index 500 -->
 <div id="ageGate" style="display:none;position:absolute;inset:0;z-index:500;background:var(--parchment);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
   <!-- Content injected by initAgeGate() in phase-a-additions.js -->
 </div>

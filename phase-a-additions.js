@@ -281,20 +281,20 @@ function saveSupabaseCredentials() {
    REGISTRATION
 ───────────────────────────────────────── */
 function doRegister() {
-  if (!sbClient) { showToast('Supabase not connected', 'error'); return; }
+  var errEl = document.getElementById('reg-error');
+  function setErr(msg) {
+    if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
+    else showToast(msg, 'error');
+  }
+
+  if (!sbClient) { setErr('Connection error — please refresh and try again'); return; }
 
   var email = (document.getElementById('reg-email') || {}).value || '';
   var pw    = (document.getElementById('reg-pw')    || {}).value || '';
   var pw2   = (document.getElementById('reg-pw2')   || {}).value || '';
   var gdpr  = (document.getElementById('reg-gdpr')  || {}).checked;
-  var errEl = document.getElementById('reg-error');
 
   email = email.trim();
-
-  function setErr(msg) {
-    if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
-    else showToast(msg, 'error');
-  }
 
   if (!email || !pw || !pw2) { setErr('Please fill in all fields.'); return; }
   if (pw !== pw2)             { setErr('Passwords do not match.'); return; }
