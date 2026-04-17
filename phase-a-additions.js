@@ -440,7 +440,7 @@ function showAuthScreen(screenId) {
   var target = document.getElementById(screenId);
   if (target) {
     target.classList.add('on');
-    var flexScreens = ['auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
+    var flexScreens = ['auth-onboard1a','auth-onboard1b','auth-onboard2'];
     if (flexScreens.indexOf(screenId) !== -1) {
       target.style.display       = 'flex';
       target.style.flexDirection = 'column';
@@ -472,7 +472,7 @@ function hideAuthScreens() {
   document.body.classList.remove('auth-mode');
 
   var authIds = ['auth-login','auth-register',
-                 'auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
+                 'auth-onboard1a','auth-onboard1b','auth-onboard2'];
   authIds.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) { el.classList.remove('on'); el.style.display = ''; }
@@ -485,7 +485,7 @@ function hideAuthScreens() {
 // Navigate by screen ID — bridges auth screens with the existing goTo() system
 function goToScreen(screenId) {
   var authIds = ['auth-login','auth-register',
-                 'auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'];
+                 'auth-onboard1a','auth-onboard1b','auth-onboard2'];
   if (authIds.indexOf(screenId) !== -1) {
     showAuthScreen(screenId);
     return;
