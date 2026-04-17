@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════════════════
+   NAV-1 — 5-tab bottom navigation
+   Injected after phase-b-styles.css by build.py
+   ═══════════════════════════════════════════════════ */
+
+.rundown-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 62px;
+  display: flex;
+  background: var(--parchment);
+  border-top: 1px solid var(--rule-strong);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 200;
+}
+
+.rundown-nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  padding: 8px 0;
+  position: relative;
+}
+
+.rundown-nav-tab:active {
+  transform: scale(0.95);
+}
+
+.rundown-nav-icon {
+  font-size: 22px;
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}
+
+.rundown-nav-label {
+  font-family: var(--fm);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  transition: color 0.15s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rundown-nav-tab.active .rundown-nav-icon {
+  opacity: 1;
+}
+
+.rundown-nav-tab.active .rundown-nav-label {
+  color: var(--live);
+}
+
+.rundown-nav-dot {
+  position: absolute;
+  top: 6px;
+  right: 24%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--live);
+  border: 2px solid var(--parchment);
+}
+
+/* Add padding to all screens to prevent content hiding under nav */
+.screen .scroll {
+  padding-bottom: 70px !important;
+}
