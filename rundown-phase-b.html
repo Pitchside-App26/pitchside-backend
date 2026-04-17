@@ -1,4 +1,3 @@
-<!-- Build: phase-b-v2 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1272,14 +1271,89 @@ body.auth-mode .status-bar    { display: none !important; }
   font-family: var(--fs); font-size: 12px; color: var(--ink5);
 }
 
+/* ── nav-1-styles.css ── */
+/* ═══════════════════════════════════════════════════
+   NAV-1 — 5-tab bottom navigation
+   Injected after phase-b-styles.css by build.py
+   ═══════════════════════════════════════════════════ */
+
+.rundown-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 62px;
+  display: flex;
+  background: var(--parchment);
+  border-top: 1px solid var(--rule-strong);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 200;
+}
+
+.rundown-nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  padding: 8px 0;
+  position: relative;
+}
+
+.rundown-nav-tab:active {
+  transform: scale(0.95);
+}
+
+.rundown-nav-icon {
+  font-size: 22px;
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}
+
+.rundown-nav-label {
+  font-family: var(--fm);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  transition: color 0.15s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rundown-nav-tab.active .rundown-nav-icon {
+  opacity: 1;
+}
+
+.rundown-nav-tab.active .rundown-nav-label {
+  color: var(--live);
+}
+
+.rundown-nav-dot {
+  position: absolute;
+  top: 6px;
+  right: 24%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--live);
+  border: 2px solid var(--parchment);
+}
+
+/* Add padding to all screens to prevent content hiding under nav */
+.screen .scroll {
+  padding-bottom: 70px !important;
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="scene">
-
-  <!-- Section jump bar -->
-  <div class="jump-bar" id="jumpBar"></div>
 
   <!-- Navigation -->
   <div class="controls">
@@ -1362,13 +1436,6 @@ body.auth-mode .status-bar    { display: none !important; }
         <div class="mrow"><span class="mtime">FT</span><div class="mteams"><div class="mtr"><span class="mtn b">Real Madrid</span><span class="mscore">3</span></div><div class="mtr"><span class="mtn">PSG</span><span class="mscore">1</span></div></div></div>
         <div class="mrow"><span class="mtime live">58'</span><div class="mteams"><div class="mtr"><span class="mtn">Barcelona</span><span class="mscore">1</span></div><div class="mtr"><span class="mtn b">Bayern</span><span class="mscore" style="color:var(--live)">2</span></div></div></div>
         <div style="height:78px"></div>
-      </div>
-      <div class="tabs">
-        <div class="ti on"><div class="ico">📅</div><div class="lbl">Today</div></div>
-        <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-        <div class="ti"><div class="ico">🏆</div><div class="lbl">Comps</div></div>
-        <div class="ti"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-        <div class="ti"><div class="ico">🏷</div><div class="lbl">Offers</div></div>
       </div>
     </div>
 
@@ -1722,13 +1789,6 @@ body.auth-mode .status-bar    { display: none !important; }
         <div class="st-row"><div class="st-bar" style="background:var(--live)"></div><div class="st-pos rel" style="padding-left:12px">19</div><div class="st-crest" style="background:#005CAB;margin-left:3px">IPS</div><div class="st-name">Ipswich</div><div class="st-stat">30</div><div class="st-stat">3</div><div class="st-stat">7</div><div class="st-stat">20</div><div class="st-pts" style="color:var(--live)">16</div><div class="form"><div class="fp fl">L</div><div class="fp fd">D</div><div class="fp fl">L</div><div class="fp fl">L</div><div class="fp fl">L</div></div></div>
         <div class="st-row"><div class="st-bar" style="background:var(--live)"></div><div class="st-pos rel" style="padding-left:12px">20</div><div class="st-crest" style="background:#003399;margin-left:3px">LEI</div><div class="st-name">Leicester</div><div class="st-stat">30</div><div class="st-stat">2</div><div class="st-stat">7</div><div class="st-stat">21</div><div class="st-pts" style="color:var(--live)">13</div><div class="form"><div class="fp fl">L</div><div class="fp fl">L</div><div class="fp fl">L</div><div class="fp fd">D</div><div class="fp fl">L</div></div></div>
         <div style="height:78px"></div>
-      </div>
-      <div class="tabs">
-        <div class="ti"><div class="ico">📅</div><div class="lbl">Today</div></div>
-        <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-        <div class="ti"><div class="ico">🏆</div><div class="lbl">Comps</div></div>
-        <div class="ti on"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-        <div class="ti"><div class="ico">🏷</div><div class="lbl">Offers</div></div>
       </div>
     </div>
 
@@ -2375,13 +2435,6 @@ body.auth-mode .status-bar    { display: none !important; }
       </div>
       <div style="height:78px"></div>
     </div>
-    <div class="tabs">
-      <div class="ti"><div class="ico">📅</div><div class="lbl">Today</div></div>
-      <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-      <div class="ti on"><div class="ico">📈</div><div class="lbl">Tracker</div></div>
-      <div class="ti"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-      <div class="ti"><div class="ico">👤</div><div class="lbl">Profile</div></div>
-    </div>
   </div>
 
   <!-- ═══════════════════════════════════════
@@ -2424,13 +2477,6 @@ body.auth-mode .status-bar    { display: none !important; }
           <span>· 0808 802 0133</span>
         </div>
         <div style="height:78px"></div>
-      </div>
-      <div class="tabs">
-        <div class="ti"><div class="ico">📅</div><div class="lbl">Today</div></div>
-        <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-        <div class="ti"><div class="ico">🏆</div><div class="lbl">Comps</div></div>
-        <div class="ti"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-        <div class="ti on"><div class="ico">🏷</div><div class="lbl">Offers</div></div>
       </div>
     </div>
 
@@ -2529,15 +2575,33 @@ body.auth-mode .status-bar    { display: none !important; }
       </div>
       <div style="height:10px"></div>
     </div>
-    <div class="tabs">
-      <div class="ti"><div class="ico">📅</div><div class="lbl">Today</div></div>
-      <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-      <div class="ti"><div class="ico">📈</div><div class="lbl">Tracker</div></div>
-      <div class="ti"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-      <div class="ti on"><div class="ico">👤</div><div class="lbl">Profile</div></div>
-    </div>
   </div>
 
+
+  <!-- ══════════ Shared bottom nav bar ══════════ -->
+  <div class="rundown-nav" style="display:none">
+    <div class="rundown-nav-tab active" data-tab="home" onclick="navGo('home')">
+      <div class="rundown-nav-icon">🏠</div>
+      <div class="rundown-nav-label">Home</div>
+    </div>
+    <div class="rundown-nav-tab" data-tab="matches" onclick="navGo('matches')">
+      <div class="rundown-nav-icon">⚽</div>
+      <div class="rundown-nav-label">Matches</div>
+    </div>
+    <div class="rundown-nav-tab" data-tab="matchday" onclick="navGo('matchday')">
+      <div class="rundown-nav-icon">📍</div>
+      <div class="rundown-nav-label">Match Day</div>
+      <div class="rundown-nav-dot" style="display:none"></div>
+    </div>
+    <div class="rundown-nav-tab" data-tab="bets" onclick="navGo('bets')">
+      <div class="rundown-nav-icon">💷</div>
+      <div class="rundown-nav-label">Bets</div>
+    </div>
+    <div class="rundown-nav-tab" data-tab="profile" onclick="navGo('profile')">
+      <div class="rundown-nav-icon">👤</div>
+      <div class="rundown-nav-label">Profile</div>
+    </div>
+  </div>
 
   <!-- ═══════════════════════════════════════════════════════════
      PHASE A — HTML FRAGMENTS (revised)
@@ -2758,6 +2822,7 @@ function sectionFor(idx) {
 
 function buildJumpBar() {
   const bar = document.getElementById('jumpBar');
+  if (!bar) return;
   bar.innerHTML = '';
   SECTIONS.forEach((sec, si) => {
     const btn = document.createElement('div');
@@ -4519,6 +4584,116 @@ function initPhaseB() {
 
 window.addEventListener('load', function() {
   if (typeof initPhaseB === 'function') initPhaseB();
+});
+
+
+/* ── nav-1-scripts.js ── */
+// ── NAV-1 — 5-tab bottom navigation ─────────────────────
+
+var NAV_TAB_MAP = {
+  home:     [0, 1, 2, 3],
+  matches:  [0],
+  matchday: [5, 6, 7, 8],
+  bets:     [12, 9, 10, 11],
+  profile:  [13]
+};
+
+var NAV_TAB_DEFAULT = {
+  home:     0,
+  matches:  0,
+  matchday: 5,
+  bets:     12,
+  profile:  13
+};
+
+var currentNavTab = 'home';
+
+/* ── Visibility helpers ─────────────────────────────── */
+var AUTH_SCREEN_IDS = [
+  'auth-login', 'auth-register',
+  'auth-onboard1a', 'auth-onboard1b', 'auth-onboard1c',
+  'auth-onboard2'
+];
+
+function navBarShow() {
+  var el = document.querySelector('.rundown-nav');
+  if (el) el.style.display = 'flex';
+}
+
+function navBarHide() {
+  var el = document.querySelector('.rundown-nav');
+  if (el) el.style.display = 'none';
+}
+
+/* ── Core nav functions ─────────────────────────────── */
+function navGo(tabName) {
+  if (!NAV_TAB_MAP[tabName]) return;
+  currentNavTab = tabName;
+  var targetScreen = NAV_TAB_DEFAULT[tabName];
+  goTo(targetScreen);
+  updateNavActiveState();
+  navBarShow();
+}
+
+function updateNavActiveState() {
+  document.querySelectorAll('.rundown-nav-tab').forEach(function(el) {
+    el.classList.toggle('active', el.dataset.tab === currentNavTab);
+  });
+}
+
+function syncNavToScreen(screenIdx) {
+  if (screenIdx === 13) {
+    currentNavTab = 'profile';
+    updateNavActiveState();
+    return;
+  }
+  if ([9, 10, 11, 12].indexOf(screenIdx) !== -1) {
+    currentNavTab = 'bets';
+    updateNavActiveState();
+    return;
+  }
+  if ([5, 6, 7, 8].indexOf(screenIdx) !== -1) {
+    currentNavTab = 'matchday';
+    updateNavActiveState();
+    return;
+  }
+  // n0-n3: keep current tab (Home or Matches)
+}
+
+/* ── Wrap goTo to sync nav state ────────────────────── */
+var _originalGoTo = null;
+
+function _installGoToWrapper() {
+  if (typeof goTo !== 'function') return;
+  _originalGoTo = goTo;
+  goTo = function(idx) {
+    _originalGoTo(idx);
+    syncNavToScreen(idx);
+    /* Any goTo call means we're past auth — show the nav bar */
+    navBarShow();
+  };
+}
+
+/* ── Wrap showAuthScreen to hide nav during auth ────── */
+function _installAuthWrapper() {
+  if (typeof showAuthScreen !== 'function') return;
+  var _origShowAuth = showAuthScreen;
+  showAuthScreen = function(screenId) {
+    _origShowAuth(screenId);
+    navBarHide();
+  };
+}
+
+/* ── Init ───────────────────────────────────────────── */
+window.addEventListener('load', function() {
+  /* Nav bar hidden by default — shown once user passes auth */
+  navBarHide();
+
+  setTimeout(function() {
+    _installGoToWrapper();
+    _installAuthWrapper();
+    updateNavActiveState();
+  }, 300);
 });
 
 </script>
