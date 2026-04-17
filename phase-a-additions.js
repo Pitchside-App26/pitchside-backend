@@ -424,14 +424,14 @@ function showAuthScreen(screenId) {
   document.body.classList.add('auth-mode');
 
   // Explicitly hide every auth screen (prevents bleed-through from z-index stacking)
-  ['auth-login','auth-register','auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'].forEach(function(id) {
+  ['auth-login','auth-register','auth-onboard1a','auth-onboard1b','auth-onboard2'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) { el.classList.remove('on'); el.style.display = 'none'; }
   });
 
   // Also clear inline display on any other .screen divs
   document.querySelectorAll('.screen').forEach(function(s) {
-    if (['auth-login','auth-register','auth-onboard1a','auth-onboard1b','auth-onboard1c','auth-onboard2'].indexOf(s.id) === -1) {
+    if (['auth-login','auth-register','auth-onboard1a','auth-onboard1b','auth-onboard2'].indexOf(s.id) === -1) {
       s.classList.remove('on');
       s.style.display = '';
     }
@@ -457,26 +457,7 @@ function showAuthScreen(screenId) {
   }
 
   if (screenId === 'auth-onboard1b') {
-    // Reset Yes/No choice state whenever screen is (re-)shown
-    var idleSt = 'flex:1;padding:10px;border-radius:9px;font-family:var(--fs);font-size:13px;font-weight:700;border:1.5px solid rgba(255,255,255,0.28);background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;';
-    var yBtn = document.getElementById('ob1b-yes');
-    var nBtn = document.getElementById('ob1b-no');
-    if (yBtn) yBtn.setAttribute('style', idleSt);
-    if (nBtn) nBtn.setAttribute('style', idleSt);
-    var bodyEl    = document.getElementById('ob1b-body');
-    var footerEl  = document.getElementById('ob1b-footer');
-    var counterEl = document.getElementById('ob1b-counter');
-    if (bodyEl)    bodyEl.style.display    = 'none';
-    if (footerEl)  footerEl.style.display  = 'none';
-    if (counterEl) counterEl.style.display = 'none';
-    if (typeof goesToMatches !== 'undefined') goesToMatches = null;
-  }
-
-  if (screenId === 'auth-onboard1c') {
-    var myLg = (typeof leagueOf === 'function' && typeof selectedMyClub !== 'undefined') ? leagueOf(selectedMyClub) : '';
-    if (myLg && typeof selectedLeague1c !== 'undefined') selectedLeague1c = myLg;
-    if (typeof renderLeaguePanel1c === 'function') renderLeaguePanel1c();
-    if (typeof renderFollowList    === 'function') renderFollowList('');
+    if (typeof ob1bInitScreen === 'function') ob1bInitScreen();
   }
 
   // Show/hide Supabase warning on login screen
