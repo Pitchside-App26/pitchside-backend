@@ -710,9 +710,6 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
 <body>
 <div class="scene">
 
-  <!-- Section jump bar -->
-  <div class="jump-bar" id="jumpBar"></div>
-
   <!-- Navigation -->
   <div class="controls">
     <div class="arrows">
@@ -794,13 +791,6 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
         <div class="mrow"><span class="mtime">FT</span><div class="mteams"><div class="mtr"><span class="mtn b">Real Madrid</span><span class="mscore">3</span></div><div class="mtr"><span class="mtn">PSG</span><span class="mscore">1</span></div></div></div>
         <div class="mrow"><span class="mtime live">58'</span><div class="mteams"><div class="mtr"><span class="mtn">Barcelona</span><span class="mscore">1</span></div><div class="mtr"><span class="mtn b">Bayern</span><span class="mscore" style="color:var(--live)">2</span></div></div></div>
         <div style="height:78px"></div>
-      </div>
-      <div class="tabs">
-        <div class="ti on"><div class="ico">📅</div><div class="lbl">Today</div></div>
-        <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-        <div class="ti"><div class="ico">🏆</div><div class="lbl">Comps</div></div>
-        <div class="ti"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-        <div class="ti"><div class="ico">🏷</div><div class="lbl">Offers</div></div>
       </div>
     </div>
 
@@ -1154,13 +1144,6 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
         <div class="st-row"><div class="st-bar" style="background:var(--live)"></div><div class="st-pos rel" style="padding-left:12px">19</div><div class="st-crest" style="background:#005CAB;margin-left:3px">IPS</div><div class="st-name">Ipswich</div><div class="st-stat">30</div><div class="st-stat">3</div><div class="st-stat">7</div><div class="st-stat">20</div><div class="st-pts" style="color:var(--live)">16</div><div class="form"><div class="fp fl">L</div><div class="fp fd">D</div><div class="fp fl">L</div><div class="fp fl">L</div><div class="fp fl">L</div></div></div>
         <div class="st-row"><div class="st-bar" style="background:var(--live)"></div><div class="st-pos rel" style="padding-left:12px">20</div><div class="st-crest" style="background:#003399;margin-left:3px">LEI</div><div class="st-name">Leicester</div><div class="st-stat">30</div><div class="st-stat">2</div><div class="st-stat">7</div><div class="st-stat">21</div><div class="st-pts" style="color:var(--live)">13</div><div class="form"><div class="fp fl">L</div><div class="fp fl">L</div><div class="fp fl">L</div><div class="fp fd">D</div><div class="fp fl">L</div></div></div>
         <div style="height:78px"></div>
-      </div>
-      <div class="tabs">
-        <div class="ti"><div class="ico">📅</div><div class="lbl">Today</div></div>
-        <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-        <div class="ti"><div class="ico">🏆</div><div class="lbl">Comps</div></div>
-        <div class="ti on"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-        <div class="ti"><div class="ico">🏷</div><div class="lbl">Offers</div></div>
       </div>
     </div>
 
@@ -1807,13 +1790,6 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
       </div>
       <div style="height:78px"></div>
     </div>
-    <div class="tabs">
-      <div class="ti"><div class="ico">📅</div><div class="lbl">Today</div></div>
-      <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-      <div class="ti on"><div class="ico">📈</div><div class="lbl">Tracker</div></div>
-      <div class="ti"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-      <div class="ti"><div class="ico">👤</div><div class="lbl">Profile</div></div>
-    </div>
   </div>
 
   <!-- ═══════════════════════════════════════
@@ -1856,13 +1832,6 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
           <span>· 0808 802 0133</span>
         </div>
         <div style="height:78px"></div>
-      </div>
-      <div class="tabs">
-        <div class="ti"><div class="ico">📅</div><div class="lbl">Today</div></div>
-        <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-        <div class="ti"><div class="ico">🏆</div><div class="lbl">Comps</div></div>
-        <div class="ti"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-        <div class="ti on"><div class="ico">🏷</div><div class="lbl">Offers</div></div>
       </div>
     </div>
 
@@ -1961,15 +1930,33 @@ body{font-family:var(--fs);background:#1a1714;min-height:100vh;display:flex;flex
       </div>
       <div style="height:10px"></div>
     </div>
-    <div class="tabs">
-      <div class="ti"><div class="ico">📅</div><div class="lbl">Today</div></div>
-      <div class="ti"><div class="ico">⭐</div><div class="lbl">My Teams</div></div>
-      <div class="ti"><div class="ico">📈</div><div class="lbl">Tracker</div></div>
-      <div class="ti"><div class="ico">📊</div><div class="lbl">Tables</div></div>
-      <div class="ti on"><div class="ico">👤</div><div class="lbl">Profile</div></div>
-    </div>
   </div>
 
+
+  <!-- ══════════ Shared bottom nav bar ══════════ -->
+  <div class="rundown-nav" style="display:none">
+    <div class="rundown-nav-tab active" data-tab="home" onclick="navGo('home')">
+      <div class="rundown-nav-icon">🏠</div>
+      <div class="rundown-nav-label">Home</div>
+    </div>
+    <div class="rundown-nav-tab" data-tab="matches" onclick="navGo('matches')">
+      <div class="rundown-nav-icon">⚽</div>
+      <div class="rundown-nav-label">Matches</div>
+    </div>
+    <div class="rundown-nav-tab" data-tab="matchday" onclick="navGo('matchday')">
+      <div class="rundown-nav-icon">📍</div>
+      <div class="rundown-nav-label">Match Day</div>
+      <div class="rundown-nav-dot" style="display:none"></div>
+    </div>
+    <div class="rundown-nav-tab" data-tab="bets" onclick="navGo('bets')">
+      <div class="rundown-nav-icon">💷</div>
+      <div class="rundown-nav-label">Bets</div>
+    </div>
+    <div class="rundown-nav-tab" data-tab="profile" onclick="navGo('profile')">
+      <div class="rundown-nav-icon">👤</div>
+      <div class="rundown-nav-label">Profile</div>
+    </div>
+  </div>
 
   </div><!-- /phone -->
 
@@ -2010,6 +1997,7 @@ function sectionFor(idx) {
 
 function buildJumpBar() {
   const bar = document.getElementById('jumpBar');
+  if (!bar) return;
   bar.innerHTML = '';
   SECTIONS.forEach((sec, si) => {
     const btn = document.createElement('div');
