@@ -1,4 +1,4 @@
-<!-- Build: v3 -->
+<!-- Build: phase-b-v1 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1144,6 +1144,134 @@ body.auth-mode .status-bar    { display: none !important; }
   font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink5);
 }
 
+/* ── phase-b-styles.css ── */
+/* ═══════════════════════════════════════════════════
+   PHASE B — CSS
+   Injected after phase-a-styles.css by build.py
+   All class names prefixed to avoid collisions.
+   ═══════════════════════════════════════════════════ */
+
+/* ── Market switcher tabs (n10 top of odds comparison) ── */
+.mkt-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1.5px solid var(--rule-strong);
+  background: var(--parchment2);
+  overflow-x: auto; scrollbar-width: none;
+}
+.mkt-tabs::-webkit-scrollbar { display: none; }
+.mkt-tab {
+  flex-shrink: 0; padding: 10px 16px;
+  font-family: var(--fm); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--ink4); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.1s;
+}
+.mkt-tab.active {
+  color: var(--ink); border-bottom-color: var(--ink);
+}
+
+/* ── Odds row: licence number sub-line ── */
+.odds-bookie-wrap { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.odds-bookie-name {
+  font-family: var(--fs); font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.odds-licence {
+  font-family: var(--fm); font-size: 7px; color: var(--ink5);
+  margin-top: 1px; letter-spacing: 0.04em;
+}
+
+/* ── Account / offer badges inside odds rows ── */
+.odds-acct-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-family: var(--fm); font-size: 7px; font-weight: 700;
+  letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px;
+  background: var(--forest-bg); color: var(--forest);
+  white-space: nowrap; margin-left: 5px; flex-shrink: 0;
+}
+.odds-new-badge {
+  display: inline-flex; align-items: center;
+  font-family: var(--fm); font-size: 7px; font-weight: 700;
+  letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px;
+  background: var(--gold-bg); color: var(--gold);
+  white-space: nowrap; margin-left: 5px; flex-shrink: 0;
+}
+.odds-best-label {
+  font-family: var(--fm); font-size: 7px; font-weight: 700;
+  letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px;
+  background: var(--forest-bg); color: var(--forest);
+  margin-left: 5px; flex-shrink: 0;
+}
+
+/* ── Odds row: best price dot ── */
+.odds-dot-best  { width: 6px; height: 6px; border-radius: 50%; background: var(--forest); flex-shrink: 0; }
+.odds-dot-other { width: 6px; height: 6px; border-radius: 50%; background: var(--ink5);   flex-shrink: 0; }
+
+/* ── Dynamic odds section header ── */
+.odds-updated {
+  font-family: var(--fm); font-size: 8px; color: var(--ink5);
+}
+
+/* ── Offer filter tabs (n12) ── */
+.offer-filter-tabs {
+  display: flex; gap: 0; padding: 8px 16px;
+  background: var(--parchment); border-bottom: 1px solid var(--rule-strong);
+  overflow-x: auto; scrollbar-width: none;
+}
+.offer-filter-tabs::-webkit-scrollbar { display: none; }
+.offer-filter-tab {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 20px;
+  font-family: var(--fm); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink4); cursor: pointer; margin-right: 5px;
+  border: 1.5px solid transparent; transition: all 0.1s;
+}
+.offer-filter-tab.active {
+  color: var(--ink); background: var(--card);
+  border-color: var(--rule-strong);
+}
+
+/* ── New Customer badge on offer cards ── */
+.oc-new-badge {
+  display: inline-block; font-family: var(--fm); font-size: 7px;
+  font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 4px;
+  background: var(--gold-bg); color: var(--gold);
+  margin-left: 6px;
+}
+
+/* ── Spreadex warning banner ── */
+.spreadex-warning {
+  margin: 0 16px 6px; padding: 8px 12px;
+  background: rgba(176,42,24,0.07); border: 1px solid rgba(176,42,24,0.18);
+  border-radius: 8px;
+  font-family: var(--fs); font-size: 10px; font-weight: 600;
+  color: var(--live); line-height: 1.4;
+}
+
+/* ── Compliance strip (n9, n10, n11, n12 scroll footer) ── */
+.betting-compliance-strip {
+  margin: 8px 16px 14px; padding: 10px 14px;
+  background: var(--parchment2); border: 1px solid var(--rule);
+  border-radius: 10px; text-align: center;
+}
+.betting-compliance-strip p {
+  font-family: var(--fm); font-size: 8px; color: var(--ink5);
+  line-height: 1.6; margin: 0;
+}
+.betting-compliance-strip a {
+  color: var(--ink4); text-decoration: underline;
+}
+.betting-compliance-strip .bcs-bold {
+  font-weight: 700; color: var(--ink3);
+}
+
+/* ── Loading skeleton for dynamic content ── */
+.odds-loading, .offers-loading {
+  padding: 22px 16px; text-align: center;
+  font-family: var(--fs); font-size: 12px; color: var(--ink5);
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -2021,6 +2149,13 @@ body.auth-mode .status-bar    { display: none !important; }
         </div>
       </div>
       <div class="ai-disclaimer">Data-driven analysis only. Not financial advice. Please gamble responsibly. 18+ · BeGambleAware.org</div>
+      <div class="betting-compliance-strip">
+        <span>18+</span>
+        <a href="https://www.begambleaware.org" target="_blank">BeGambleAware.org</a>
+        <span>·</span>
+        <a href="https://www.gamstop.co.uk" target="_blank">GamStop.co.uk</a>
+        <span>· 0808 802 0133</span>
+      </div>
       <div style="height:10px"></div>
     </div>
   </div>
@@ -2038,7 +2173,8 @@ body.auth-mode .status-bar    { display: none !important; }
       </div>
       <div class="slip-count">4 legs</div>
     </div>
-    <div class="scroll" style="height:702px">
+    <div id="odds-match-title" style="padding:9px 16px;background:var(--parchment2);border-bottom:1px solid var(--rule);font-family:var(--fs);font-size:12px;font-weight:600;color:var(--ink4)">Select a match to compare odds</div>
+    <div class="scroll" style="height:693px">
       <div class="slip-leg">
         <div class="slip-leg-bar" style="background:var(--forest)"></div>
         <div style="flex:1">
@@ -2101,37 +2237,32 @@ body.auth-mode .status-bar    { display: none !important; }
       </div>
 
       <!-- Odds comparison -->
+      <div class="mkt-tabs" id="market-tabs">
+        <div class="mkt-tab active" data-market="h2h">Result</div>
+        <div class="mkt-tab" data-market="btts">BTTS</div>
+        <div class="mkt-tab" data-market="over_25">Over 2.5</div>
+        <div class="mkt-tab" data-market="handicap">Handicap</div>
+      </div>
       <div class="odds-comparison">
         <div class="odds-comp-header">
           <span class="odds-comp-title">Compare Odds · Best Price First</span>
-          <span style="font-family:var(--fm);font-size:8px;color:var(--ink5)">Updated 2 min ago</span>
+          <span class="odds-updated" id="odds-updated-time">Updated live</span>
         </div>
-        <div class="odds-row">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--forest);flex-shrink:0"></div>
-          <div class="odds-bookie">Bet365 <span class="odds-badge" style="background:var(--forest-bg);color:var(--forest)">Best price</span></div>
-          <div class="odds-price best">14/1</div>
-          <div class="odds-arrow">›</div>
-        </div>
-        <div class="odds-row">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--forest);flex-shrink:0"></div>
-          <div class="odds-bookie">Sky Bet <span class="odds-badge" style="background:rgba(26,23,20,0.06);color:var(--ink4)">✓ Account</span></div>
-          <div class="odds-price mid">13/1</div>
-          <div class="odds-arrow">›</div>
-        </div>
-        <div class="odds-row">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--ink5);flex-shrink:0"></div>
-          <div class="odds-bookie">Paddy Power <span class="odds-badge" style="background:var(--live-bg);color:var(--live)">🏷 New: £20 Free</span></div>
-          <div class="odds-price mid">12/1</div>
-          <div class="odds-arrow">›</div>
-        </div>
-        <div class="odds-row">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--ink5);flex-shrink:0"></div>
-          <div class="odds-bookie">William Hill</div>
-          <div class="odds-price worst">11/1</div>
-          <div class="odds-arrow">›</div>
+        <div id="odds-comparison-rows">
+          <!-- populated by renderOddsComparison() -->
+          <div style="padding:20px;text-align:center;font-family:var(--fs);font-size:13px;color:var(--ink4)">
+            Tap a match on the Today screen to compare odds
+          </div>
         </div>
       </div>
-      <div style="margin:0 16px 10px;padding:9px 14px;background:var(--parchment2);border-radius:10px;border:1px solid var(--rule);font-family:var(--fm);font-size:8px;color:var(--ink5);text-align:center;line-height:1.5">18+ only · All operators are UKGC licensed · BeGambleAware.org · GamStop.co.uk</div>
+      <div style="margin:0 16px 6px;padding:6px 14px;font-family:var(--fm);font-size:8px;color:var(--ink5);text-align:center">Best odds guaranteed · Prices update every 30 seconds</div>
+      <div class="betting-compliance-strip">
+        <span>18+</span>
+        <a href="https://www.begambleaware.org" target="_blank">BeGambleAware.org</a>
+        <span>·</span>
+        <a href="https://www.gamstop.co.uk" target="_blank">GamStop.co.uk</a>
+        <span>· 0808 802 0133</span>
+      </div>
       <div style="height:10px"></div>
     </div>
   </div>
@@ -2235,6 +2366,13 @@ body.auth-mode .status-bar    { display: none !important; }
         </div>
         <div style="font-family:var(--fm);font-size:11px;color:var(--forest);font-weight:700">+£13.00</div>
       </div>
+      <div class="betting-compliance-strip">
+        <span>18+</span>
+        <a href="https://www.begambleaware.org" target="_blank">BeGambleAware.org</a>
+        <span>·</span>
+        <a href="https://www.gamstop.co.uk" target="_blank">GamStop.co.uk</a>
+        <span>· 0808 802 0133</span>
+      </div>
       <div style="height:78px"></div>
     </div>
     <div class="tabs">
@@ -2260,24 +2398,30 @@ body.auth-mode .status-bar    { display: none !important; }
         </div>
       </div>
       <div class="scroll" style="height:724px">
-        <div class="offer-hero">
-          <div class="oh-glow"></div>
-          <div class="oh-eye">Tonight's Featured Offer</div>
-          <div class="oh-title">Up to £50 in Free Bets</div>
-          <div class="oh-btn">Get Offer ↗</div>
+        <div id="featured-offer-container">
+          <!-- populated by loadOffers() -->
         </div>
-        <div class="sec-hdr">Betting Offers · 2</div>
-        <!-- Bet365 -->
-        <div class="offer-card"><div class="oc-accent" style="background:linear-gradient(90deg,#0070CC,#0050A0)"></div><div class="oc-body"><div class="oc-hdr"><div><div class="oc-op">Bet365</div><div class="oc-type">Free Bet</div></div><div class="oc-badge" style="color:#0070CC;background:rgba(0,112,204,0.1)">Free Bet</div></div><div class="oc-title">Bet £10, Get £30 in Free Bets</div><div class="oc-sub">New UK customers. Min odds 1/5.</div><div class="oc-terms"><div class="oc-term"><div class="oct-lbl">Min Deposit</div><div class="oct-val">£10</div></div><div class="oc-term"><div class="oct-lbl">Wagering</div><div class="oct-val">1×</div></div><div class="oc-term"><div class="oct-lbl">Min Odds</div><div class="oct-val">1/5</div></div><div class="oc-term"><div class="oct-lbl">Expires</div><div class="oct-val">30 days</div></div></div><div class="oc-ctas"><div class="btn-claim">Claim Offer ↗</div><div class="btn-rev">Review</div></div></div><div class="oc-foot"><span class="oc-tc">New customers only. 18+. T&Cs apply.</span><div class="ukgc"><div class="ukgc-dot"></div>UKGC 39563</div></div></div>
-        <!-- Paddy Power -->
-        <div class="offer-card"><div class="oc-accent" style="background:linear-gradient(90deg,#007A3D,#005C2E)"></div><div class="oc-body"><div class="oc-hdr"><div><div class="oc-op">Paddy Power</div><div class="oc-type">Cashback</div></div><div class="oc-badge" style="color:#007A3D;background:rgba(0,122,61,0.1)">Cashback</div></div><div class="oc-title">Money Back as Cash Up To £20</div><div class="oc-sub">If your first bet loses.</div><div class="oc-terms"><div class="oc-term"><div class="oct-lbl">Min Deposit</div><div class="oct-val">£5</div></div><div class="oc-term"><div class="oct-lbl">Wagering</div><div class="oct-val">N/A</div></div><div class="oc-term"><div class="oct-lbl">Min Odds</div><div class="oct-val">1/5</div></div><div class="oc-term"><div class="oct-lbl">Expires</div><div class="oct-val">Ongoing</div></div></div><div class="oc-ctas"><div class="btn-claim">Claim Offer ↗</div><div class="btn-rev">Review</div></div></div><div class="oc-foot"><span class="oc-tc">New UK customers. Max refund £20. 18+.</span><div class="ukgc"><div class="ukgc-dot"></div>UKGC 44540</div></div></div>
-        <div class="sec-hdr">Ticket Resale · 1</div>
-        <div class="offer-card"><div class="oc-accent" style="background:linear-gradient(90deg,#E31837,#A01020)"></div><div class="oc-body"><div class="oc-hdr"><div><div class="oc-op">StubHub</div><div class="oc-type">Last Minute Entry</div></div><div class="oc-badge" style="color:#E31837;background:rgba(227,24,55,0.1)">Global</div></div><div class="oc-title">Last Minute Seats — From £35</div><div class="oc-sub">Buyer guarantee on all purchases.</div><div class="oc-ctas" style="margin-top:8px"><div class="btn-claim">Find Seats ↗</div><div class="btn-rev">Details</div></div></div><div class="oc-foot"><span class="oc-tc">Prices vary by event. Buyer guarantee applies.</span><span style="font-family:var(--fm);font-size:7px;color:var(--ink5)">🌍 Global</span></div></div>
+        <div class="offer-filter-tabs" id="offer-filter-tabs">
+          <div class="offer-filter-tab active" data-filter="all">All</div>
+          <div class="offer-filter-tab" data-filter="welcome">Free Bets</div>
+          <div class="offer-filter-tab" data-filter="enhanced_odds">Enhanced Odds</div>
+          <div class="offer-filter-tab" data-filter="cashback">Cashback</div>
+        </div>
+        <div id="offer-cards-container">
+          <!-- populated by renderOfferCards() -->
+        </div>
         <!-- Compliance footer -->
         <div class="comp-footer">
           <div class="cf-row1"><span style="font-size:12px">🛡️</span><span class="cf-t">18+ only · All operators UKGC licensed</span></div>
           <div class="cf-2">BeGambleAware.org · GamStop.co.uk · 0808 802 0133</div>
           <div class="cf-3">18+ · BeGambleAware.org · GamStop.co.uk · UKGC Licensed · T&Cs Apply · Gamble Responsibly</div>
+        </div>
+        <div class="betting-compliance-strip">
+          <span>18+</span>
+          <a href="https://www.begambleaware.org" target="_blank">BeGambleAware.org</a>
+          <span>·</span>
+          <a href="https://www.gamstop.co.uk" target="_blank">GamStop.co.uk</a>
+          <span>· 0808 802 0133</span>
         </div>
         <div style="height:78px"></div>
       </div>
@@ -3822,6 +3966,565 @@ function saveAllOnboardingData(skipBookmakers) {
 window.addEventListener('load', function() {
   initAgeGate();
   initSupabase();
+});
+
+
+/* ── phase-b-scripts.js ── */
+/* ═══════════════════════════════════════════════════════════
+   PHASE B — Odds + Offers
+   Injected after phase-a-additions-2.js by build.py
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────
+   AFFILIATE URLS
+   TODO Gate 2: replace all values with real tracked affiliate URLs before going live
+───────────────────────────────────────── */
+var AFFILIATE_URLS = {
+  'Bet365':          'https://www.bet365.com/',
+  'Sky Bet':         'https://www.skybet.com/',
+  'Paddy Power':     'https://www.paddypower.com/',
+  'William Hill':    'https://www.williamhill.com/',
+  'Betfair':         'https://www.betfair.com/',
+  'Coral':           'https://www.coral.co.uk/',
+  'Ladbrokes':       'https://www.ladbrokes.com/',
+  'Betfred':         'https://www.betfred.com/',
+  '888sport':        'https://www.888sport.com/',
+  'Unibet':          'https://www.unibet.co.uk/',
+  'BetVictor':       'https://www.betvictor.com/',
+  'Betway':          'https://www.betway.com/',
+  'BoyleSports':     'https://www.boylesports.com/',
+  'Spreadex':        'https://www.spreadex.com/',
+  'QuinnBet':        'https://www.quinnbet.com/',
+  'Tote':            'https://www.tote.co.uk/',
+  'Mr Green':        'https://www.mrgreen.com/',
+  'NetBet':          'https://www.netbet.co.uk/',
+  'Grosvenor Sport': 'https://www.grosvenorsport.com/',
+  '10bet':           'https://www.10bet.co.uk/',
+  'Parimatch':       'https://www.parimatch.co.uk/',
+  'Mansion Bet':     'https://www.mansionbet.com/'
+};
+
+/* UKGC licence numbers — displayed in odds comparison rows */
+var BOOKIE_LICENCES = {
+  'Bet365':          '39563',
+  'Sky Bet':         '38718',
+  'Paddy Power':     '44540',
+  'William Hill':    '39225',
+  'Betfair':         '39470',
+  'Coral':           '44548',
+  'Ladbrokes':       '44548',
+  'Betfred':         '42484',
+  '888sport':        '39469',
+  'Unibet':          '39218',
+  'BetVictor':       '39198',
+  'Betway':          '39372',
+  'BoyleSports':     '44604',
+  'Spreadex':        '44408',
+  'QuinnBet':        '54989',
+  'Tote':            '44416',
+  'Mr Green':        '54973',
+  'NetBet':          '39372',
+  'Grosvenor Sport': '39378',
+  '10bet':           '39451',
+  'Parimatch':       '57149',
+  'Mansion Bet':     '40769'
+};
+
+/* ─────────────────────────────────────────
+   MOCK ODDS
+   TODO Phase B live: replace MOCK_ODDS with Supabase query when The Odds API is connected
+───────────────────────────────────────── */
+var MOCK_ODDS = [
+  {
+    matchId:       'match_ars_che',
+    homeTeam:      'Arsenal',
+    awayTeam:      'Chelsea',
+    competition:   'Premier League',
+    commenceTime:  '2026-04-19T15:00:00Z',
+    markets: {
+      h2h: [
+        { bookmaker: 'Bet365',       home: 2.10, draw: 3.40, away: 3.60 },
+        { bookmaker: 'Sky Bet',      home: 2.05, draw: 3.50, away: 3.70 },
+        { bookmaker: 'Paddy Power',  home: 2.15, draw: 3.30, away: 3.55 },
+        { bookmaker: 'William Hill', home: 2.00, draw: 3.40, away: 3.80 },
+        { bookmaker: 'Betfair',      home: 2.12, draw: 3.45, away: 3.65 },
+        { bookmaker: 'Coral',        home: 2.05, draw: 3.40, away: 3.60 }
+      ],
+      btts: [
+        { bookmaker: 'Bet365',       yes: 1.80, no: 2.00 },
+        { bookmaker: 'Sky Bet',      yes: 1.83, no: 1.95 },
+        { bookmaker: 'Paddy Power',  yes: 1.85, no: 1.95 },
+        { bookmaker: 'William Hill', yes: 1.80, no: 2.00 },
+        { bookmaker: 'Betfair',      yes: 1.88, no: 1.96 },
+        { bookmaker: 'Coral',        yes: 1.80, no: 1.95 }
+      ],
+      over_25: [
+        { bookmaker: 'Bet365',       over: 1.85, under: 1.95 },
+        { bookmaker: 'Sky Bet',      over: 1.90, under: 1.90 },
+        { bookmaker: 'Paddy Power',  over: 1.87, under: 1.93 },
+        { bookmaker: 'William Hill', over: 1.83, under: 1.97 },
+        { bookmaker: 'Betfair',      over: 1.92, under: 1.91 },
+        { bookmaker: 'Coral',        over: 1.85, under: 1.95 }
+      ]
+    }
+  },
+  {
+    matchId:       'match_mci_liv',
+    homeTeam:      'Manchester City',
+    awayTeam:      'Liverpool',
+    competition:   'Premier League',
+    commenceTime:  '2026-04-20T16:30:00Z',
+    markets: {
+      h2h: [
+        { bookmaker: 'Bet365',       home: 2.25, draw: 3.30, away: 3.10 },
+        { bookmaker: 'Sky Bet',      home: 2.20, draw: 3.40, away: 3.15 },
+        { bookmaker: 'Paddy Power',  home: 2.30, draw: 3.25, away: 3.05 },
+        { bookmaker: 'William Hill', home: 2.20, draw: 3.30, away: 3.20 },
+        { bookmaker: 'Betfair',      home: 2.28, draw: 3.35, away: 3.12 },
+        { bookmaker: 'Ladbrokes',    home: 2.22, draw: 3.30, away: 3.10 }
+      ],
+      btts: [
+        { bookmaker: 'Bet365',       yes: 1.72, no: 2.10 },
+        { bookmaker: 'Sky Bet',      yes: 1.75, no: 2.05 },
+        { bookmaker: 'Paddy Power',  yes: 1.73, no: 2.08 },
+        { bookmaker: 'William Hill', yes: 1.70, no: 2.10 },
+        { bookmaker: 'Betfair',      yes: 1.76, no: 2.06 },
+        { bookmaker: 'Ladbrokes',    yes: 1.72, no: 2.08 }
+      ],
+      over_25: [
+        { bookmaker: 'Bet365',       over: 1.80, under: 2.00 },
+        { bookmaker: 'Sky Bet',      over: 1.83, under: 1.97 },
+        { bookmaker: 'Paddy Power',  over: 1.82, under: 1.98 },
+        { bookmaker: 'William Hill', over: 1.78, under: 2.02 },
+        { bookmaker: 'Betfair',      over: 1.85, under: 1.97 },
+        { bookmaker: 'Ladbrokes',    over: 1.80, under: 2.00 }
+      ]
+    }
+  },
+  {
+    matchId:       'match_cel_ran',
+    homeTeam:      'Celtic',
+    awayTeam:      'Rangers',
+    competition:   'Scottish Premiership',
+    commenceTime:  '2026-04-21T12:30:00Z',
+    markets: {
+      h2h: [
+        { bookmaker: 'Bet365',       home: 1.95, draw: 3.50, away: 4.00 },
+        { bookmaker: 'Sky Bet',      home: 1.90, draw: 3.60, away: 4.20 },
+        { bookmaker: 'Paddy Power',  home: 2.00, draw: 3.40, away: 3.90 },
+        { bookmaker: 'William Hill', home: 1.91, draw: 3.55, away: 4.10 },
+        { bookmaker: 'BoyleSports',  home: 2.05, draw: 3.40, away: 3.80 },
+        { bookmaker: 'Coral',        home: 1.95, draw: 3.50, away: 4.00 }
+      ],
+      btts: [
+        { bookmaker: 'Bet365',       yes: 1.90, no: 1.90 },
+        { bookmaker: 'Sky Bet',      yes: 1.91, no: 1.90 },
+        { bookmaker: 'Paddy Power',  yes: 1.93, no: 1.87 },
+        { bookmaker: 'William Hill', yes: 1.88, no: 1.92 },
+        { bookmaker: 'BoyleSports',  yes: 1.95, no: 1.85 },
+        { bookmaker: 'Coral',        yes: 1.90, no: 1.90 }
+      ],
+      over_25: [
+        { bookmaker: 'Bet365',       over: 1.90, under: 1.90 },
+        { bookmaker: 'Sky Bet',      over: 1.88, under: 1.92 },
+        { bookmaker: 'Paddy Power',  over: 1.92, under: 1.88 },
+        { bookmaker: 'William Hill', over: 1.87, under: 1.93 },
+        { bookmaker: 'BoyleSports',  over: 1.95, under: 1.85 },
+        { bookmaker: 'Coral',        over: 1.90, under: 1.90 }
+      ]
+    }
+  }
+];
+
+/* ─────────────────────────────────────────
+   OFFERS FALLBACK DATA
+   Shown when Supabase is not connected or returns empty
+───────────────────────────────────────── */
+var OFFERS_FALLBACK = [
+  {
+    id: 1, operator_name: 'Bet365', offer_type: 'free_bet',
+    title: 'Bet £10, Get £30 in Free Bets',
+    subtitle: 'New UK customers. Min odds 1/5.',
+    is_featured: true,  is_active: true, new_customers_only: true, is_spreadex: false,
+    min_deposit: '£10', wagering: '1×', min_odds: '1/5', expiry: '30 days',
+    terms_summary: 'New customers only. 18+. T&Cs apply.',
+    ukgc_licence: '39563', affiliate_url: 'https://www.bet365.com/',
+    badge_color: '#0070CC', accent_color: 'linear-gradient(90deg,#0070CC,#0050A0)',
+    sort_order: 1
+  },
+  {
+    id: 2, operator_name: 'Sky Bet', offer_type: 'welcome',
+    title: 'Bet £5, Get £20 in Free Bets',
+    subtitle: 'New customers only. Min deposit £5.',
+    is_featured: false, is_active: true, new_customers_only: true, is_spreadex: false,
+    min_deposit: '£5', wagering: '1×', min_odds: '1/2', expiry: '7 days',
+    terms_summary: 'New customers only. 18+. T&Cs apply.',
+    ukgc_licence: '38718', affiliate_url: 'https://www.skybet.com/',
+    badge_color: '#0C2340', accent_color: 'linear-gradient(90deg,#0C2340,#091929)',
+    sort_order: 2
+  },
+  {
+    id: 3, operator_name: 'Paddy Power', offer_type: 'cashback',
+    title: 'Money Back as Cash Up To £20',
+    subtitle: 'If your first bet loses.',
+    is_featured: false, is_active: true, new_customers_only: true, is_spreadex: false,
+    min_deposit: '£5', wagering: 'N/A', min_odds: '1/5', expiry: 'Ongoing',
+    terms_summary: 'New UK customers. Max refund £20. 18+.',
+    ukgc_licence: '44540', affiliate_url: 'https://www.paddypower.com/',
+    badge_color: '#007A3D', accent_color: 'linear-gradient(90deg,#007A3D,#005C2E)',
+    sort_order: 3
+  },
+  {
+    id: 4, operator_name: 'William Hill', offer_type: 'free_bet',
+    title: 'Bet £10, Get £30 in Free Bets',
+    subtitle: 'New UK customers online only.',
+    is_featured: false, is_active: true, new_customers_only: true, is_spreadex: false,
+    min_deposit: '£10', wagering: '1×', min_odds: '1/2', expiry: '28 days',
+    terms_summary: 'New customers only. 18+. T&Cs apply.',
+    ukgc_licence: '39225', affiliate_url: 'https://www.williamhill.com/',
+    badge_color: '#83002A', accent_color: 'linear-gradient(90deg,#83002A,#5E001F)',
+    sort_order: 4
+  },
+  {
+    id: 5, operator_name: 'Betfair', offer_type: 'enhanced_odds',
+    title: 'Enhanced Odds on Selected Markets',
+    subtitle: 'Boosted prices on top matches daily.',
+    is_featured: false, is_active: true, new_customers_only: false, is_spreadex: false,
+    min_deposit: 'N/A', wagering: 'N/A', min_odds: 'N/A', expiry: 'Daily',
+    terms_summary: '18+. T&Cs apply. Selected markets only.',
+    ukgc_licence: '39470', affiliate_url: 'https://www.betfair.com/',
+    badge_color: '#D4881A', accent_color: 'linear-gradient(90deg,#F5A623,#D4881A)',
+    sort_order: 5
+  },
+  {
+    id: 6, operator_name: 'Coral', offer_type: 'free_bet',
+    title: 'Bet £5 Get £20 in Free Bets',
+    subtitle: 'New customers only.',
+    is_featured: false, is_active: true, new_customers_only: true, is_spreadex: false,
+    min_deposit: '£5', wagering: '1×', min_odds: '1/2', expiry: '30 days',
+    terms_summary: 'New customers only. 18+. T&Cs apply.',
+    ukgc_licence: '44548', affiliate_url: 'https://www.coral.co.uk/',
+    badge_color: '#004B91', accent_color: 'linear-gradient(90deg,#004B91,#003570)',
+    sort_order: 6
+  }
+];
+
+/* ─────────────────────────────────────────
+   STATE
+───────────────────────────────────────── */
+var _oddsMatchId  = null;
+var _oddsMarket   = 'h2h';
+var _offersFilter = 'all';
+var _offersData   = [];
+
+/* ─────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────── */
+function _gcd(a, b) { return b === 0 ? a : _gcd(b, a % b); }
+
+function decimalToFrac(dec) {
+  if (!dec || dec <= 1) return 'EVS';
+  var n = Math.round((dec - 1) * 100);
+  var d = 100;
+  var g = _gcd(n, d);
+  return (n / g) + '/' + (d / g);
+}
+
+function hexToRgba(hex, alpha) {
+  var r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!r) return 'rgba(26,23,20,' + alpha + ')';
+  return 'rgba(' + parseInt(r[1], 16) + ',' + parseInt(r[2], 16) + ',' + parseInt(r[3], 16) + ',' + alpha + ')';
+}
+
+function _esc(str) {
+  return String(str || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+/* ─────────────────────────────────────────
+   1. loadOddsForMatch
+───────────────────────────────────────── */
+function loadOddsForMatch(matchId) {
+  for (var i = 0; i < MOCK_ODDS.length; i++) {
+    if (MOCK_ODDS[i].matchId === matchId) return MOCK_ODDS[i];
+  }
+  return null;
+}
+
+/* ─────────────────────────────────────────
+   2. renderOddsComparison
+───────────────────────────────────────── */
+function renderOddsComparison(matchId, market) {
+  var container = document.getElementById('odds-comparison-rows');
+  if (!container) return;
+
+  var matchData = loadOddsForMatch(matchId);
+  if (!matchData) {
+    container.innerHTML = '<div class="odds-loading">No odds available.</div>';
+    return;
+  }
+
+  var rows = (matchData.markets[market] || []).slice();
+
+  /* Pick sort key and display label per market */
+  var sortKey, mktLabel;
+  if (market === 'h2h')     { sortKey = 'home';  mktLabel = 'Home Win'; }
+  else if (market === 'btts')    { sortKey = 'yes';   mktLabel = 'BTTS Yes'; }
+  else if (market === 'over_25') { sortKey = 'over';  mktLabel = 'Over 2.5'; }
+  else                           { sortKey = 'home';  mktLabel = 'Home Win'; }
+
+  /* Sort descending — best (highest) price first */
+  rows.sort(function(a, b) { return (b[sortKey] || 0) - (a[sortKey] || 0); });
+
+  var userAccounts = (typeof userProfile !== 'undefined' && userProfile && userProfile.bookmaker_accounts)
+    ? userProfile.bookmaker_accounts : [];
+
+  var html = '';
+  rows.forEach(function(row, idx) {
+    var isBest     = idx === 0;
+    var bookie     = row.bookmaker;
+    var licence    = BOOKIE_LICENCES[bookie] || '';
+    var hasAccount = userAccounts.indexOf(bookie) !== -1;
+    var url        = AFFILIATE_URLS[bookie] || '#';
+    var price      = row[sortKey];
+
+    var dot       = isBest ? '<div class="odds-dot-best"></div>' : '<div class="odds-dot-other"></div>';
+    var bestLabel = isBest ? '<span class="odds-best-label">Best price</span>' : '';
+    var acctBadge = hasAccount
+      ? '<span class="odds-acct-badge">✓ Account</span>'
+      : '<span class="odds-new-badge">New Customer Offer</span>';
+    var priceClass = isBest ? 'best' : (idx < rows.length - 1 ? 'mid' : 'worst');
+
+    html +=
+      '<div class="odds-row" onclick="window.open(\'' + _esc(url) + '\',\'_blank\')">' +
+        dot +
+        '<div class="odds-bookie-wrap">' +
+          '<div class="odds-bookie-name">' + _esc(bookie) + bestLabel + acctBadge + '</div>' +
+          '<div class="odds-licence">UKGC ' + _esc(licence) + '</div>' +
+        '</div>' +
+        '<div class="odds-price ' + priceClass + '">' + decimalToFrac(price) + '</div>' +
+        '<div class="odds-arrow">›</div>' +
+      '</div>';
+  });
+
+  container.innerHTML = html || '<div class="odds-loading">No odds for this market.</div>';
+
+  /* Update subtitle showing which selection is being compared */
+  var subtitleEl = document.getElementById('odds-market-subtitle');
+  if (subtitleEl) subtitleEl.textContent = mktLabel + ' · Best price first';
+}
+
+/* ─────────────────────────────────────────
+   3. switchOddsMarket
+───────────────────────────────────────── */
+function switchOddsMarket(market) {
+  _oddsMarket = market;
+  document.querySelectorAll('.mkt-tab').forEach(function(tab) {
+    tab.classList.toggle('active', tab.dataset.market === market);
+  });
+  renderOddsComparison(_oddsMatchId, market);
+}
+
+/* ─────────────────────────────────────────
+   4. loadOddsForScreen
+───────────────────────────────────────── */
+function loadOddsForScreen(matchId) {
+  _oddsMatchId = matchId || MOCK_ODDS[0].matchId;
+  _oddsMarket  = 'h2h';
+
+  var matchData = loadOddsForMatch(_oddsMatchId);
+
+  /* Populate match title */
+  var titleEl = document.getElementById('odds-match-title');
+  if (titleEl) {
+    titleEl.textContent = matchData
+      ? matchData.homeTeam + ' vs ' + matchData.awayTeam + ' · ' + matchData.competition
+      : 'Odds Comparison';
+  }
+
+  /* Reset market tabs to h2h */
+  document.querySelectorAll('.mkt-tab').forEach(function(tab) {
+    tab.classList.toggle('active', tab.dataset.market === 'h2h');
+  });
+
+  renderOddsComparison(_oddsMatchId, 'h2h');
+}
+
+/* ─────────────────────────────────────────
+   5. loadOffers
+───────────────────────────────────────── */
+function loadOffers() {
+  var offersContainer = document.getElementById('offer-cards-container');
+  if (offersContainer) offersContainer.innerHTML = '<div class="offers-loading">Loading offers…</div>';
+
+  if (!sbClient) {
+    _offersData = OFFERS_FALLBACK.slice();
+    renderOfferCards(_offersData, _offersFilter);
+    return;
+  }
+
+  sbClient
+    .from('pitchside_offers')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .then(function(result) {
+      if (result.error || !result.data || !result.data.length) {
+        _offersData = OFFERS_FALLBACK.slice();
+      } else {
+        _offersData = result.data;
+      }
+      renderOfferCards(_offersData, _offersFilter);
+    });
+}
+
+/* ─────────────────────────────────────────
+   6. renderOfferCards helpers
+───────────────────────────────────────── */
+function _termCell(label, val) {
+  return '<div class="oc-term">' +
+    '<div class="oct-lbl">' + label + '</div>' +
+    '<div class="oct-val">' + _esc(val || '—') + '</div>' +
+    '</div>';
+}
+
+var _OFFER_TYPE_LABELS = {
+  free_bet:      'Free Bet',
+  welcome:       'Welcome Offer',
+  enhanced_odds: 'Enhanced Odds',
+  cashback:      'Cashback'
+};
+
+function _buildFeaturedHtml(offer) {
+  var url = _esc(offer.affiliate_url || '#');
+  return '<div class="offer-hero" onclick="window.open(\'' + url + '\',\'_blank\')" style="cursor:pointer">' +
+    '<div class="oh-glow"></div>' +
+    '<div class="oh-eye">Featured Offer · ' + _esc(offer.operator_name) + '</div>' +
+    '<div class="oh-title">' + _esc(offer.title) + '</div>' +
+    (offer.new_customers_only
+      ? '<div style="font-family:var(--fm);font-size:8px;color:rgba(255,255,255,0.55);margin-top:4px">New Customers Only · 18+</div>'
+      : '') +
+    '<div class="oh-btn">Get Offer ↗</div>' +
+    '</div>';
+}
+
+function _buildCardHtml(offer) {
+  var url        = _esc(offer.affiliate_url || '#');
+  var color      = offer.badge_color || '#1A1714';
+  var accent     = offer.accent_color || 'var(--ink)';
+  var badgeBg    = hexToRgba(color, 0.1);
+  var typeLabel  = _OFFER_TYPE_LABELS[offer.offer_type] || (offer.offer_type || '');
+  var newBadge   = offer.new_customers_only
+    ? '<span class="oc-new-badge">New Customer</span>' : '';
+
+  var spreadexBanner = offer.is_spreadex
+    ? '<div class="spreadex-warning">⚠ Spread betting losses can exceed your initial deposit.</div>' : '';
+
+  var terms = '<div class="oc-terms">' +
+    _termCell('Min Deposit', offer.min_deposit) +
+    _termCell('Wagering',    offer.wagering) +
+    _termCell('Min Odds',    offer.min_odds) +
+    _termCell('Expires',     offer.expiry) +
+    '</div>';
+
+  return spreadexBanner +
+    '<div class="offer-card">' +
+      '<div class="oc-accent" style="background:' + accent + '"></div>' +
+      '<div class="oc-body">' +
+        '<div class="oc-hdr">' +
+          '<div>' +
+            '<div class="oc-op">' + _esc(offer.operator_name) + newBadge + '</div>' +
+            '<div class="oc-type">' + _esc(typeLabel) + '</div>' +
+          '</div>' +
+          '<div class="oc-badge" style="color:' + color + ';background:' + badgeBg + '">' + _esc(typeLabel) + '</div>' +
+        '</div>' +
+        '<div class="oc-title">' + _esc(offer.title) + '</div>' +
+        '<div class="oc-sub">' + _esc(offer.subtitle) + '</div>' +
+        terms +
+        '<div class="oc-ctas">' +
+          '<div class="btn-claim" onclick="window.open(\'' + url + '\',\'_blank\')">Claim Offer ↗</div>' +
+          '<div class="btn-rev">T&amp;Cs</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="oc-foot">' +
+        '<span class="oc-tc">' + _esc(offer.terms_summary) + '</span>' +
+        '<div class="ukgc"><div class="ukgc-dot"></div>UKGC ' + _esc(offer.ukgc_licence) + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+/* ─────────────────────────────────────────
+   7. renderOfferCards
+───────────────────────────────────────── */
+function renderOfferCards(offers, filter) {
+  var featuredEl = document.getElementById('featured-offer-container');
+  var cardsEl    = document.getElementById('offer-cards-container');
+  if (!cardsEl) return;
+
+  var featured = null;
+  var cards    = [];
+
+  (offers || []).forEach(function(offer) {
+    if (!offer.is_active) return;
+    if (offer.is_featured) { if (!featured) featured = offer; return; }
+    if (filter !== 'all' && offer.offer_type !== filter) return;
+    cards.push(offer);
+  });
+
+  /* Featured hero */
+  if (featuredEl) {
+    if (featured) {
+      featuredEl.innerHTML = _buildFeaturedHtml(featured);
+      featuredEl.style.display = '';
+    } else {
+      featuredEl.style.display = 'none';
+    }
+  }
+
+  /* Offer cards */
+  if (!cards.length) {
+    cardsEl.innerHTML = '<div class="offers-loading">No offers in this category right now.</div>';
+    return;
+  }
+  var html = '';
+  cards.forEach(function(offer) { html += _buildCardHtml(offer); });
+  cardsEl.innerHTML = html;
+}
+
+/* ─────────────────────────────────────────
+   8. switchOfferFilter
+───────────────────────────────────────── */
+function switchOfferFilter(filter) {
+  _offersFilter = filter;
+  document.querySelectorAll('.offer-filter-tab').forEach(function(tab) {
+    tab.classList.toggle('active', tab.dataset.filter === filter);
+  });
+  renderOfferCards(_offersData, filter);
+}
+
+/* ─────────────────────────────────────────
+   9. initPhaseB
+───────────────────────────────────────── */
+function initPhaseB() {
+  /* Market tab handlers for n10 */
+  document.querySelectorAll('.mkt-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      switchOddsMarket(tab.dataset.market);
+    });
+  });
+
+  /* Offer filter tab handlers for n12 */
+  document.querySelectorAll('.offer-filter-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      switchOfferFilter(tab.dataset.filter);
+    });
+  });
+
+  /* Load offers on startup */
+  loadOffers();
+}
+
+window.addEventListener('load', function() {
+  if (typeof initPhaseB === 'function') initPhaseB();
 });
 
 </script>
