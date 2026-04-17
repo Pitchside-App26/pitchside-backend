@@ -87,7 +87,7 @@
 <!-- ④ ONBOARDING 1a — MY CLUB (single, mandatory) -->
 <div class="screen" id="auth-onboard1a">
   <div class="ob-hero" style="padding:16px 16px 12px;">
-    <div class="ob-step">Step 1 of 4 — My Club</div>
+    <div class="ob-step">Step 1 of 3 — My Club</div>
     <div class="ob-title" style="font-size:20px;margin-bottom:4px;">Which club do you support?</div>
     <div class="ob-counter" id="ob1a-counter">No club selected</div>
   </div>
@@ -107,66 +107,61 @@
   </div>
 </div>
 
-<!-- ⑤ ONBOARDING 1b — WATCH LIVE (up to 5, My Club locked) -->
+<!-- ⑤ ONBOARDING 1b — ADD TEAMS (combined Watch Live + Follow Scores) -->
 <div class="screen" id="auth-onboard1b">
-  <div class="ob-hero" style="padding:16px 16px 14px;">
-    <div class="ob-step">Step 2 of 4 — Live Matches</div>
-    <div class="ob-title" style="font-size:20px;margin-bottom:4px;">Do you attend<br>matches in person?</div>
-    <div class="ob-sub">We'll show pub and transport info for games you attend.</div>
-    <div id="ob1b-yn" style="display:flex;gap:10px;margin-top:12px;">
-      <button id="ob1b-yes" onclick="answerGoesToMatches(true)"
-        style="flex:1;padding:10px;border-radius:9px;font-family:var(--fs);font-size:13px;font-weight:700;border:1.5px solid rgba(255,255,255,0.28);background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;">
-        Yes
+  <div class="ob-hero" style="padding:16px 16px 12px;">
+    <div class="ob-step">Step 2 of 3 — Add Teams</div>
+    <div class="ob-title" style="font-size:18px;margin-bottom:8px;">Add teams to personalise<br>The Rundown</div>
+    <!-- Tab pills -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button id="ob1b-tab-wl" onclick="ob1bSwitchTab('watchlive')"
+        style="flex:1;padding:7px 8px;border-radius:20px;font-family:var(--fs);font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,0.5);background:rgba(255,255,255,0.18);color:#fff;transition:all 0.15s;">
+        Watch Live <span id="ob1b-wl-count">0</span>
       </button>
-      <button id="ob1b-no" onclick="answerGoesToMatches(false)"
-        style="flex:1;padding:10px;border-radius:9px;font-family:var(--fs);font-size:13px;font-weight:700;border:1.5px solid rgba(255,255,255,0.28);background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;">
-        No — skip this
+      <button id="ob1b-tab-fs" onclick="ob1bSwitchTab('followscores')"
+        style="flex:1;padding:7px 8px;border-radius:20px;font-family:var(--fs);font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.5);transition:all 0.15s;">
+        Follow Scores <span id="ob1b-fs-count">0</span>
       </button>
     </div>
-    <div class="ob-counter" id="ob1b-counter" style="display:none;">1 of 5 selected</div>
+    <div id="ob1b-tab-sub" style="font-family:var(--fs);font-size:11px;color:rgba(255,255,255,0.65);line-height:1.45;min-height:34px;">Teams you attend in person — up to 5. We'll show pubs, transport and tickets for their matchdays.</div>
+    <div class="ob-counter" id="ob1b-counter" style="margin-top:6px;">0 of 5 selected</div>
   </div>
-  <!-- Master/detail body — revealed after "Yes" -->
-  <div id="ob1b-body" class="ob1a-body" style="display:none;">
+  <div class="ob1a-body" id="ob1b-body">
     <div class="ob1a-leagues" id="ob1b-leagues"></div>
     <div class="ob1a-teams-panel">
       <div class="ob1a-search-row">
-        <input class="ob1a-search-input" id="ob1b-search" type="text" placeholder="Search teams…" oninput="filterWatchLive(this.value)"/>
+        <input class="ob1a-search-input" id="ob1b-search" type="text" placeholder="Search teams…" oninput="ob1bFilterTeams(this.value)"/>
       </div>
       <div id="ob1b-list" class="ob1a-team-list"></div>
     </div>
   </div>
-  <div class="ob-footer" id="ob1b-footer" style="display:none;">
-    <button class="ob-continue" id="ob1b-continue" onclick="submitWatchLive()">Continue →</button>
-  </div>
-</div>
-
-<!-- ⑥ ONBOARDING 1c — FOLLOW TEAMS (up to 10, pre-seeded) -->
-<div class="screen" id="auth-onboard1c">
-  <div class="ob-hero" style="padding:16px 16px 12px;">
-    <div class="ob-step">Step 3 of 4 — Score Tracking</div>
-    <div class="ob-title" style="font-size:20px;margin-bottom:4px;">Which teams do<br>you follow?</div>
-    <div class="ob-sub">Up to 10 teams — shown on your home screen.<br><span style="opacity:0.55">(Showing your club's league first)</span></div>
-    <div class="ob-counter" id="ob1c-counter">0 of 10 selected</div>
-  </div>
-  <div class="ob1a-body">
-    <div class="ob1a-leagues" id="ob1c-leagues"></div>
-    <div class="ob1a-teams-panel">
-      <div class="ob1a-search-row">
-        <input class="ob1a-search-input" id="ob1c-search" type="text" placeholder="Search teams…" oninput="filterFollowTeams(this.value)"/>
-      </div>
-      <div id="ob1c-list" class="ob1a-team-list"></div>
-    </div>
-  </div>
   <div class="ob-footer">
-    <button class="ob-continue" id="ob1c-continue" onclick="submitFollowTeams()">Continue →</button>
-    <span class="ob-skip" onclick="submitFollowTeams(true)">Skip for now</span>
+    <button class="ob-continue" id="ob1b-continue" onclick="submitAddTeams()">Continue →</button>
+    <span class="ob-skip" onclick="ob1bShowSkipDialog()">Skip for now</span>
   </div>
 </div>
 
-<!-- ⑦ ONBOARDING 2 — BOOKMAKERS (unchanged) -->
+<!-- Skip confirmation dialog — scoped inside phone frame, z-index below age gate -->
+<div id="ob1b-skip-dialog" style="display:none;position:absolute;inset:0;z-index:450;background:rgba(26,23,20,0.72);align-items:center;justify-content:center;padding:24px 20px;">
+  <div style="background:var(--parchment);border-radius:16px;padding:24px 20px;width:100%;">
+    <div style="font-family:var(--fs);font-size:17px;font-weight:800;color:var(--ink);margin-bottom:10px;">Skip adding teams?</div>
+    <div style="font-family:var(--fs);font-size:13px;color:var(--ink4);line-height:1.55;margin-bottom:20px;">
+      You can always add teams later in <strong style="color:var(--ink3);">Profile → Teams</strong>.<br><br>
+      Without teams, your home screen will show all UK football fixtures instead of a personalised feed.
+    </div>
+    <button onclick="ob1bSkipConfirm()" style="width:100%;padding:13px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;background:var(--ink);color:var(--parchment);border:none;cursor:pointer;margin-bottom:10px;">
+      Skip anyway
+    </button>
+    <button onclick="ob1bSkipCancel()" style="width:100%;padding:13px;border-radius:10px;font-family:var(--fs);font-size:14px;font-weight:700;background:transparent;color:var(--ink);border:1.5px solid var(--rule-strong);cursor:pointer;">
+      Back to selection
+    </button>
+  </div>
+</div>
+
+<!-- ⑥ ONBOARDING 2 — BOOKMAKERS -->
 <div class="screen" id="auth-onboard2">
   <div class="ob-hero">
-    <div class="ob-step">Step 4 of 4 — Bookmaker Accounts</div>
+    <div class="ob-step">Step 3 of 3 — Bookmaker Accounts</div>
     <div class="ob-title">Your bookmaker<br>accounts.</div>
     <div class="ob-sub">Toggle on the ones you already have. We'll highlight your best available odds in Bet Builder.</div>
     <div style="font-family:var(--fm);font-size:9px;color:rgba(255,255,255,0.3);margin-top:8px">Optional — update any time in Profile.</div>
