@@ -5,10 +5,10 @@
 
 /* ── Onboarding state ── */
 var selectedMyClub    = '';   // single string — auth-onboard1a
-var goesToMatches     = null; // boolean — auth-onboard1b Yes/No
-var selectedWatchLive = [];   // up to 5 — auth-onboard1b
-var selectedFollow    = [];   // up to 10 — auth-onboard1c
+var selectedWatchLive = [];   // up to 5 — auth-onboard1b Watch Live tab
+var selectedFollow    = [];   // up to 10 — auth-onboard1b Follow Scores tab
 var selectedBookmakers = [];  // auth-onboard2
+var ob1bActiveTab     = 'watchlive'; // 'watchlive' | 'followscores'
 
 /* ─────────────────────────────────────────
    ALL_TEAMS
@@ -81,8 +81,7 @@ function leagueOf(team) {
    MY CLUB — MASTER/DETAIL PANEL DATA
 ───────────────────────────────────────── */
 var selectedLeague1a = 'PREMIER LEAGUE';
-var selectedLeague1b = 'PREMIER LEAGUE';
-var selectedLeague1c = 'PREMIER LEAGUE';
+var selectedLeague1b = 'PREMIER LEAGUE'; // shared across both tabs on 1b
 
 var LEAGUE_INFO = {
   'PREMIER LEAGUE':        { chip: 'PL',     label: 'Premier League',      color: '#38003C' },
@@ -233,20 +232,85 @@ function selectMyClub(team) {
 /* ─────────────────────────────────────────
    ONBOARDING 1b — WATCH LIVE PANEL HELPERS
 ───────────────────────────────────────── */
-function teamCard1bc(team, lgColor, isSelected, isLocked, onclick) {
+function teamCard1bc(team, lgColor, isSelected, isLocked, onclick, sublabel) {
   var sel  = isSelected || isLocked;
   var tick = isLocked
     ? '<span class="ob1a-tick" style="font-size:10px;border-color:var(--ink4);color:var(--ink4);background:transparent">🔒</span>'
     : '<span class="ob1a-tick">' + (isSelected ? '✓' : '') + '</span>';
+  var sub = sublabel
+    ? '<span style="font-family:var(--fm);font-size:8px;color:var(--ink5);display:block;margin-top:1px">' + sublabel + '</span>'
+    : '';
   return '<div class="ob1a-team-card' + (sel ? ' selected' : '') + '"' +
     (isLocked ? '' : ' onclick="' + onclick + '"') + '>' +
     badgeHtml(team, lgColor) +
-    '<span class="ob1a-team-name">' + team + '</span>' +
+    '<span class="ob1a-team-name">' + team + sub + '</span>' +
     tick +
     '</div>';
 }
 
-function renderLeaguePanel1b() {
+/* ─────────────────────────────────────────
+   ONBOARDING 1b — COMBINED: WATCH LIVE + FOLLOW SCORES
+───────────────────────────────────────── */
+var OB1B_SUBTITLES = {
+  watchlive:    'Teams you attend in person — up to 5. We\'ll show pubs, transport and tickets for their matchdays.',
+  followscores: 'Teams whose scores you want to track — up to 10. Shown on your home screen.'
+};
+
+function ob1bInitScreen() {
+  ob1bActiveTab = 'watchlive';
+  var myLeague = leagueOf(selectedMyClub);
+  if (myLeague) selectedLeague1b = myLeague;
+  var s = document.getElementById('ob1b-search');
+  if (s) s.value = '';
+  ob1bUpdateTabStyles();
+  ob1bRenderLeaguePanel();
+  ob1bRenderTeamList('');
+  ob1bUpdateUI();
+}
+
+function ob1bSwitchTab(tab) {
+  ob1bActiveTab = tab;
+  var s = document.getElementById('ob1b-search');
+  if (s) s.value = '';
+  ob1bUpdateTabStyles();
+  ob1bRenderLeaguePanel();
+  ob1bRenderTeamList('');
+  ob1bUpdateUI();
+}
+
+function ob1bUpdateTabStyles() {
+  var wlBtn = document.getElementById('ob1b-tab-wl');
+  var fsBtn = document.getElementById('ob1b-tab-fs');
+  var activeSt = 'flex:1;padding:7px 8px;border-radius:20px;font-family:var(--fs);font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,0.5);background:rgba(255,255,255,0.18);color:#fff;transition:all 0.15s;';
+  var idleSt   = 'flex:1;padding:7px 8px;border-radius:20px;font-family:var(--fs);font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.5);transition:all 0.15s;';
+  if (wlBtn) wlBtn.setAttribute('style', ob1bActiveTab === 'watchlive'    ? activeSt : idleSt);
+  if (fsBtn) fsBtn.setAttribute('style', ob1bActiveTab === 'followscores' ? activeSt : idleSt);
+}
+
+function ob1bUpdateUI() {
+  var wlCount = document.getElementById('ob1b-wl-count');
+  var fsCount = document.getElementById('ob1b-fs-count');
+  if (wlCount) wlCount.textContent = selectedWatchLive.length;
+  if (fsCount) fsCount.textContent = selectedFollow.length;
+
+  var sub = document.getElementById('ob1b-tab-sub');
+  if (sub) sub.textContent = OB1B_SUBTITLES[ob1bActiveTab] || '';
+
+  var ctr = document.getElementById('ob1b-counter');
+  if (ctr) {
+    if (ob1bActiveTab === 'watchlive') {
+      var n = selectedWatchLive.length;
+      ctr.textContent = n + ' of 5 selected';
+      ctr.className = 'ob-counter' + (n >= 5 ? ' full' : '');
+    } else {
+      var m = selectedFollow.length;
+      ctr.textContent = m + ' of 10 selected';
+      ctr.className = 'ob-counter' + (m >= 10 ? ' full' : '');
+    }
+  }
+}
+
+function ob1bRenderLeaguePanel() {
   var el = document.getElementById('ob1b-leagues');
   if (!el) return;
   var html = '';
@@ -255,7 +319,7 @@ function renderLeaguePanel1b() {
     var isActive = lg === selectedLeague1b;
     html +=
       '<div class="ob1a-league-item' + (isActive ? ' active' : '') +
-      '" onclick="selectLeague1b(\'' + lg.replace(/'/g,"\\'") + '\')">' +
+      '" onclick="ob1bSelectLeague(\'' + lg.replace(/'/g, "\\'") + '\')">' +
       '<span class="ob1a-league-chip" style="background:' + info.color + '">' + info.chip + '</span>' +
       '<span class="ob1a-league-label">' + info.label + '</span>' +
       '</div>';
@@ -263,51 +327,143 @@ function renderLeaguePanel1b() {
   el.innerHTML = html;
 }
 
-function selectLeague1b(lg) {
+function ob1bSelectLeague(lg) {
   selectedLeague1b = lg;
   var s = document.getElementById('ob1b-search');
   if (s) s.value = '';
-  renderLeaguePanel1b();
-  renderWatchLiveList('');
+  ob1bRenderLeaguePanel();
+  ob1bRenderTeamList('');
+}
+
+function ob1bFilterTeams(val) { ob1bRenderTeamList(val); }
+
+function ob1bRenderTeamList(filter) {
+  var list = document.getElementById('ob1b-list');
+  if (!list) return;
+  var q    = (filter || '').toLowerCase().trim();
+  var html = '';
+
+  if (ob1bActiveTab === 'watchlive') {
+    if (q) {
+      var any = false;
+      Object.keys(ALL_TEAMS).forEach(function(lg) {
+        var c     = (LEAGUE_INFO[lg] || {}).color || '#666';
+        var teams = ALL_TEAMS[lg].filter(function(t) { return t.toLowerCase().indexOf(q) !== -1; });
+        if (!teams.length) return;
+        any = true;
+        html += '<div class="ob1a-search-lg-hdr">' + lg + '</div>';
+        teams.forEach(function(team) {
+          var locked = team === selectedMyClub;
+          var sel    = selectedWatchLive.indexOf(team) !== -1;
+          html += teamCard1bc(team, c, sel, locked,
+            'ob1bToggleTeam(\'' + team.replace(/'/g, "\\'") + '\')', '');
+        });
+      });
+      if (!any) html = '<div class="ob-empty">No teams match "' + q + '"</div>';
+    } else {
+      var lgC  = (LEAGUE_INFO[selectedLeague1b] || {}).color || '#666';
+      var wlTeams = ALL_TEAMS[selectedLeague1b] || [];
+      wlTeams.forEach(function(team) {
+        var locked = team === selectedMyClub;
+        var sel    = selectedWatchLive.indexOf(team) !== -1;
+        html += teamCard1bc(team, lgC, sel, locked,
+          'ob1bToggleTeam(\'' + team.replace(/'/g, "\\'") + '\')', '');
+      });
+      if (!wlTeams.length) html = '<div class="ob-empty">No teams</div>';
+    }
+  } else {
+    /* Follow Scores tab — WL teams appear locked with "from Watch Live" label */
+    if (q) {
+      var any2 = false;
+      Object.keys(ALL_TEAMS).forEach(function(lg) {
+        var c2    = (LEAGUE_INFO[lg] || {}).color || '#666';
+        var teams2 = ALL_TEAMS[lg].filter(function(t) { return t.toLowerCase().indexOf(q) !== -1; });
+        if (!teams2.length) return;
+        any2 = true;
+        html += '<div class="ob1a-search-lg-hdr">' + lg + '</div>';
+        teams2.forEach(function(team) {
+          var isWL   = selectedWatchLive.indexOf(team) !== -1;
+          var sel    = selectedFollow.indexOf(team) !== -1 || isWL;
+          html += teamCard1bc(team, c2, sel, isWL,
+            'ob1bToggleTeam(\'' + team.replace(/'/g, "\\'") + '\')',
+            isWL ? 'from Watch Live' : '');
+        });
+      });
+      if (!any2) html = '<div class="ob-empty">No teams match "' + q + '"</div>';
+    } else {
+      var lgC2   = (LEAGUE_INFO[selectedLeague1b] || {}).color || '#666';
+      var fsTeams = ALL_TEAMS[selectedLeague1b] || [];
+      fsTeams.forEach(function(team) {
+        var isWL   = selectedWatchLive.indexOf(team) !== -1;
+        var sel    = selectedFollow.indexOf(team) !== -1 || isWL;
+        html += teamCard1bc(team, lgC2, sel, isWL,
+          'ob1bToggleTeam(\'' + team.replace(/'/g, "\\'") + '\')',
+          isWL ? 'from Watch Live' : '');
+      });
+      if (!fsTeams.length) html = '<div class="ob-empty">No teams</div>';
+    }
+  }
+
+  list.innerHTML = html;
+  ob1bUpdateUI();
+}
+
+function ob1bToggleTeam(team) {
+  if (ob1bActiveTab === 'watchlive') {
+    if (team === selectedMyClub) { showToast('Your club is always included', 'info'); return; }
+    var idx = selectedWatchLive.indexOf(team);
+    if (idx !== -1) {
+      selectedWatchLive.splice(idx, 1);
+    } else {
+      if (selectedWatchLive.length >= 5) { showToast('Maximum 5 teams for Watch Live — remove one first', 'error'); return; }
+      selectedWatchLive.push(team);
+      if (selectedFollow.indexOf(team) === -1 && selectedFollow.length < 10) {
+        selectedFollow.push(team);
+      }
+    }
+  } else {
+    if (selectedWatchLive.indexOf(team) !== -1) { showToast('Already added via Watch Live', 'info'); return; }
+    var idx2 = selectedFollow.indexOf(team);
+    if (idx2 !== -1) {
+      selectedFollow.splice(idx2, 1);
+    } else {
+      if (selectedFollow.length >= 10) { showToast('Maximum 10 teams — remove one first', 'error'); return; }
+      selectedFollow.push(team);
+    }
+  }
+  var searchEl = document.getElementById('ob1b-search');
+  ob1bRenderTeamList(searchEl ? searchEl.value : '');
+}
+
+function submitAddTeams() {
+  /* Ensure all WL teams are in the follow list before saving */
+  selectedWatchLive.forEach(function(t) {
+    if (selectedFollow.indexOf(t) === -1) selectedFollow.push(t);
+  });
+  showAuthScreen('auth-onboard2');
+  renderBookmakerList();
 }
 
 /* ─────────────────────────────────────────
-   ONBOARDING 1c — FOLLOW TEAMS PANEL HELPERS
+   SKIP CONFIRMATION DIALOG
 ───────────────────────────────────────── */
-function renderLeaguePanel1c() {
-  var el = document.getElementById('ob1c-leagues');
-  if (!el) return;
-  var html = '';
-  Object.keys(LEAGUE_INFO).forEach(function(lg) {
-    var info     = LEAGUE_INFO[lg];
-    var isActive = lg === selectedLeague1c;
-    html +=
-      '<div class="ob1a-league-item' + (isActive ? ' active' : '') +
-      '" onclick="selectLeague1c(\'' + lg.replace(/'/g,"\\'") + '\')">' +
-      '<span class="ob1a-league-chip" style="background:' + info.color + '">' + info.chip + '</span>' +
-      '<span class="ob1a-league-label">' + info.label + '</span>' +
-      '</div>';
-  });
-  el.innerHTML = html;
+function ob1bShowSkipDialog() {
+  var dlg = document.getElementById('ob1b-skip-dialog');
+  if (dlg) dlg.style.display = 'flex';
 }
 
-function selectLeague1c(lg) {
-  selectedLeague1c = lg;
-  var s = document.getElementById('ob1c-search');
-  if (s) s.value = '';
-  renderLeaguePanel1c();
-  renderFollowList('');
+function ob1bSkipCancel() {
+  var dlg = document.getElementById('ob1b-skip-dialog');
+  if (dlg) dlg.style.display = 'none';
 }
 
-/* Helper: safe HTML render of a team row (used by 1b + 1c screens) */
-function teamRow(team, isSelected, isLocked, onclick) {
-  var sel  = isSelected || isLocked;
-  var icon = isLocked ? '🔒' : (isSelected ? '✓' : '');
-  return '<div class="ob-team-row' + (sel ? ' selected' : '') + '"' +
-    (isLocked ? '' : ' onclick="' + onclick + '"') + '>' +
-    '<span class="ob-team-name">' + team + '</span>' +
-    '<span class="ob-check">' + icon + '</span>' +
-    '</div>';
+function ob1bSkipConfirm() {
+  var dlg = document.getElementById('ob1b-skip-dialog');
+  if (dlg) dlg.style.display = 'none';
+  selectedWatchLive = selectedMyClub ? [selectedMyClub] : [];
+  selectedFollow    = selectedMyClub ? [selectedMyClub] : [];
+  showAuthScreen('auth-onboard2');
+  renderBookmakerList();
 }
 
 function updateMyClubCounter() {
@@ -331,199 +487,6 @@ function submitMyClub() {
   showAuthScreen('auth-onboard1b');
 }
 
-/* ─────────────────────────────────────────
-   ONBOARDING 1b — WATCH LIVE (up to 5, My Club locked)
-───────────────────────────────────────── */
-function answerGoesToMatches(yes) {
-  goesToMatches = yes;
-  var activeSt = 'flex:1;padding:10px;border-radius:9px;font-family:var(--fs);font-size:13px;font-weight:700;border:1.5px solid white;background:white;color:var(--ink);cursor:pointer;';
-  var idleSt   = 'flex:1;padding:10px;border-radius:9px;font-family:var(--fs);font-size:13px;font-weight:700;border:1.5px solid rgba(255,255,255,0.28);background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;';
-  var yBtn = document.getElementById('ob1b-yes');
-  var nBtn = document.getElementById('ob1b-no');
-  if (yBtn) yBtn.setAttribute('style', yes ? activeSt : idleSt);
-  if (nBtn) nBtn.setAttribute('style', !yes ? activeSt : idleSt);
-
-  if (!yes) {
-    selectedWatchLive = [selectedMyClub];
-    showAuthScreen('auth-onboard1c');
-    return;
-  }
-
-  // Set default league to My Club's league
-  var myLeague = leagueOf(selectedMyClub);
-  if (myLeague) selectedLeague1b = myLeague;
-
-  var bodyEl    = document.getElementById('ob1b-body');
-  var footerEl  = document.getElementById('ob1b-footer');
-  var counterEl = document.getElementById('ob1b-counter');
-  if (bodyEl)    bodyEl.style.display    = 'flex';
-  if (footerEl)  footerEl.style.display  = '';
-  if (counterEl) counterEl.style.display = '';
-
-  renderLeaguePanel1b();
-  renderWatchLiveList('');
-}
-
-function renderWatchLiveList(filter) {
-  var list = document.getElementById('ob1b-list');
-  if (!list) return;
-  var q    = (filter || '').toLowerCase().trim();
-  var html = '';
-
-  if (q) {
-    var any = false;
-    Object.keys(ALL_TEAMS).forEach(function(lg) {
-      var c     = (LEAGUE_INFO[lg] || {}).color || '#666';
-      var teams = ALL_TEAMS[lg].filter(function(t) {
-        return t.toLowerCase().indexOf(q) !== -1;
-      });
-      if (!teams.length) return;
-      any = true;
-      html += '<div class="ob1a-search-lg-hdr">' + lg + '</div>';
-      teams.forEach(function(team) {
-        var locked = team === selectedMyClub;
-        var sel    = selectedWatchLive.indexOf(team) !== -1;
-        html += teamCard1bc(team, c, sel, locked,
-          'toggleWatchLiveTeam(\'' + team.replace(/'/g, "\\'") + '\')');
-      });
-    });
-    if (!any) html = '<div class="ob-empty">No teams match "' + q + '"</div>';
-  } else {
-    var lgInfo  = LEAGUE_INFO[selectedLeague1b] || {};
-    var lgColor = lgInfo.color || '#666';
-    var teams   = ALL_TEAMS[selectedLeague1b] || [];
-    if (teams.length) {
-      teams.forEach(function(team) {
-        var locked = team === selectedMyClub;
-        var sel    = selectedWatchLive.indexOf(team) !== -1;
-        html += teamCard1bc(team, lgColor, sel, locked,
-          'toggleWatchLiveTeam(\'' + team.replace(/'/g, "\\'") + '\')');
-      });
-    } else {
-      html = '<div class="ob-empty">No teams</div>';
-    }
-  }
-
-  list.innerHTML = html;
-  updateWatchLiveCounter();
-}
-
-function filterWatchLive(val) { renderWatchLiveList(val); }
-
-function toggleWatchLiveTeam(team) {
-  if (team === selectedMyClub) { showToast('Your club is always included', 'info'); return; }
-  var idx = selectedWatchLive.indexOf(team);
-  if (idx !== -1) {
-    selectedWatchLive.splice(idx, 1);
-  } else {
-    if (selectedWatchLive.length >= 5) { showToast('Maximum 5 teams — remove one first', 'error'); return; }
-    selectedWatchLive.push(team);
-  }
-  var searchEl = document.getElementById('ob1b-search');
-  renderWatchLiveList(searchEl ? searchEl.value : '');
-}
-
-function updateWatchLiveCounter() {
-  var el = document.getElementById('ob1b-counter');
-  if (el) {
-    var n = selectedWatchLive.length;
-    el.textContent = n + ' of 5 selected';
-    el.className = 'ob-counter' + (n >= 5 ? ' full' : '');
-  }
-}
-
-function submitWatchLive() {
-  // Merge watch-live into follow list
-  selectedWatchLive.forEach(function(t) {
-    if (selectedFollow.indexOf(t) === -1) selectedFollow.push(t);
-  });
-  showAuthScreen('auth-onboard1c');
-}
-
-/* ─────────────────────────────────────────
-   ONBOARDING 1c — FOLLOW TEAMS (up to 10)
-───────────────────────────────────────── */
-function renderFollowList(filter) {
-  var list = document.getElementById('ob1c-list');
-  if (!list) return;
-  var q           = (filter || '').toLowerCase().trim();
-  var myLeague    = leagueOf(selectedMyClub);
-  var lockedTeams = [selectedMyClub].concat(
-    selectedWatchLive.filter(function(t) { return t !== selectedMyClub; })
-  );
-  var html = '';
-
-  if (q) {
-    var any = false;
-    Object.keys(ALL_TEAMS).forEach(function(lg) {
-      var c     = (LEAGUE_INFO[lg] || {}).color || '#666';
-      var teams = ALL_TEAMS[lg].filter(function(t) {
-        return t.toLowerCase().indexOf(q) !== -1;
-      });
-      if (!teams.length) return;
-      any = true;
-      html += '<div class="ob1a-search-lg-hdr">' + lg + (lg === myLeague ? ' ★' : '') + '</div>';
-      teams.forEach(function(team) {
-        var locked = lockedTeams.indexOf(team) !== -1;
-        var sel    = selectedFollow.indexOf(team) !== -1;
-        html += teamCard1bc(team, c, sel, locked,
-          'toggleFollowTeam(\'' + team.replace(/'/g, "\\'") + '\')');
-      });
-    });
-    if (!any) html = '<div class="ob-empty">No teams match "' + q + '"</div>';
-  } else {
-    var lgInfo  = LEAGUE_INFO[selectedLeague1c] || {};
-    var lgColor = lgInfo.color || '#666';
-    var teams   = ALL_TEAMS[selectedLeague1c] || [];
-    if (teams.length) {
-      teams.forEach(function(team) {
-        var locked = lockedTeams.indexOf(team) !== -1;
-        var sel    = selectedFollow.indexOf(team) !== -1;
-        html += teamCard1bc(team, lgColor, sel, locked,
-          'toggleFollowTeam(\'' + team.replace(/'/g, "\\'") + '\')');
-      });
-    } else {
-      html = '<div class="ob-empty">No teams</div>';
-    }
-  }
-
-  list.innerHTML = html;
-  updateFollowCounter();
-}
-
-function filterFollowTeams(val) { renderFollowList(val); }
-
-function toggleFollowTeam(team) {
-  var lockedTeams = [selectedMyClub].concat(
-    selectedWatchLive.filter(function(t) { return t !== selectedMyClub; })
-  );
-  if (lockedTeams.indexOf(team) !== -1) {
-    showToast('Already in your selection', 'info'); return;
-  }
-  var idx = selectedFollow.indexOf(team);
-  if (idx !== -1) {
-    selectedFollow.splice(idx, 1);
-  } else {
-    if (selectedFollow.length >= 10) { showToast('Maximum 10 teams — remove one first', 'error'); return; }
-    selectedFollow.push(team);
-  }
-  var searchEl = document.getElementById('ob1c-search');
-  renderFollowList(searchEl ? searchEl.value : '');
-}
-
-function updateFollowCounter() {
-  var el = document.getElementById('ob1c-counter');
-  if (el) {
-    var n = selectedFollow.length;
-    el.textContent = n + ' of 10 selected';
-    el.className = 'ob-counter' + (n >= 10 ? ' full' : '');
-  }
-}
-
-function submitFollowTeams() {
-  showAuthScreen('auth-onboard2');
-  renderBookmakerList();
-}
 
 /* ─────────────────────────────────────────
    ALL_BOOKMAKERS (22 operators)
