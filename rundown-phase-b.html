@@ -1,4 +1,4 @@
-<!-- Build: phase-b-v1 -->
+<!-- Build: phase-b-v2 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2403,8 +2403,8 @@ body.auth-mode .status-bar    { display: none !important; }
         </div>
         <div class="offer-filter-tabs" id="offer-filter-tabs">
           <div class="offer-filter-tab active" data-filter="all">All</div>
-          <div class="offer-filter-tab" data-filter="welcome">Free Bets</div>
-          <div class="offer-filter-tab" data-filter="enhanced_odds">Enhanced Odds</div>
+          <div class="offer-filter-tab" data-filter="welcome_bonus">Welcome</div>
+          <div class="offer-filter-tab" data-filter="free_bet">Free Bets</div>
           <div class="offer-filter-tab" data-filter="cashback">Cashback</div>
         </div>
         <div id="offer-cards-container">
@@ -4145,67 +4145,61 @@ var OFFERS_FALLBACK = [
     id: 1, operator_name: 'Bet365', offer_type: 'free_bet',
     title: 'Bet £10, Get £30 in Free Bets',
     subtitle: 'New UK customers. Min odds 1/5.',
-    is_featured: true,  is_active: true, new_customers_only: true, is_spreadex: false,
-    min_deposit: '£10', wagering: '1×', min_odds: '1/5', expiry: '30 days',
-    terms_summary: 'New customers only. 18+. T&Cs apply.',
-    ukgc_licence: '39563', affiliate_url: 'https://www.bet365.com/',
-    badge_color: '#0070CC', accent_color: 'linear-gradient(90deg,#0070CC,#0050A0)',
-    sort_order: 1
+    is_featured: true, is_active: true, is_spreadex: false,
+    min_deposit_gbp: 10, wagering_req: 1, min_odds: '1/5', expiry_days: 30,
+    tc_summary: 'New customers only. 18+. T&Cs apply.',
+    ukgc_licence_no: '39563', affiliate_url: 'https://www.bet365.com/',
+    accent_hex: '0070CC', display_order: 1
   },
   {
-    id: 2, operator_name: 'Sky Bet', offer_type: 'welcome',
+    id: 2, operator_name: 'Sky Bet', offer_type: 'welcome_bonus',
     title: 'Bet £5, Get £20 in Free Bets',
     subtitle: 'New customers only. Min deposit £5.',
-    is_featured: false, is_active: true, new_customers_only: true, is_spreadex: false,
-    min_deposit: '£5', wagering: '1×', min_odds: '1/2', expiry: '7 days',
-    terms_summary: 'New customers only. 18+. T&Cs apply.',
-    ukgc_licence: '38718', affiliate_url: 'https://www.skybet.com/',
-    badge_color: '#0C2340', accent_color: 'linear-gradient(90deg,#0C2340,#091929)',
-    sort_order: 2
+    is_featured: false, is_active: true, is_spreadex: false,
+    min_deposit_gbp: 5, wagering_req: 1, min_odds: '1/2', expiry_days: 7,
+    tc_summary: 'New customers only. 18+. T&Cs apply.',
+    ukgc_licence_no: '38718', affiliate_url: 'https://www.skybet.com/',
+    accent_hex: '0C2340', display_order: 2
   },
   {
     id: 3, operator_name: 'Paddy Power', offer_type: 'cashback',
     title: 'Money Back as Cash Up To £20',
     subtitle: 'If your first bet loses.',
-    is_featured: false, is_active: true, new_customers_only: true, is_spreadex: false,
-    min_deposit: '£5', wagering: 'N/A', min_odds: '1/5', expiry: 'Ongoing',
-    terms_summary: 'New UK customers. Max refund £20. 18+.',
-    ukgc_licence: '44540', affiliate_url: 'https://www.paddypower.com/',
-    badge_color: '#007A3D', accent_color: 'linear-gradient(90deg,#007A3D,#005C2E)',
-    sort_order: 3
+    is_featured: false, is_active: true, is_spreadex: false,
+    min_deposit_gbp: 5, wagering_req: 0, min_odds: '1/5', expiry_days: null,
+    tc_summary: 'New UK customers. Max refund £20. 18+.',
+    ukgc_licence_no: '44540', affiliate_url: 'https://www.paddypower.com/',
+    accent_hex: '007A3D', display_order: 3
   },
   {
     id: 4, operator_name: 'William Hill', offer_type: 'free_bet',
     title: 'Bet £10, Get £30 in Free Bets',
     subtitle: 'New UK customers online only.',
-    is_featured: false, is_active: true, new_customers_only: true, is_spreadex: false,
-    min_deposit: '£10', wagering: '1×', min_odds: '1/2', expiry: '28 days',
-    terms_summary: 'New customers only. 18+. T&Cs apply.',
-    ukgc_licence: '39225', affiliate_url: 'https://www.williamhill.com/',
-    badge_color: '#83002A', accent_color: 'linear-gradient(90deg,#83002A,#5E001F)',
-    sort_order: 4
+    is_featured: false, is_active: true, is_spreadex: false,
+    min_deposit_gbp: 10, wagering_req: 1, min_odds: '1/2', expiry_days: 28,
+    tc_summary: 'New customers only. 18+. T&Cs apply.',
+    ukgc_licence_no: '39225', affiliate_url: 'https://www.williamhill.com/',
+    accent_hex: '83002A', display_order: 4
   },
   {
-    id: 5, operator_name: 'Betfair', offer_type: 'enhanced_odds',
-    title: 'Enhanced Odds on Selected Markets',
-    subtitle: 'Boosted prices on top matches daily.',
-    is_featured: false, is_active: true, new_customers_only: false, is_spreadex: false,
-    min_deposit: 'N/A', wagering: 'N/A', min_odds: 'N/A', expiry: 'Daily',
-    terms_summary: '18+. T&Cs apply. Selected markets only.',
-    ukgc_licence: '39470', affiliate_url: 'https://www.betfair.com/',
-    badge_color: '#D4881A', accent_color: 'linear-gradient(90deg,#F5A623,#D4881A)',
-    sort_order: 5
+    id: 5, operator_name: 'Betfair', offer_type: 'welcome_bonus',
+    title: 'Bet £10, Get £30 in Free Bets',
+    subtitle: 'New customers. Exchange or Sportsbook.',
+    is_featured: false, is_active: true, is_spreadex: false,
+    min_deposit_gbp: 10, wagering_req: 1, min_odds: '1/5', expiry_days: 30,
+    tc_summary: '18+. T&Cs apply. New customers only.',
+    ukgc_licence_no: '39470', affiliate_url: 'https://www.betfair.com/',
+    accent_hex: 'F5A623', display_order: 5
   },
   {
     id: 6, operator_name: 'Coral', offer_type: 'free_bet',
     title: 'Bet £5 Get £20 in Free Bets',
     subtitle: 'New customers only.',
-    is_featured: false, is_active: true, new_customers_only: true, is_spreadex: false,
-    min_deposit: '£5', wagering: '1×', min_odds: '1/2', expiry: '30 days',
-    terms_summary: 'New customers only. 18+. T&Cs apply.',
-    ukgc_licence: '44548', affiliate_url: 'https://www.coral.co.uk/',
-    badge_color: '#004B91', accent_color: 'linear-gradient(90deg,#004B91,#003570)',
-    sort_order: 6
+    is_featured: false, is_active: true, is_spreadex: false,
+    min_deposit_gbp: 5, wagering_req: 1, min_odds: '1/2', expiry_days: 30,
+    tc_summary: 'New customers only. 18+. T&Cs apply.',
+    ukgc_licence_no: '44548', affiliate_url: 'https://www.coral.co.uk/',
+    accent_hex: '004B91', display_order: 6
   }
 ];
 
@@ -4366,7 +4360,7 @@ function loadOffers() {
     .from('pitchside_offers')
     .select('*')
     .eq('is_active', true)
-    .order('sort_order', { ascending: true })
+    .order('display_order', { ascending: true })
     .then(function(result) {
       if (result.error || !result.data || !result.data.length) {
         _offersData = OFFERS_FALLBACK.slice();
@@ -4388,9 +4382,10 @@ function _termCell(label, val) {
 }
 
 var _OFFER_TYPE_LABELS = {
+  welcome_bonus: 'Welcome',
   free_bet:      'Free Bet',
-  welcome:       'Welcome Offer',
-  enhanced_odds: 'Enhanced Odds',
+  free_spins:    'Free Spins',
+  no_deposit:    'No Deposit',
   cashback:      'Cashback'
 };
 
@@ -4400,30 +4395,29 @@ function _buildFeaturedHtml(offer) {
     '<div class="oh-glow"></div>' +
     '<div class="oh-eye">Featured Offer · ' + _esc(offer.operator_name) + '</div>' +
     '<div class="oh-title">' + _esc(offer.title) + '</div>' +
-    (offer.new_customers_only
-      ? '<div style="font-family:var(--fm);font-size:8px;color:rgba(255,255,255,0.55);margin-top:4px">New Customers Only · 18+</div>'
-      : '') +
+    '<div style="font-family:var(--fm);font-size:8px;color:rgba(255,255,255,0.55);margin-top:4px">New Customers Only · 18+</div>' +
     '<div class="oh-btn">Get Offer ↗</div>' +
     '</div>';
 }
 
 function _buildCardHtml(offer) {
   var url        = _esc(offer.affiliate_url || '#');
-  var color      = offer.badge_color || '#1A1714';
-  var accent     = offer.accent_color || 'var(--ink)';
+  var color      = '#' + (offer.accent_hex || '1A1714');
+  var accent     = 'linear-gradient(90deg,' + color + ',' + color + ')';
   var badgeBg    = hexToRgba(color, 0.1);
   var typeLabel  = _OFFER_TYPE_LABELS[offer.offer_type] || (offer.offer_type || '');
-  var newBadge   = offer.new_customers_only
-    ? '<span class="oc-new-badge">New Customer</span>' : '';
+  var minDep     = offer.min_deposit_gbp != null ? '£' + offer.min_deposit_gbp : 'N/A';
+  var wagering   = (offer.wagering_req && offer.wagering_req > 0) ? offer.wagering_req + 'x' : 'N/A';
+  var expiry     = offer.expiry_days ? offer.expiry_days + ' days' : 'Ongoing';
 
   var spreadexBanner = offer.is_spreadex
     ? '<div class="spreadex-warning">⚠ Spread betting losses can exceed your initial deposit.</div>' : '';
 
   var terms = '<div class="oc-terms">' +
-    _termCell('Min Deposit', offer.min_deposit) +
-    _termCell('Wagering',    offer.wagering) +
+    _termCell('Min Deposit', minDep) +
+    _termCell('Wagering',    wagering) +
     _termCell('Min Odds',    offer.min_odds) +
-    _termCell('Expires',     offer.expiry) +
+    _termCell('Expires',     expiry) +
     '</div>';
 
   return spreadexBanner +
@@ -4432,7 +4426,7 @@ function _buildCardHtml(offer) {
       '<div class="oc-body">' +
         '<div class="oc-hdr">' +
           '<div>' +
-            '<div class="oc-op">' + _esc(offer.operator_name) + newBadge + '</div>' +
+            '<div class="oc-op">' + _esc(offer.operator_name) + '<span class="oc-new-badge">New Customer</span></div>' +
             '<div class="oc-type">' + _esc(typeLabel) + '</div>' +
           '</div>' +
           '<div class="oc-badge" style="color:' + color + ';background:' + badgeBg + '">' + _esc(typeLabel) + '</div>' +
@@ -4446,8 +4440,8 @@ function _buildCardHtml(offer) {
         '</div>' +
       '</div>' +
       '<div class="oc-foot">' +
-        '<span class="oc-tc">' + _esc(offer.terms_summary) + '</span>' +
-        '<div class="ukgc"><div class="ukgc-dot"></div>UKGC ' + _esc(offer.ukgc_licence) + '</div>' +
+        '<span class="oc-tc">' + _esc(offer.tc_summary) + '</span>' +
+        '<div class="ukgc"><div class="ukgc-dot"></div>UKGC ' + _esc(offer.ukgc_licence_no) + '</div>' +
       '</div>' +
     '</div>';
 }
