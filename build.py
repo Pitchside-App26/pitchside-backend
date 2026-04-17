@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-build.py — Phase B assembly script
-Reads rundown-base.html and inserts all Phase A + Phase B additions
+build.py — Phase B + NAV-1 assembly script
+Reads rundown-base.html and inserts all Phase A, Phase B, and NAV-1 additions
 to produce rundown-phase-b.html
 """
 
@@ -38,7 +38,7 @@ def insert_before_first(html, marker, content, label):
     return result
 
 print("=" * 52)
-print("  Phase B build")
+print("  Phase B + NAV-1 build")
 print("=" * 52)
 
 # ── 1. Read source files ──────────────────────────────
@@ -46,10 +46,12 @@ print("\n[1] Reading source files…")
 base       = read('rundown-base.html')
 styles_a   = read('phase-a-styles.css')
 styles_b   = read('phase-b-styles.css')
+styles_nav = read('nav-1-styles.css')
 screens    = read('phase-a-screens.html')
 js1        = read('phase-a-additions.js')
 js2        = read('phase-a-additions-2.js')
 js3        = read('phase-b-scripts.js')
+js4        = read('nav-1-scripts.js')
 print("  ✓  All source files found")
 
 html = base
@@ -58,10 +60,11 @@ html = base
 print("\n[2] Inserting CSS files before </style>…")
 css_block = (
     '\n/* ── phase-a-styles.css ── */\n' + styles_a +
-    '\n/* ── phase-b-styles.css ── */\n' + styles_b
+    '\n/* ── phase-b-styles.css ── */\n' + styles_b +
+    '\n/* ── nav-1-styles.css ── */\n'   + styles_nav
 )
 html = insert_before_first(html, '</style>', css_block,
-                           'phase-a-styles.css + phase-b-styles.css inserted before first </style>')
+                           'phase-a + phase-b + nav-1 styles inserted before first </style>')
 
 # ── 3. Insert Supabase CDN in <head> before </head> ──
 print("\n[3] Inserting Supabase CDN script tag before </head>…")
@@ -90,15 +93,16 @@ else:
     html = html[:last_screen] + screens + '\n\n  ' + html[last_screen:]
     print("  ✓  Screen fragments inserted (fallback)")
 
-# ── 5/6/7. Append all JS files before last </script> ─
-print("\n[5/6/7] Inserting JS files before last </script>…")
+# ── 5/6/7/8. Append all JS files before last </script> ─
+print("\n[5/6/7/8] Inserting JS files before last </script>…")
 js_block = (
     '\n\n/* ── phase-a-additions.js ── */\n' + js1 +
     '\n\n/* ── phase-a-additions-2.js ── */\n' + js2 +
-    '\n\n/* ── phase-b-scripts.js ── */\n' + js3
+    '\n\n/* ── phase-b-scripts.js ── */\n' + js3 +
+    '\n\n/* ── nav-1-scripts.js ── */\n' + js4
 )
 html = insert_before(html, '</script>', js_block,
-                     'phase-a-additions.js + phase-a-additions-2.js + phase-b-scripts.js inserted before last </script>')
+                     'phase-a + phase-a-2 + phase-b + nav-1 JS inserted before last </script>')
 
 # ── 8. Write output ───────────────────────────────────
 print("\n[8] Writing rundown-phase-b.html…")
@@ -121,13 +125,16 @@ print("=" * 52)
 # ── 10. Content checks ────────────────────────────────
 print("\n[10] Content checks…")
 checks = [
-    ('MOCK_ODDS',              'MOCK_ODDS array present'),
-    ('AFFILIATE_URLS',         'AFFILIATE_URLS present'),
-    ('id="market-tabs"',       'market-tabs element present'),
-    ('id="offer-cards-container"', 'offer-cards-container element present'),
-    ('id="odds-comparison-rows"',  'odds-comparison-rows element present'),
+    ('MOCK_ODDS',                   'MOCK_ODDS array present'),
+    ('AFFILIATE_URLS',              'AFFILIATE_URLS present'),
+    ('id="market-tabs"',            'market-tabs element present'),
+    ('id="offer-cards-container"',  'offer-cards-container element present'),
+    ('id="odds-comparison-rows"',   'odds-comparison-rows element present'),
     ('id="featured-offer-container"', 'featured-offer-container element present'),
-    ('betting-compliance-strip',  'compliance strips present'),
+    ('betting-compliance-strip',    'compliance strips present'),
+    ('class="rundown-nav"',         'shared bottom nav bar present'),
+    ('NAV_TAB_MAP',                 'NAV_TAB_MAP present'),
+    ('data-tab="matchday"',         'Match Day tab present'),
 ]
 all_ok = True
 for needle, label in checks:
