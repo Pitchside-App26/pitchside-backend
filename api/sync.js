@@ -1,5 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
-const axios = require('axios');
+import { createClient } from '@supabase/supabase-js';
+import axios from 'axios';
 
 const LEAGUES = [
   39,  // English Premier League
