@@ -3408,59 +3408,76 @@ var ob1bActiveTab     = 'watchlive'; // 'watchlive' | 'followscores'
 
 /* ─────────────────────────────────────────
    ALL_TEAMS
-   NOTE: Reflects 2024/25 season.
+   NOTE: Reflects 2025/26 season.
    Review every summer — promotion/relegation
    changes memberships annually.
    Long-term: replace with API-Football /teams.
 ───────────────────────────────────────── */
+// Season: 2025/26 — review June 2026
 var ALL_TEAMS = {
   'PREMIER LEAGUE': [
     'Arsenal','Aston Villa','Bournemouth','Brentford','Brighton',
-    'Chelsea','Crystal Palace','Everton','Fulham','Ipswich Town',
-    'Leicester City','Liverpool','Manchester City','Manchester United',
-    'Newcastle United','Nottingham Forest','Southampton',
+    'Burnley','Chelsea','Crystal Palace','Everton','Fulham',
+    'Leeds United','Liverpool','Manchester City','Manchester United',
+    'Newcastle United','Nottingham Forest','Sunderland',
     'Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'
   ],
   'CHAMPIONSHIP': [
-    'Birmingham City','Blackburn Rovers','Blackpool','Bristol City',
-    'Burnley','Cardiff City','Coventry City','Derby County','Hull City',
-    'Leeds United','Luton Town','Middlesbrough','Millwall','Norwich City',
-    'Oxford United','Plymouth Argyle','Portsmouth','Preston North End',
-    'Queens Park Rangers','Sheffield United','Sheffield Wednesday',
-    'Stoke City','Sunderland','Swansea City','Watford','West Bromwich Albion'
+    'Birmingham City','Blackburn Rovers','Bristol City','Charlton Athletic',
+    'Coventry City','Derby County','Hull City','Ipswich Town',
+    'Leicester City','Middlesbrough','Millwall','Norwich City',
+    'Oxford United','Portsmouth','Preston North End','Queens Park Rangers',
+    'Sheffield United','Sheffield Wednesday','Southampton','Stoke City',
+    'Swansea City','Watford','West Bromwich Albion','Wrexham'
   ],
   'LEAGUE ONE': [
-    'Barnsley','Birmingham City','Bolton Wanderers','Bristol Rovers',
-    'Burton Albion','Cambridge United','Charlton Athletic','Crawley Town',
-    'Exeter City','Leyton Orient','Lincoln City','Mansfield Town',
-    'MK Dons','Northampton Town','Peterborough United','Reading',
-    'Rotherham United','Shrewsbury Town','Stevenage','Stockport County',
-    'Wigan Athletic','Wrexham'
+    'AFC Wimbledon','Barnsley','Blackpool','Bolton Wanderers',
+    'Bradford City','Burton Albion','Cardiff City','Doncaster Rovers',
+    'Exeter City','Huddersfield Town','Leyton Orient','Lincoln City',
+    'Luton Town','Mansfield Town','Northampton Town','Peterborough United',
+    'Plymouth Argyle','Port Vale','Reading','Rotherham United',
+    'Stockport County','Stevenage','Wigan Athletic','Wycombe Wanderers'
   ],
   'LEAGUE TWO': [
-    'AFC Wimbledon','Barrow','Bradford City','Bromley','Carlisle United',
-    'Chesterfield','Colchester United','Crewe Alexandra','Doncaster Rovers',
-    'Fleetwood Town','Gillingham','Grimsby Town','Harrogate Town',
-    'Morecambe','Newport County','Notts County','Port Vale','Salford City',
-    'Swindon Town','Tranmere Rovers','Walsall','Accrington Stanley'
+    'Accrington Stanley','Barnet','Barrow','Bristol Rovers',
+    'Cambridge United','Cheltenham Town','Chesterfield','Colchester United',
+    'Crawley Town','Crewe Alexandra','Gillingham','Grimsby Town',
+    'Harrogate Town','MK Dons','Newport County','Notts County',
+    'Oldham Athletic','Salford City','Shrewsbury Town','Swindon Town',
+    'Tranmere Rovers','Walsall','Bromley','Fleetwood Town'
+  ],
+  'NATIONAL LEAGUE': [
+    'Aldershot Town','Altrincham','Boreham Wood','Boston United',
+    'Brackley Town','Braintree Town','Carlisle United','Eastleigh',
+    'FC Halifax Town','Forest Green Rovers','Gateshead','Hartlepool United',
+    'Morecambe','Rochdale','Scunthorpe United','Solihull Moors',
+    'Southend United','Sutton United','Tamworth','Truro City',
+    'Wealdstone','Woking','Yeovil Town','York City'
+  ],
+  "WOMEN'S SUPER LEAGUE": [
+    'Arsenal','Aston Villa','Brighton','Chelsea','Everton',
+    'Leicester City','Liverpool','London City Lionesses','Manchester City',
+    'Manchester United','Tottenham Hotspur','West Ham United'
   ],
   'SCOTTISH PREMIERSHIP': [
     'Aberdeen','Celtic','Dundee','Dundee United','Falkirk',
-    'Heart of Midlothian','Hibernian','Kilmarnock','Motherwell',
-    'Rangers','Ross County','St Johnstone','St Mirren'
+    'Heart of Midlothian','Hibernian','Kilmarnock','Livingston',
+    'Motherwell','Rangers','St Mirren'
   ],
   'SCOTTISH CHAMPIONSHIP': [
-    'Airdrieonians','Ayr United','Dunfermline Athletic',
-    'Hamilton Academical','Inverness CT','Livingston','Morton',
-    'Partick Thistle',"Queen's Park",'Raith Rovers'
+    'Airdrieonians','Arbroath','Ayr United','Dunfermline Athletic',
+    'Greenock Morton','Partick Thistle',"Queen's Park",'Raith Rovers',
+    'Ross County','St Johnstone'
   ],
   'SCOTTISH LEAGUE ONE': [
-    'Alloa Athletic','Arbroath','Cove Rangers','Dumbarton','East Fife',
-    'Kelty Hearts','Montrose','Peterhead','Stenhousemuir','Stirling Albion'
+    'Alloa Athletic','Cove Rangers','East Fife','Hamilton Academical',
+    'Inverness CT','Kelty Hearts','Montrose','Peterhead',
+    'Queen of the South','Stenhousemuir'
   ],
   'SCOTTISH LEAGUE TWO': [
-    'Annan Athletic','Bonnyrigg Rose','Clyde','Edinburgh City','Elgin City',
-    'Forfar Athletic','Queen of the South','Spartans','Stranraer'
+    'Annan Athletic','Clyde','Dumbarton','East Kilbride',
+    'Edinburgh City','Elgin City','Forfar Athletic',
+    'Stirling Albion','Stranraer','The Spartans'
   ]
 };
 
@@ -3484,6 +3501,8 @@ var LEAGUE_INFO = {
   'CHAMPIONSHIP':          { chip: 'CHAMP',  label: 'Championship',         color: '#EE2E24' },
   'LEAGUE ONE':            { chip: 'L1',     label: 'League One',            color: '#00A650' },
   'LEAGUE TWO':            { chip: 'L2',     label: 'League Two',            color: '#00A0DC' },
+  'NATIONAL LEAGUE':       { chip: 'NL',     label: 'National League',      color: '#1B2A52' },
+  "WOMEN'S SUPER LEAGUE":  { chip: 'WSL',    label: "Women's Super League", color: '#6A0DAD' },
   'SCOTTISH PREMIERSHIP':  { chip: 'SPL',    label: 'Scottish Prem.',       color: '#003F7F' },
   'SCOTTISH CHAMPIONSHIP': { chip: 'SCHAMP', label: 'Scot. Champ.',         color: '#003F7F' },
   'SCOTTISH LEAGUE ONE':   { chip: 'SL1',    label: 'Scot. L1',             color: '#003F7F' },
