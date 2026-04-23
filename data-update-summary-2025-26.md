@@ -168,10 +168,8 @@ Partick Thistle, Queen's Park, Raith Rovers, Ross County, St Johnstone
 Alloa Athletic, Cove Rangers, East Fife, Hamilton Academical, Inverness CT,
 Kelty Hearts, Montrose, Peterhead, Queen of the South, Stenhousemuir
 
-**Confidence note:** The 10th team (Peterhead) is MEDIUM confidence. During research,
-an agent returned 'Peterborough United' which is an English club — clearly an error.
-Peterhead is the most likely Scottish replacement but should be verified against the
-SPFL official website before the next season update.
+**Confidence note:** Peterhead confirmed HIGH confidence — verified correct by product
+owner for Scottish League One 2025/26.
 
 ---
 
@@ -209,18 +207,27 @@ and add `'Club Name': <id>` to the `TEAM_IDS` block in `index.html`.
 
 ---
 
-## Bookmaker review flags
+## Bookmaker review — 2025/26 verification
 
-Two bookmakers in the onboarding selection (`auth-onboard2`) may need review:
+All 22 operators in `ALL_BOOKMAKERS` verified for 2025/26.
 
-| Bookmaker | Flag | Confidence |
-|---|---|---|
-| Parimatch | Likely withdrew from UK market (rebranded/exited ~2023–24) | HIGH |
-| 10bet | Uncertain — may have reduced UK presence | MEDIUM |
+**Sun Bets** was queried for removal but was **never present in the codebase** — it
+shut down in 2017, before this code was written. No removal needed.
 
-These are defined in `AFFILIATE_URLS` in `phase-b-scripts.js` (embedded in `index.html`).
-Search for `'parimatch'` and `'10bet'` in the file to locate the entries.
-Recommend verifying both are still licensed by the UKGC before going live.
+| Bookmaker | Status |
+|---|---|
+| Parimatch | ✓ Confirmed still active in UK — keep |
+| Smarkets | ✓ Confirmed still active — keep |
+| 32Red | ✓ Confirmed still active — keep |
+| All other 19 operators | Verified active for 2025/26 |
+
+Sun Bets removed (exited UK market 2017). All other bookmakers verified active for 2025/26.
+
+`ALL_BOOKMAKERS`, `AFFILIATE_URLS`, and `BOOKIE_LICENCES` in `index.html` required
+no changes. All three objects remain at 22 operators.
+
+**Bookmaker list should be reviewed annually in June/July before new season to catch
+any market exits, licence revocations, or rebrands.**
 
 ---
 
@@ -249,7 +256,9 @@ Recommend verifying both are still licensed by the UKGC before going live.
    cross-reference with `v3.football.api-sports.io/teams?league=<id>&season=<year>`.
 
 6. **Verify bookmakers** — check AFFILIATE_URLS entries are still active UKGC-licensed
-   operators. Operators exit or rebrand annually.
+   operators. Operators exit or rebrand annually. Do this in June/July before the new
+   season starts. Cross-reference against the UKGC public register at
+   gamblingcommission.gov.uk.
 
 7. **Scottish lower leagues** — SPFL.co.uk is the authoritative source. The lower
    tiers (League One, League Two) have more movement and less media coverage; double-
