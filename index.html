@@ -3954,8 +3954,8 @@ function saveAllOnboardingData(skipBookmakers) {
   var bookiesToSave = skipBookmakers ? [] : selectedBookmakers.slice();
 
   if (!sbClient || !authUser) {
-    hideAuthScreens();
-    if (typeof goTo === 'function') goTo(13);
+    showToast('Session expired — please log in again', 'error');
+    showAuthScreen('auth-login');
     return;
   }
 
