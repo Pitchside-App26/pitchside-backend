@@ -3061,9 +3061,17 @@ function loadUserProfile() {
           userProfile = { id: authUser.id, favourite_teams: [], bookmaker_accounts: [], trust_tier: 'New Fan', gdpr_consent: false };
           updateBettingGates();
           updateProfileScreen();
+        }).catch(function(err) {
+          console.error('loadUserProfile insert failed:', err);
+          updateBettingGates();
+          updateProfileScreen();
         });
         return;
       }
+      updateBettingGates();
+      updateProfileScreen();
+    }).catch(function(err) {
+      console.error('loadUserProfile failed:', err);
       updateBettingGates();
       updateProfileScreen();
     });
