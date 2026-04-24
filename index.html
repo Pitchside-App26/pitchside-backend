@@ -3854,16 +3854,43 @@ function submitMyClub() {
 
 
 /* ─────────────────────────────────────────
-   ALL_BOOKMAKERS (22 operators)
+   BOOKMAKERS — single source of truth (22 operators)
+   To add/remove a bookmaker edit only this array.
+   ALL_BOOKMAKERS, AFFILIATE_URLS, BOOKIE_LICENCES are derived below.
+   TODO Gate 2: replace url values with real tracked affiliate URLs before going live
 ───────────────────────────────────────── */
-var ALL_BOOKMAKERS = [
-  'Bet365','Sky Bet','Paddy Power','William Hill',
-  'Betfair','Coral','Ladbrokes','Betfred',
-  '888sport','Unibet','BetVictor','Betway',
-  'BoyleSports','Spreadex','QuinnBet','Tote',
-  'Mr Green','NetBet','Grosvenor Sport','10bet',
-  'Parimatch','Mansion Bet'
+var BOOKMAKERS = [
+  { name: 'Bet365',          url: 'https://www.bet365.com/',          licence: '39563' },
+  { name: 'Sky Bet',         url: 'https://www.skybet.com/',           licence: '38718' },
+  { name: 'Paddy Power',     url: 'https://www.paddypower.com/',       licence: '44540' },
+  { name: 'William Hill',    url: 'https://www.williamhill.com/',      licence: '39225' },
+  { name: 'Betfair',         url: 'https://www.betfair.com/',          licence: '39470' },
+  { name: 'Coral',           url: 'https://www.coral.co.uk/',          licence: '44548' },
+  { name: 'Ladbrokes',       url: 'https://www.ladbrokes.com/',        licence: '44548' },
+  { name: 'Betfred',         url: 'https://www.betfred.com/',          licence: '42484' },
+  { name: '888sport',        url: 'https://www.888sport.com/',         licence: '39469' },
+  { name: 'Unibet',          url: 'https://www.unibet.co.uk/',         licence: '39218' },
+  { name: 'BetVictor',       url: 'https://www.betvictor.com/',        licence: '39198' },
+  { name: 'Betway',          url: 'https://www.betway.com/',           licence: '39372' },
+  { name: 'BoyleSports',     url: 'https://www.boylesports.com/',      licence: '44604' },
+  { name: 'Spreadex',        url: 'https://www.spreadex.com/',         licence: '44408' },
+  { name: 'QuinnBet',        url: 'https://www.quinnbet.com/',         licence: '54989' },
+  { name: 'Tote',            url: 'https://www.tote.co.uk/',           licence: '44416' },
+  { name: 'Mr Green',        url: 'https://www.mrgreen.com/',          licence: '54973' },
+  { name: 'NetBet',          url: 'https://www.netbet.co.uk/',         licence: '39372' },
+  { name: 'Grosvenor Sport', url: 'https://www.grosvenorsport.com/',   licence: '39378' },
+  { name: '10bet',           url: 'https://www.10bet.co.uk/',          licence: '39451' },
+  { name: 'Parimatch',       url: 'https://www.parimatch.co.uk/',      licence: '57149' },
+  { name: 'Mansion Bet',     url: 'https://www.mansionbet.com/',       licence: '40769' }
 ];
+
+var ALL_BOOKMAKERS  = BOOKMAKERS.map(function(b) { return b.name; });
+var AFFILIATE_URLS  = {};
+var BOOKIE_LICENCES = {};
+BOOKMAKERS.forEach(function(b) {
+  AFFILIATE_URLS[b.name]  = b.url;
+  BOOKIE_LICENCES[b.name] = b.licence;
+});
 
 /* ─────────────────────────────────────────
    ONBOARDING 2 — BOOKMAKERS
@@ -3949,60 +3976,6 @@ window.addEventListener('load', function() {
    Injected after phase-a-additions-2.js by build.py
    ═══════════════════════════════════════════════════════════ */
 
-/* ─────────────────────────────────────────
-   AFFILIATE URLS
-   TODO Gate 2: replace all values with real tracked affiliate URLs before going live
-───────────────────────────────────────── */
-var AFFILIATE_URLS = {
-  'Bet365':          'https://www.bet365.com/',
-  'Sky Bet':         'https://www.skybet.com/',
-  'Paddy Power':     'https://www.paddypower.com/',
-  'William Hill':    'https://www.williamhill.com/',
-  'Betfair':         'https://www.betfair.com/',
-  'Coral':           'https://www.coral.co.uk/',
-  'Ladbrokes':       'https://www.ladbrokes.com/',
-  'Betfred':         'https://www.betfred.com/',
-  '888sport':        'https://www.888sport.com/',
-  'Unibet':          'https://www.unibet.co.uk/',
-  'BetVictor':       'https://www.betvictor.com/',
-  'Betway':          'https://www.betway.com/',
-  'BoyleSports':     'https://www.boylesports.com/',
-  'Spreadex':        'https://www.spreadex.com/',
-  'QuinnBet':        'https://www.quinnbet.com/',
-  'Tote':            'https://www.tote.co.uk/',
-  'Mr Green':        'https://www.mrgreen.com/',
-  'NetBet':          'https://www.netbet.co.uk/',
-  'Grosvenor Sport': 'https://www.grosvenorsport.com/',
-  '10bet':           'https://www.10bet.co.uk/',
-  'Parimatch':       'https://www.parimatch.co.uk/',
-  'Mansion Bet':     'https://www.mansionbet.com/'
-};
-
-/* UKGC licence numbers — displayed in odds comparison rows */
-var BOOKIE_LICENCES = {
-  'Bet365':          '39563',
-  'Sky Bet':         '38718',
-  'Paddy Power':     '44540',
-  'William Hill':    '39225',
-  'Betfair':         '39470',
-  'Coral':           '44548',
-  'Ladbrokes':       '44548',
-  'Betfred':         '42484',
-  '888sport':        '39469',
-  'Unibet':          '39218',
-  'BetVictor':       '39198',
-  'Betway':          '39372',
-  'BoyleSports':     '44604',
-  'Spreadex':        '44408',
-  'QuinnBet':        '54989',
-  'Tote':            '44416',
-  'Mr Green':        '54973',
-  'NetBet':          '39372',
-  'Grosvenor Sport': '39378',
-  '10bet':           '39451',
-  'Parimatch':       '57149',
-  'Mansion Bet':     '40769'
-};
 
 /* ─────────────────────────────────────────
    MOCK ODDS
