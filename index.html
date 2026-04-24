@@ -3127,7 +3127,8 @@ function updateProfileScreen() {
   var bookies = (p.bookmaker_accounts || []);
   var tier = p.trust_tier || 'New Fan';
   var tierIcon = tier === 'New Fan' ? '🌱' : tier === 'Regular Fan' ? '⭐' : '🔴';
-  var initials = (authUser.email || 'U').substring(0,2).toUpperCase();
+  var rawEmail = authUser.email || '';
+  var initials = escHtml(rawEmail.substring(0, 2).toUpperCase());
 
   var teamRows = teams.length
     ? teams.map(function(t){ return '<div class="profile-row"><div class="profile-row-icon" style="background:var(--live-bg)">⚽</div><div class="profile-row-label">'+t+'</div><div class="profile-row-arrow">›</div></div>'; }).join('')
@@ -3142,7 +3143,7 @@ function updateProfileScreen() {
       '<div class="profile-hero">' +
         '<div class="profile-avatar">'+initials+'</div>' +
         '<div class="trust-badge-hero"><span class="tb-icon">'+tierIcon+'</span><span class="tb-label">'+tier.toUpperCase()+'</span></div>' +
-        '<div class="profile-name">'+(authUser.email || '')+'</div>' +
+        '<div class="profile-name">'+escHtml(rawEmail)+'</div>' +
         '<div class="profile-meta">Member · '+tier+'</div>' +
         '<div class="profile-tabs">' +
           '<div class="profile-tab on">Overview</div>' +
@@ -3551,6 +3552,14 @@ var TEAM_IDS = {
   'Celtic':485,'Rangers':489,'Aberdeen':700,
   'Heart of Midlothian':703,'Hibernian':704
 };
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 function getInitials(name) {
   var words = name.replace(/[&']/g,'').split(/\s+/).filter(function(w) {
