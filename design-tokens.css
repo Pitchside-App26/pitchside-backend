@@ -1,0 +1,108 @@
+/*
+ * design-tokens.css — The Rundown Design System v1.0
+ *
+ * Single source of truth for visual design.
+ * Injected FIRST in the CSS pipeline so all subsequent CSS can reference these tokens.
+ * Do NOT add component styles here — tokens only.
+ *
+ * To add a new token: add it here first, then reference it in components.
+ * All colour values use CSS custom properties; components never hard-code colours.
+ * Spacing follows the 8-point grid (--space-*).
+ *
+ * Light mode (v2): reserved. Token names are semantic so dark→light swap
+ * only requires updating values here, not hunting component files.
+ */
+
+:root {
+
+  /* ── Backgrounds ─────────────────────────────────────── */
+  --bg-primary:          #0E0F12;            /* main app background, near-black with subtle warmth */
+  --bg-surface:          #1A1C20;            /* cards, raised surfaces */
+  --bg-surface-elevated: #22252A;            /* modals, dropdowns, higher elevation */
+  --bg-overlay:          rgba(0, 0, 0, 0.7); /* modal scrims */
+
+  /* ── Text ────────────────────────────────────────────── */
+  --text-primary:   #F5F1EA;    /* headers, primary content — warm off-white, Athletic-style */
+  --text-secondary: #B8B5AE;    /* secondary text, descriptions */
+  --text-muted:     #7A7872;    /* captions, metadata, inactive states */
+  --text-inverse:   #0E0F12;    /* text on light backgrounds */
+
+  /* ── Brand ───────────────────────────────────────────── */
+  --brand-red:       #C8302C;                 /* accent red, editorial muted */
+  --brand-red-hover: #E13A36;                 /* hover / active state */
+  --brand-red-muted: rgba(200, 48, 44, 0.15); /* tinted backgrounds */
+
+  /* ── Semantic ─────────────────────────────────────────── */
+  --success: #4A7C59;  /* subtle forest green */
+  --warning: #C99A2E;  /* warm amber */
+  --error:   #C8302C;  /* same as brand red */
+  --info:    #6B8CAE;  /* muted blue */
+
+  /* ── Borders & dividers ──────────────────────────────── */
+  --border-subtle: rgba(245, 241, 234, 0.08); /* very low contrast */
+  --border-medium: rgba(245, 241, 234, 0.15);
+  --border-strong: rgba(245, 241, 234, 0.25);
+
+  /* ── Interactive states ──────────────────────────────── */
+  --hover-overlay:   rgba(245, 241, 234, 0.04);
+  --pressed-overlay: rgba(245, 241, 234, 0.08);
+  --focus-ring:      rgba(200, 48, 44, 0.4);
+
+  /* ── Typography — font stacks ────────────────────────── */
+  --font-serif: 'Source Serif Pro', 'Tiempos Text', Georgia, serif;
+  --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:  'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  /* ── Typography — type scale ─────────────────────────── */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-lg:   17px;
+  --text-xl:   20px;
+  --text-2xl:  24px;
+  --text-3xl:  30px;
+  --text-4xl:  36px;
+
+  /* ── Typography — weights ────────────────────────────── */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* ── Typography — line heights ───────────────────────── */
+  --leading-tight:   1.2;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.7;
+
+  /* ── Spacing — 8-point grid ──────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Radius ──────────────────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 999px;
+
+  /* ── Animation ───────────────────────────────────────── */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --easing-default:  cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-emphasis: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ── Shadows (elevation only — use sparingly) ─────────── */
+  --shadow-sm: 0 1px 2px  rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+
+}
