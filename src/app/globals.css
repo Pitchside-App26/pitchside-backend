@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn/ui semantic tokens — mapped to Handover brand */
+    --background: 45 33% 97%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 155 42% 17%;
+    --primary-foreground: 45 33% 97%;
+    --secondary: 40 20% 93%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 40 20% 93%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 40 20% 93%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 38 22% 88%;
+    --input: 38 22% 88%;
+    --ring: 155 42% 17%;
+    --radius: 0.5rem;
+    --chart-1: 155 42% 17%;
+    --chart-2: 45 88% 61%;
+    --chart-3: 32 81% 46%;
+    --chart-4: 220 70% 50%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-cream text-ink;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  }
+
+  .tabular-nums,
+  [class*="display-"],
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  .text-display-xl {
+    font-size: clamp(3.5rem, 8vw, 6.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+
+  .text-display-lg {
+    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    line-height: 1;
+    letter-spacing: -0.025em;
+  }
+
+  .text-display-md {
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  .text-display-sm {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+  }
+
+  .eyebrow {
+    @apply font-mono text-forest uppercase tracking-[0.18em] text-[11px];
+  }
+
+  .scribble-underline {
+    position: relative;
+    display: inline-block;
+  }
+
+  .scribble-underline::after {
+    content: '';
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    bottom: -4px;
+    height: 6px;
+    background: #F5C842;
+    border-radius: 2px;
+    transform: rotate(-0.5deg) skewX(-2deg);
+    z-index: -1;
+    opacity: 0.85;
+  }
+
+  .status-dot {
+    @apply inline-block w-2 h-2 rounded-full bg-forest;
+    animation: statusPulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+}
