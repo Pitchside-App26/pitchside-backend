@@ -88,6 +88,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         active_leagues=result.active_leagues,
         live_books=result.live_books,
         quota_remaining=result.quota_remaining,
+        betfair_missing=result.betfair_missing,
     )
     print(card)
 

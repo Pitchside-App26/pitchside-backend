@@ -59,33 +59,45 @@ class ScanResult:
     quota_remaining: int | None = None
     bankroll_paused: bool = False
     pause_reason: str = ""
+    betfair_missing: bool = False   # True when running Pinnacle-only
 
 
-def verify_books(client: OddsAPIClient) -> list[str]:
+def verify_books(client: OddsAPIClient) -> tuple[list[str], bool]:
     """
     Step 1: query the feed to discover which of our configured soft books
-    are actually present.  Halts with OddsAPIError if either sharp book
-    (Pinnacle, Betfair) is absent.
+    are actually present.
 
-    Returns the list of live soft-book keys to use for this scan.
+    - Halts with OddsAPIError if Pinnacle is absent (no sharp anchor at all).
+    - If Betfair Exchange is absent, continues with Pinnacle alone and logs a
+      warning; cross-checks are skipped and low_confidence is never set via
+      the Betfair path.
+
+    Returns (live_soft_books, betfair_missing).
     """
     log.info("Verifying available bookmakers …")
     live_keys = client.get_bookmaker_keys()
 
-    for sharp in SHARP_BOOKS:
-        if sharp not in live_keys:
-            raise OddsAPIError(
-                f"Sharp reference book '{sharp}' not found in the feed. "
-                "Cannot compute true probabilities without it. Aborting."
-            )
+    if PRIMARY_SHARP not in live_keys:
+        raise OddsAPIError(
+            f"Pinnacle ('{PRIMARY_SHARP}') not found in the feed. "
+            "Cannot compute true probabilities without it. Aborting."
+        )
+
+    betfair_missing = CROSS_CHECK_SHARP not in live_keys
+    if betfair_missing:
+        log.warning(
+            "Betfair Exchange ('%s') not in feed — running Pinnacle-only. "
+            "Cross-checks and low-confidence flags are disabled for this scan.",
+            CROSS_CHECK_SHARP,
+        )
 
     live_soft = [k for k in SOFT_BOOKS_CONFIGURED if k in live_keys]
-    missing = [k for k in SOFT_BOOKS_CONFIGURED if k not in live_keys]
+    missing_soft = [k for k in SOFT_BOOKS_CONFIGURED if k not in live_keys]
 
-    if missing:
-        log.info("Soft books not in feed (dropped): %s", missing)
+    if missing_soft:
+        log.info("Soft books not in feed (dropped): %s", missing_soft)
     log.info("Live soft books (%d): %s", len(live_soft), live_soft)
-    return live_soft
+    return live_soft, betfair_missing
 
 
 def _get_market_outcomes(bookmaker: dict, market_key: str) -> list[dict] | None:
@@ -125,6 +137,7 @@ def scan(
     client: OddsAPIClient,
     balance: float,
     live_soft_books: list[str] | None = None,
+    betfair_missing: bool = False,
 ) -> ScanResult:
     """
     Run the full weekly scan and return a ScanResult.
@@ -136,9 +149,12 @@ def scan(
 
     # ── Step 1: verify ────────────────────────────────────────────────────────
     if live_soft_books is None:
-        live_soft_books = verify_books(client)
+        live_soft_books, betfair_missing = verify_books(client)
     result.live_books = live_soft_books
-    all_books = SHARP_BOOKS + live_soft_books
+    result.betfair_missing = betfair_missing
+
+    sharp_books_live = [PRIMARY_SHARP] if betfair_missing else SHARP_BOOKS
+    all_books = sharp_books_live + live_soft_books
 
     # ── Step 2+3: fetch fixtures + odds ───────────────────────────────────────
     all_candidates: list[CandidateBet] = []
@@ -159,7 +175,7 @@ def scan(
             continue
 
         league_candidates = _process_league(
-            fixtures, sport_key, league_name, live_soft_books
+            fixtures, sport_key, league_name, live_soft_books, betfair_missing
         )
 
         # Conditional league: only include if we actually got sharp prices
@@ -204,6 +220,7 @@ def _process_league(
     sport_key: str,
     league_name: str,
     live_soft_books: list[str],
+    betfair_missing: bool = False,
 ) -> list[CandidateBet]:
     candidates: list[CandidateBet] = []
 
@@ -236,10 +253,10 @@ def _process_league(
                 log.debug("Devig failed for %s %s: %s", fixture_label, market_key, exc)
                 continue
 
-            # Cross-check with Betfair if available
+            # Cross-check with Betfair if available (skipped when Pinnacle-only)
             low_confidence = False
             confidence_delta = 0.0
-            if betfair_bm:
+            if not betfair_missing and betfair_bm:
                 bf_raw = _get_market_outcomes(betfair_bm, market_key)
                 if bf_raw:
                     bf_outcomes = _parse_outcomes_for_market(market_key, bf_raw)

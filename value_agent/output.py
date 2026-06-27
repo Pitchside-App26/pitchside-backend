@@ -22,6 +22,7 @@ def format_card(
     active_leagues: list[str] | None = None,
     live_books: list[str] | None = None,
     quota_remaining: int | None = None,
+    betfair_missing: bool = False,
 ) -> str:
     scan_date = scan_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
     total_stake = sum(s.stake for s in slips)
@@ -39,6 +40,8 @@ def format_card(
         lines.append(f"Leagues scanned : {', '.join(active_leagues)}")
     if live_books:
         lines.append(f"Live soft books : {', '.join(live_books)}")
+    sharp_label = "Pinnacle only (Betfair not in feed)" if betfair_missing else "Pinnacle + Betfair Exchange"
+    lines.append(f"Sharp reference : {sharp_label}")
     if quota_remaining is not None:
         lines.append(f"API quota left  : {quota_remaining} requests this month")
     lines.append(f"Bankroll        : £{balance:.2f}")
