@@ -39,15 +39,19 @@ OFFENSE_MARKETS = {
     "player_receptions": {"stat_col": "receptions", "position_group": "WR"},
 }
 
-# Defensive market keys. NEEDS LIVE VERIFICATION -- these are the most likely
-# correct keys based on how sportsbooks actually offer defensive props
-# (combined tackles+assists is standard; separate "solo tackles" and "passes
-# defended" markets are far less commonly offered and may not exist on this
-# API at all). Do not assume all of these resolve -- run verify_markets.py.
+# Defensive market keys. Live-checked with verify_markets.py on 2026-09-13
+# against 3 games kicking off that same day (as real a test as it gets --
+# not a "too early, no props posted yet" false negative):
+#   player_tackles_assists          -- CONFIRMED, has real data
+#   player_sacks                    -- CONFIRMED, has real data
+#   player_defensive_interceptions  -- CONFIRMED NOT OFFERED by any book on
+#       any of the 3 games checked; removed below. Sportsbooks on this API
+#       apparently just don't offer a "will this defender record an
+#       interception" prop -- re-run verify_markets.py periodically if you
+#       want to check whether that changes.
 DEFENSE_MARKETS = {
     "player_tackles_assists": {"stat_col": "def_tackles", "position_group": "DEF"},
     "player_sacks": {"stat_col": "def_sacks", "position_group": "DEF"},
-    "player_defensive_interceptions": {"stat_col": "def_interceptions", "position_group": "DEF"},
     # Passes defended is offered by very few books on this API, if any.
     # Uncomment and confirm the key name with verify_markets.py if you find it.
     # "player_passes_defended": {"stat_col": "def_pass_defended", "position_group": "DEF"},

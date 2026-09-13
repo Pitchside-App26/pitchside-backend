@@ -79,27 +79,36 @@ everything below was checked against the actual data rather than assumed:
   actually happened (a widely-known bad offensive line year), not because
   that number was hand-picked.
 
-## What still needs YOUR live verification before trusting this in-season
+## Market keys: now live-verified (as of 2026-09-13)
 
-Everything in this section is a best-effort placeholder, not a confirmed
-fact, because the-odds-api.com was unreachable while building this:
+`verify_markets.py` was run for real (via the `verify-odds-markets.yml`
+GitHub Actions workflow, since this sandbox can't reach the-odds-api.com
+directly) against 3 games kicking off later that same day -- as strong a
+test as possible, not a "too early, no props posted yet" false negative:
 
-- **Every market key in `config.py`.** `OFFENSE_MARKETS` keys
-  (`player_pass_yds`, `player_rush_yds`, etc) are standard and likely
-  correct but unconfirmed live. `DEFENSE_MARKETS` keys are considerably
-  less certain -- `player_tackles_assists` for combined tackles is my best
-  guess based on how books typically offer that prop, and a
-  passes-defended market is commented out entirely because it's uncommon
-  enough that it may not exist on this API at all.
-- **The exact response shape `fetch_odds.parse_event_odds()` expects**
+| Market key | Result |
+|---|---|
+| `player_pass_yds`, `player_pass_tds`, `player_pass_completions`, `player_pass_interceptions`, `player_rush_yds`, `player_rush_attempts`, `player_reception_yds`, `player_receptions` | **Confirmed working** -- real data on all 8 |
+| `player_tackles_assists` (combined tackles) | **Confirmed working** |
+| `player_sacks` | **Confirmed working** |
+| `player_defensive_interceptions` | **Confirmed NOT offered** by any book on any of the 3 games checked -- removed from `config.py`. Apparently no book on this API offers a "will this defender record an interception" prop. |
+
+10 of 11 configured markets are real and working. The one dropped market
+was already the least-confident guess when this was built. Re-run
+`verify_markets.py` occasionally if you want to check whether a defensive
+-interceptions-style market appears later, or whenever adding a new market
+key to `config.py`.
+
+Still worth knowing:
+- **The response shape `fetch_odds.parse_event_odds()` expects**
   (`bookmakers[].markets[].outcomes[].description` as the player name,
-  `.point` as the line) is the standard v4 player-props shape per public
-  docs, but was never checked against a real response.
-- Run `python verify_markets.py` once, with a real key, before the season
-  starts -- it checks every configured market key against one real event
-  and tells you which ones actually return data. It costs ~1 credit per
-  candidate key (~11 credits total), so it's a one-time check, not a
-  weekly habit.
+  `.point` as the line) matches the standard v4 player-props shape and is
+  implicitly confirmed by `verify_markets.py` succeeding against real
+  responses, but `run_weekly.py`'s full pipeline (matching, projecting,
+  ranking real odds end to end) still hasn't been run against live data.
+- Passes defended is still commented out in `config.py` (not checked --
+  uncommon enough on this API that it likely isn't worth a market-key
+  guess without evidence).
 
 ## Design choices worth knowing about (not explicit in the spec)
 
