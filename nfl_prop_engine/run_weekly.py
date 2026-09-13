@@ -100,6 +100,16 @@ def run(
     opp_map = opponent_map(games)
 
     stats = fetch_all_stats(season)
+    if stats["offense"].empty and stats["defense"].empty:
+        logger.error(
+            "No nflverse player stats are published yet for season %s or %s -- "
+            "nflverse's data release can lag real time (confirmed: their stats "
+            "release had nothing past 2024 while this season's games were "
+            "already being played). Nothing to project against until that "
+            "catches up; not attempting to rank props with zero real player data.",
+            season - 1, season,
+        )
+        return
     # Map from nflverse's fine-grained `position` column (QB/RB/WR/TE/CB/...),
     # not its own coarser `position_group` column (DB/DL/LB/OL/...) -- the
     # latter uses a different vocabulary than POSITION_GROUP_MAP's keys and

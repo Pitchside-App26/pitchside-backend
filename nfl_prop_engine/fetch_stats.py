@@ -28,7 +28,21 @@ logger = logging.getLogger(__name__)
 
 
 def fetch_offense_weekly(seasons: list[int]) -> pd.DataFrame:
-    df = nfl.import_weekly_data(seasons)
+    """Fetches one season at a time rather than nfl_data_py's default
+    single call for the whole list -- confirmed the hard way: nflverse's
+    publish pipeline can lag real time by more than a full season (their
+    player_stats release had nothing past 2024 while the live schedule was
+    already showing played 2026 games), and a single missing year 404s the
+    entire batched call, taking every other requested year down with it."""
+    frames = []
+    for season in seasons:
+        try:
+            frames.append(nfl.import_weekly_data([season]))
+        except Exception as exc:
+            logger.warning("No offense weekly data published yet for season %s (%s)", season, exc)
+    if not frames:
+        return pd.DataFrame()
+    df = pd.concat(frames, ignore_index=True)
     return df[df["season_type"] == "REG"].reset_index(drop=True)
 
 
