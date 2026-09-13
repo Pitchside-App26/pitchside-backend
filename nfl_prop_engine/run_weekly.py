@@ -3,6 +3,7 @@
     python run_weekly.py            # live odds calls (spends credits)
     python run_weekly.py --cache    # replay cached odds JSON from ./cache/
     python run_weekly.py --season 2024 --week 3   # backtest a past week
+    python run_weekly.py --teams NYG,DAL,KC,DEN   # only these games -- cheap test
 
 Suggested build order per the spec: get steps 1-4 working first (print the
 raw matched player+line+stats table, no ranking math) before trusting the
@@ -34,9 +35,13 @@ from results_log import log_weekly_output
 logger = logging.getLogger(__name__)
 
 
-def build_odds_dataframe(season: int, week: int, use_cache: bool) -> pd.DataFrame:
+def build_odds_dataframe(
+    season: int, week: int, use_cache: bool, teams_filter: set[str] | None = None
+) -> pd.DataFrame:
     events = list_events()
     games = fetch_week_games(season, week)
+    if teams_filter:
+        games = games[games["home_team"].isin(teams_filter) | games["away_team"].isin(teams_filter)]
     this_week_teams = teams_playing(games)
     week_events = [e for e in events if e["home_team"] in this_week_teams and e["away_team"] in this_week_teams]
     if not week_events:
@@ -76,9 +81,22 @@ def build_allowed_tables(offense_df: pd.DataFrame, defense_df: pd.DataFrame, sea
     return tables
 
 
-def run(season: int, week: int | None, use_cache: bool, raw_only: bool = False) -> None:
+def run(
+    season: int,
+    week: int | None,
+    use_cache: bool,
+    raw_only: bool = False,
+    teams_filter: set[str] | None = None,
+) -> None:
     games = fetch_week_games(season, week)
     week = int(games["week"].iloc[0])  # resolve once so every downstream call uses the same week
+    if teams_filter:
+        games = games[games["home_team"].isin(teams_filter) | games["away_team"].isin(teams_filter)]
+        logger.info(
+            "Limiting this run to %d game(s): %s",
+            len(games),
+            ", ".join(f"{r.away_team}@{r.home_team}" for r in games.itertuples()),
+        )
     opp_map = opponent_map(games)
 
     stats = fetch_all_stats(season)
@@ -96,7 +114,7 @@ def run(season: int, week: int | None, use_cache: bool, raw_only: bool = False) 
 
     allowed_tables = build_allowed_tables(offense_df, defense_df, [season - 1, season])
 
-    odds_df = build_odds_dataframe(season, week, use_cache)
+    odds_df = build_odds_dataframe(season, week, use_cache, teams_filter=teams_filter)
     if odds_df.empty:
         logger.error("No odds data available -- nothing to rank.")
         return
@@ -177,12 +195,20 @@ def main():
     parser.add_argument("--week", type=int, default=None)
     parser.add_argument("--cache", action="store_true", help="replay cached odds JSON instead of live calls")
     parser.add_argument("--raw", action="store_true", help="print matched player+line table only, no projections")
+    parser.add_argument(
+        "--teams",
+        type=str,
+        default=None,
+        help="comma-separated team abbreviations (e.g. NYG,DAL,KC,DEN) to limit this run to "
+        "just the games involving them -- a cheap way to test without spending credits on the whole week's slate",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
     season = args.season or get_current_nfl_season()
     week = args.week  # None lets fetch_week_games figure out the current week
-    run(season, week, use_cache=args.cache, raw_only=args.raw)
+    teams_filter = {t.strip().upper() for t in args.teams.split(",")} if args.teams else None
+    run(season, week, use_cache=args.cache, raw_only=args.raw, teams_filter=teams_filter)
 
 
 if __name__ == "__main__":

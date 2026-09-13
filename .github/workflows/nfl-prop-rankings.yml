@@ -5,7 +5,16 @@ on:
     # Sunday 11:00 UTC ~= 7:00am ET / 4:00am PT, before the early kickoff
     # window. Adjust for your timezone and preferred lead time.
     - cron: "0 11 * * 0"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      teams:
+        description: >-
+          Optional: comma-separated team codes (e.g. NYG,DAL,KC,DEN) to limit
+          this run to just the games involving them, instead of the full
+          week's slate -- useful for a cheap test run. Leave blank to run
+          everything (this is what the Sunday schedule always does).
+        required: false
+        default: ""
 
 permissions:
   contents: write  # needed to commit results_log.sqlite3 back to the repo
@@ -29,7 +38,7 @@ jobs:
       - name: Run weekly prop ranking
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-        run: python run_weekly.py
+        run: python run_weekly.py --teams "${{ inputs.teams }}"
 
       - name: Upload results log as a build artifact
         uses: actions/upload-artifact@v4
