@@ -88,9 +88,6 @@ def project_veteran(
     n = len(current_values)
 
     current_season_avg = statistics.mean(current_values) if current_values else 0.0
-    last5 = current_values[-5:] if current_values else []
-    last5_avg = statistics.mean(last5) if last5 else current_season_avg
-
     prior_season_avg = statistics.mean(prior_values) if prior_values else None
     team_changed = _team_changed(current_rows, prior_rows, team_col)
 
@@ -101,6 +98,14 @@ def project_veteran(
     blended_season_avg = (1 - prior_weight) * current_season_avg + prior_weight * (
         prior_season_avg if prior_season_avg is not None else current_season_avg
     )
+
+    # With zero current-season games (anyone in a not-yet-played week-1 game,
+    # or a player back from injury), current_season_avg is 0 with nothing
+    # real behind it -- falling back to it here would silently cut the
+    # blended baseline roughly in half. blended_season_avg already folds in
+    # the prior season properly, so that's the right thing to fall back to.
+    last5 = current_values[-5:] if current_values else []
+    last5_avg = statistics.mean(last5) if last5 else blended_season_avg
     baseline = 0.5 * blended_season_avg + 0.5 * last5_avg
 
     opp_factor = blended_opponent_factor(

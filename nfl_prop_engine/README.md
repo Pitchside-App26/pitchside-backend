@@ -68,6 +68,33 @@ everything below was checked against the actual data rather than assumed:
   `college`/`age` plus career box-score totals (not college stats) -- no
   more than the spec assumed, joined to weekly data via `gsis_id` ==
   `player_id`.
+- **nflverse's pre-aggregated `player_stats` release can lag real time by
+  more than a full season.** Found this the hard way running against an
+  actual live week: `player_stats_2025.parquet` and `player_stats_2026.parquet`
+  (and their `_def` counterparts, and even the combined all-seasons
+  `player_stats.parquet`) all 404 or stop at 2024, despite the live
+  schedule and odds feeds already showing played 2026 games. The
+  underlying raw `play_by_play_{season}.parquet` release did NOT have this
+  gap -- confirmed current through the actual live week. `derive_stats_from_pbp.py`
+  recomputes the same per-player weekly offense/defense totals directly
+  from play-by-play (passing/rushing/receiving yards and TDs, completions,
+  sacks including correctly-credited half-sacks, combined tackles,
+  interceptions) as an automatic fallback whenever the pre-built file
+  isn't available for a season yet. `fetch_offense_weekly()` /
+  `fetch_defense_weekly()` try the pre-built file per season first and only
+  fall back per season, so a gap in one season doesn't affect another.
+  Sanity-checked against real 2026 week-1 data: sack totals correctly
+  split into 1.5/2.0 credits for shared sacks, and passing/receiving lines
+  matched real, plausible box scores.
+- **Formula bug found via that same real run:** `project_veteran()`'s
+  `last5_avg` fell back to `current_season_avg` (always 0 with no real
+  games behind it) whenever a player had zero games in the current season
+  -- true for literally every player before their first game of a new
+  season. That silently cut the blended baseline roughly in half (a real
+  veteran QB with a full healthy prior season projected at ~half his real
+  average). Fixed to fall back to `blended_season_avg` instead, which
+  already properly incorporates the prior season. Covered by
+  `test_project_veteran_zero_current_games_uses_prior_season_not_zero`.
 - **The Odds API's `/events` list call and its credit formula**
   (`markets_requested x regions_requested`) were confirmed via its public
   docs through search (the domain itself was unreachable directly).

@@ -16,6 +16,14 @@ doesn't expose them. Verified real columns as of this writing:
            rushing_yards, carries, receiving_yards, receptions, receiving_tds, ...
   defense: def_tackles, def_tackles_solo, def_sacks, def_interceptions,
            def_pass_defended, def_tds, ...
+
+ALSO CONFIRMED (the hard way, running against a live current week): this
+pre-aggregated player_stats release can lag real time by more than a full
+season -- it had nothing past 2024 while live 2026 games were already
+being played. The underlying raw play-by-play release did NOT have that
+gap (play_by_play_2025/2026.parquet both existed and were current), so
+each fetch function falls back to deriving the same stats from play-by-play
+via derive_stats_from_pbp.py when the pre-built file 404s for a season.
 """
 import logging
 
@@ -23,27 +31,34 @@ import nfl_data_py as nfl
 import pandas as pd
 
 from config import DEFENSE_STATS_URL
+from derive_stats_from_pbp import derive_defense_weekly, derive_offense_weekly
 
 logger = logging.getLogger(__name__)
 
 
 def fetch_offense_weekly(seasons: list[int]) -> pd.DataFrame:
     """Fetches one season at a time rather than nfl_data_py's default
-    single call for the whole list -- confirmed the hard way: nflverse's
-    publish pipeline can lag real time by more than a full season (their
-    player_stats release had nothing past 2024 while the live schedule was
-    already showing played 2026 games), and a single missing year 404s the
+    single call for the whole list -- a single missing year 404s the
     entire batched call, taking every other requested year down with it."""
     frames = []
     for season in seasons:
         try:
             frames.append(nfl.import_weekly_data([season]))
         except Exception as exc:
-            logger.warning("No offense weekly data published yet for season %s (%s)", season, exc)
+            logger.warning(
+                "No pre-built offense stats for season %s (%s) -- deriving from play-by-play instead.",
+                season, exc,
+            )
+            try:
+                frames.append(derive_offense_weekly(season))
+            except Exception as pbp_exc:
+                logger.warning("Play-by-play fallback also failed for season %s (%s)", season, pbp_exc)
     if not frames:
         return pd.DataFrame()
     df = pd.concat(frames, ignore_index=True)
-    return df[df["season_type"] == "REG"].reset_index(drop=True)
+    if "season_type" in df.columns:
+        df = df[df["season_type"] == "REG"]
+    return df.reset_index(drop=True)
 
 
 def fetch_defense_weekly(seasons: list[int]) -> pd.DataFrame:
@@ -52,11 +67,20 @@ def fetch_defense_weekly(seasons: list[int]) -> pd.DataFrame:
         try:
             frames.append(pd.read_parquet(DEFENSE_STATS_URL.format(season=season)))
         except Exception as exc:
-            logger.warning("No defense stats file for season %s (%s)", season, exc)
+            logger.warning(
+                "No pre-built defense stats for season %s (%s) -- deriving from play-by-play instead.",
+                season, exc,
+            )
+            try:
+                frames.append(derive_defense_weekly(season))
+            except Exception as pbp_exc:
+                logger.warning("Play-by-play fallback also failed for season %s (%s)", season, pbp_exc)
     if not frames:
         return pd.DataFrame()
     df = pd.concat(frames, ignore_index=True)
-    return df[df["season_type"] == "REG"].reset_index(drop=True)
+    if "season_type" in df.columns:
+        df = df[df["season_type"] == "REG"]
+    return df.reset_index(drop=True)
 
 
 def fetch_draft_picks(seasons: list[int] | None = None) -> pd.DataFrame:

@@ -82,6 +82,23 @@ def test_project_veteran_method_tagging_by_combined_sample_size():
     assert thin_proj.confidence == "low"
 
 
+def test_project_veteran_zero_current_games_uses_prior_season_not_zero():
+    # A player with a full, healthy prior season but zero games so far this
+    # season (week 1 not yet played, or back from injury) should project
+    # close to their real prior-season average -- not get cut roughly in
+    # half by a last-5-games fallback with no real data behind it.
+    empty_current = pd.DataFrame(columns=["week", "yards", "team"])
+    prior = _rows(list(range(1, 18)), [250.0] * 17)
+    empty_series = pd.Series(dtype=float)
+
+    proj = project_veteran(
+        "p1", "Dak-like Player", "yards", empty_current, prior, "NYG",
+        empty_series, float("nan"), 0, empty_series, float("nan"),
+        "team", 50.0, k=4,
+    )
+    assert proj.projection == pytest.approx(250.0)
+
+
 def test_project_veteran_opponent_factor_moves_projection():
     empty_series = pd.Series(dtype=float)
     current = _rows([1, 2, 3], [20.0, 20.0, 20.0])

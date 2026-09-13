@@ -79,6 +79,15 @@ KICKING_STATS_URL = NFLVERSE_RELEASE_BASE + "/player_stats/player_stats_kicking_
 # (has spread_line, total_line, roof, etc.).
 SCHEDULES_FALLBACK_URL = NFLVERSE_RELEASE_BASE + "/schedules/games.parquet"
 
+# VERIFIED the hard way: nflverse's pre-aggregated player_stats release can
+# lag real time by more than a full season (it had nothing past 2024 while
+# live 2026 games were already being played), but the underlying raw
+# play-by-play release does not -- confirmed play_by_play_2025.parquet and
+# play_by_play_2026.parquet both exist and are current. derive_stats_from_pbp.py
+# uses this as a fallback to compute the same per-player weekly totals
+# ourselves when the pre-built file isn't available yet for a season.
+PLAY_BY_PLAY_URL = NFLVERSE_RELEASE_BASE + "/pbp/play_by_play_{season}.parquet"
+
 # ---------------------------------------------------------------------------
 # Projection engine tuning
 # ---------------------------------------------------------------------------
