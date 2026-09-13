@@ -1,0 +1,9 @@
+.env
+cache/*.json
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# results_log.sqlite3 is intentionally NOT ignored -- it's committed back to
+# the repo by the weekly workflow so grading data survives across ephemeral
+# CI runs. See .github/workflows/nfl-prop-rankings.yml.
