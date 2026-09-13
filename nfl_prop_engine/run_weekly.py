@@ -17,6 +17,7 @@ import pandas as pd
 from config import (
     ALL_MARKETS,
     DEFENSE_MARKETS,
+    ODDS_API_TEAM_NAME_TO_ABBR,
     OFFENSE_MARKETS,
     POSITION_GROUP_MAP,
     SHRINKAGE_K,
@@ -43,7 +44,15 @@ def build_odds_dataframe(
     if teams_filter:
         games = games[games["home_team"].isin(teams_filter) | games["away_team"].isin(teams_filter)]
     this_week_teams = teams_playing(games)
-    week_events = [e for e in events if e["home_team"] in this_week_teams and e["away_team"] in this_week_teams]
+    # The Odds API identifies teams by full name ("New York Giants"); nflverse
+    # (and so this_week_teams) uses short codes ("NYG") -- translate before
+    # comparing, confirmed necessary by a live run that otherwise silently
+    # matched zero events every time, even for a real live week.
+    week_events = [
+        e for e in events
+        if ODDS_API_TEAM_NAME_TO_ABBR.get(e["home_team"]) in this_week_teams
+        and ODDS_API_TEAM_NAME_TO_ABBR.get(e["away_team"]) in this_week_teams
+    ]
     if not week_events:
         logger.warning("No matching events returned by the odds API for this week's schedule.")
 
@@ -55,6 +64,12 @@ def build_odds_dataframe(
         rows.extend(parse_event_odds(raw))
     rows = [r for r in rows if r["side"] == "Over"]  # Over/Under share the same point; one row per prop is enough
     rows = consolidate_lines(rows)
+    for r in rows:
+        # Same translation, applied here too since roster team columns
+        # (recent_team/team) are abbreviations -- match_players.py's
+        # candidate-team filtering needs candidate_teams in that format.
+        r["home_team"] = ODDS_API_TEAM_NAME_TO_ABBR.get(r["home_team"], r["home_team"])
+        r["away_team"] = ODDS_API_TEAM_NAME_TO_ABBR.get(r["away_team"], r["away_team"])
 
     df = pd.DataFrame(rows)
     if df.empty:

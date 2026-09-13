@@ -59,6 +59,49 @@ DEFENSE_MARKETS = {
 
 ALL_MARKETS = {**OFFENSE_MARKETS, **DEFENSE_MARKETS}
 
+# CONFIRMED BUG, found running against a real live week: The Odds API
+# identifies teams by full name ("New York Giants"), while nflverse (and
+# so the rest of this codebase) uses short codes ("NYG"). A live run
+# comparing these directly always found zero matching events, even for a
+# real live week with 16 real games. This is the standard, stable 32-team
+# mapping between the two -- confirmed against real event names returned
+# live (e.g. "Detroit Lions vs New Orleans Saints", "Philadelphia Eagles
+# vs Washington Commanders").
+ODDS_API_TEAM_NAME_TO_ABBR = {
+    "Arizona Cardinals": "ARI",
+    "Atlanta Falcons": "ATL",
+    "Baltimore Ravens": "BAL",
+    "Buffalo Bills": "BUF",
+    "Carolina Panthers": "CAR",
+    "Chicago Bears": "CHI",
+    "Cincinnati Bengals": "CIN",
+    "Cleveland Browns": "CLE",
+    "Dallas Cowboys": "DAL",
+    "Denver Broncos": "DEN",
+    "Detroit Lions": "DET",
+    "Green Bay Packers": "GB",
+    "Houston Texans": "HOU",
+    "Indianapolis Colts": "IND",
+    "Jacksonville Jaguars": "JAX",
+    "Kansas City Chiefs": "KC",
+    "Las Vegas Raiders": "LV",
+    "Los Angeles Chargers": "LAC",
+    "Los Angeles Rams": "LA",
+    "Miami Dolphins": "MIA",
+    "Minnesota Vikings": "MIN",
+    "New England Patriots": "NE",
+    "New Orleans Saints": "NO",
+    "New York Giants": "NYG",
+    "New York Jets": "NYJ",
+    "Philadelphia Eagles": "PHI",
+    "Pittsburgh Steelers": "PIT",
+    "San Francisco 49ers": "SF",
+    "Seattle Seahawks": "SEA",
+    "Tampa Bay Buccaneers": "TB",
+    "Tennessee Titans": "TEN",
+    "Washington Commanders": "WAS",
+}
+
 # ---------------------------------------------------------------------------
 # nflverse data sources
 # ---------------------------------------------------------------------------
