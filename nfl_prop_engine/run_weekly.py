@@ -147,8 +147,20 @@ def run(
     offense_odds = odds_df[odds_df["market"].isin(OFFENSE_MARKETS)]
     defense_odds = odds_df[odds_df["market"].isin(DEFENSE_MARKETS)]
 
-    offense_roster = offense_df[offense_df["season"] == season]
-    defense_roster = defense_df[defense_df["season"] == season]
+    # Name matching needs to know WHO a player is and WHICH team they're on --
+    # not their current-season stats (the projection step looks those up
+    # separately, by player_id, regardless). Restricting this to
+    # season==season rows was a real bug found running on a live Sunday:
+    # nflverse's play-by-play only gets updated after a game finishes, so on
+    # any given Sunday most players -- including ones whose games already
+    # ended, if that game hasn't been ingested yet -- have zero current-season
+    # rows, making the matching pool nearly empty. Using both seasons means a
+    # player is matchable off last year's roster info even before this
+    # season's data exists for them; the tradeoff is a player who changed
+    # teams between seasons could carry a stale team entry that occasionally
+    # over-matches, which is an acceptable cost against matching nobody at all.
+    offense_roster = offense_df
+    defense_roster = defense_df
 
     matched_offense = match_props_to_players(offense_odds, offense_roster, team_col_roster="recent_team")
     matched_defense = match_props_to_players(defense_odds, defense_roster, team_col_roster="team")
