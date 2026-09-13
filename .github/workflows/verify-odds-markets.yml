@@ -1,0 +1,30 @@
+name: Verify Odds API Markets (one-time check)
+
+# Manual-only -- tap "Run workflow" on the Actions tab in GitHub's website.
+# This exists so verify_markets.py can be run from a phone/browser, without
+# needing a computer with Python installed. Runs on GitHub's own servers,
+# which have normal internet access (unlike some restricted dev sandboxes).
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nfl_prop_engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify configured market keys against a real event
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python verify_markets.py
