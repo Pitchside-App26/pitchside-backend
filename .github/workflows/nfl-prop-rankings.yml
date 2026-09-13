@@ -1,0 +1,59 @@
+name: NFL Prop Rankings (weekly)
+
+on:
+  schedule:
+    # Sunday 11:00 UTC ~= 7:00am ET / 4:00am PT, before the early kickoff
+    # window. Adjust for your timezone and preferred lead time.
+    - cron: "0 11 * * 0"
+  workflow_dispatch:
+    inputs:
+      teams:
+        description: >-
+          Optional: comma-separated team codes (e.g. NYG,DAL,KC,DEN) to limit
+          this run to just the games involving them, instead of the full
+          week's slate -- useful for a cheap test run. Leave blank to run
+          everything (this is what the Sunday schedule always does).
+        required: false
+        default: ""
+
+permissions:
+  contents: write  # needed to commit results_log.sqlite3 back to the repo
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nfl_prop_engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run weekly prop ranking
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python run_weekly.py --teams "${{ inputs.teams }}"
+
+      - name: Upload results log as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nfl-prop-results-log
+          path: nfl_prop_engine/results_log.sqlite3
+          if-no-files-found: ignore
+
+      - name: Commit results log
+        # A fresh checkout every run means the SQLite file has no durability
+        # of its own -- committing it back to the branch is what actually
+        # satisfies "log every week's output somewhere durable" across runs.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results_log.sqlite3
+          git diff --cached --quiet || git commit -m "chore: log week's prop rankings"
+          git push
