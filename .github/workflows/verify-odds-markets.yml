@@ -1,1 +1,30 @@
-bmFtZTogVmVyaWZ5IE9kZHMgQVBJIE1hcmtldHMgKG9uZS10aW1lIGNoZWNrKQoKIyBNYW51YWwtb25seSAtLSB0YXAgIlJ1biB3b3JrZmxvdyIgb24gdGhlIEFjdGlvbnMgdGFiIGluIEdpdEh1YidzIHdlYnNpdGUuCiMgVGhpcyBleGlzdHMgc28gdmVyaWZ5X21hcmtldHMucHkgY2FuIGJlIHJ1biBmcm9tIGEgcGhvbmUvYnJvd3Nlciwgd2l0aG91dAojIG5lZWRpbmcgYSBjb21wdXRlciB3aXRoIFB5dGhvbiBpbnN0YWxsZWQuIFJ1bnMgb24gR2l0SHViJ3Mgb3duIHNlcnZlcnMsCiMgd2hpY2ggaGF2ZSBub3JtYWwgaW50ZXJuZXQgYWNjZXNzICh1bmxpa2Ugc29tZSByZXN0cmljdGVkIGRldiBzYW5kYm94ZXMpLgoKb246CiAgd29ya2Zsb3dfZGlzcGF0Y2g6IHt9Cgpqb2JzOgogIHZlcmlmeToKICAgIHJ1bnMtb246IHVidW50dS1sYXRlc3QKICAgIGRlZmF1bHRzOgogICAgICBydW46CiAgICAgICAgd29ya2luZy1kaXJlY3Rvcnk6IG5mbF9wcm9wX2VuZ2luZQogICAgc3RlcHM6CiAgICAgIC0gdXNlczogYWN0aW9ucy9jaGVja291dEB2NAoKICAgICAgLSB1c2VzOiBhY3Rpb25zL3NldHVwLXB5dGhvbkB2NQogICAgICAgIHdpdGg6CiAgICAgICAgICBweXRob24tdmVyc2lvbjogIjMuMTEiCgogICAgICAtIG5hbWU6IEluc3RhbGwgZGVwZW5kZW5jaWVzCiAgICAgICAgcnVuOiBwaXAgaW5zdGFsbCAtciByZXF1aXJlbWVudHMudHh0CgogICAgICAtIG5hbWU6IFZlcmlmeSBjb25maWd1cmVkIG1hcmtldCBrZXlzIGFnYWluc3QgYSByZWFsIGV2ZW50CiAgICAgICAgZW52OgogICAgICAgICAgT0REU19BUElfS0VZOiAke3sgc2VjcmV0cy5PRERTX0FQSV9LRVkgfX0KICAgICAgICBydW46IHB5dGhvbiB2ZXJpZnlfbWFya2V0cy5weQo=
+name: Verify Odds API Markets (one-time check)
+
+# Manual-only -- tap "Run workflow" on the Actions tab in GitHub's website.
+# This exists so verify_markets.py can be run from a phone/browser, without
+# needing a computer with Python installed. Runs on GitHub's own servers,
+# which have normal internet access (unlike some restricted dev sandboxes).
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nfl_prop_engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify configured market keys against a real event
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python verify_markets.py
