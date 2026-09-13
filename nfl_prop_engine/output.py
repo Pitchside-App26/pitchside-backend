@@ -1,10 +1,13 @@
-"""Step 7: v1 output -- a ranked markdown table, printed to stdout.
-
-Not wired into any UI yet, per the spec: prove the ranking logic produces
-something defensible before building on top of it. A JSON export is a
-reasonable v2 once there's a few weeks of track record (see results_log.py
-for the durable logging that track record depends on).
+"""Step 7: output -- a ranked markdown table (stdout/logs) plus a JSON export
+consumed by the static site in site/ (published to GitHub Pages by the
+weekly workflow). The markdown table came first per the spec, to prove the
+ranking logic was defensible before building a UI on top of it; the JSON
+export is that next step now that a real run has produced sane output.
 """
+import json
+from datetime import datetime, timezone
+
+from config import STAT_LABELS
 from rank_props import RankedProp
 
 KNOWN_LIMITATIONS = """
@@ -51,3 +54,38 @@ def print_report(ranked: list[RankedProp], season: int, week: int) -> None:
     print(to_markdown_table(ranked))
     print()
     print(KNOWN_LIMITATIONS)
+
+
+def to_json_records(ranked: list[RankedProp]) -> list[dict]:
+    records = []
+    for p in ranked:
+        edge_pct = (p.projection - p.line) / p.line if p.line else None
+        records.append({
+            "player": p.player_name,
+            "team": p.team,
+            "opponent": p.opponent,
+            "kickoff": p.kickoff,
+            "stat": p.stat_col,
+            "stat_label": STAT_LABELS.get(p.stat_col, p.stat_col),
+            "line": p.line,
+            "projection": round(p.projection, 1),
+            "direction": p.direction,
+            "edge_score": round(p.edge_score, 3),
+            "edge_pct": round(edge_pct * 100, 1) if edge_pct is not None else None,
+            "hit_rate": round(p.hit_rate, 3) if p.hit_rate is not None else None,
+            "sample_size": p.sample_size,
+            "confidence": p.confidence,
+            "method": p.method,
+        })
+    return records
+
+
+def write_json(ranked: list[RankedProp], season: int, week: int, path: str) -> None:
+    payload = {
+        "season": season,
+        "week": week,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "props": to_json_records(ranked),
+    }
+    with open(path, "w") as f:
+        json.dump(payload, f, indent=2)

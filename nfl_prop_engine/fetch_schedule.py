@@ -53,7 +53,7 @@ def fetch_week_games(season: int | None = None, week: int | None = None) -> pd.D
     week = week or get_current_week(schedule)
 
     cols = ["game_id", "season", "week", "home_team", "away_team",
-            "spread_line", "total_line", "roof", "gameday"]
+            "spread_line", "total_line", "roof", "gameday", "weekday", "gametime"]
     cols = [c for c in cols if c in schedule.columns]
     games = schedule[schedule["week"] == week][cols].reset_index(drop=True)
     logger.info("Season %s week %s: %d games", season, week, len(games))
@@ -70,6 +70,24 @@ def opponent_map(games: pd.DataFrame) -> dict[str, str]:
     for _, row in games.iterrows():
         mapping[row["home_team"]] = row["away_team"]
         mapping[row["away_team"]] = row["home_team"]
+    return mapping
+
+
+def _format_kickoff(row) -> str:
+    weekday = str(row.get("weekday", ""))[:3]
+    gametime = row.get("gametime")
+    if not weekday or gametime is None or pd.isna(gametime):
+        return ""
+    return f"{weekday} {gametime} ET"
+
+
+def kickoff_map(games: pd.DataFrame) -> dict[str, str]:
+    """team -> a display-ready kickoff string, e.g. "Sun 13:00 ET"."""
+    mapping = {}
+    for _, row in games.iterrows():
+        label = _format_kickoff(row)
+        mapping[row["home_team"]] = label
+        mapping[row["away_team"]] = label
     return mapping
 
 

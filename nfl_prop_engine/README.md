@@ -32,6 +32,27 @@ output.
 `verify_markets.py` is a separate one-time tool -- see "What still needs
 live verification" below.
 
+## The results page (site/)
+
+Every run also writes `site/data.json` alongside the static `site/index.html`
+page, which reads it client-side and renders a ranked, filterable mobile-first
+card list (search by player, filter Over/Under). Nothing server-side --
+it's a plain static page.
+
+**Deployment**: `.github/workflows/nfl-prop-rankings.yml` uploads `site/` as
+a GitHub Pages artifact after every run (scheduled or manual) and deploys it.
+One-time setup required: in the repo's Settings -> Pages, set **Source** to
+**GitHub Actions** (there's no API for this, it's a manual toggle). After
+that, every run automatically republishes the page -- no separate step, no
+extra credits, it's just the last stage of the same workflow.
+
+The `site/data.json` committed to git is a real-data sample from an actual
+run, kept as a local dev fixture / fallback so the page shows something if
+opened before CI has run -- it is NOT kept in sync with the live deployed
+page (the workflow generates a fresh one per run but only uploads it to
+Pages, it doesn't commit it back to the branch). Don't be surprised if they
+differ.
+
 ## What was verified against real data during development
 
 This environment's network egress couldn't reach the-odds-api.com at all

@@ -8,6 +8,9 @@ from projection_engine import Projection
 class RankedProp:
     player_id: str
     player_name: str
+    team: str
+    opponent: str
+    kickoff: str  # display string, e.g. "Sun 1:00 ET"
     stat_col: str
     line: float
     projection: float
@@ -35,7 +38,10 @@ def compute_hit_rate(current_values: list[float], line: float, direction: str) -
     return hits / len(decisive), len(decisive)
 
 
-def build_ranked_prop(proj: Projection, line: float, current_season_values: list[float]) -> RankedProp:
+def build_ranked_prop(
+    proj: Projection, line: float, current_season_values: list[float],
+    team: str = "", opponent: str = "", kickoff: str = "",
+) -> RankedProp:
     if proj.season_std and proj.season_std > 0:
         edge_score = (proj.projection - line) / proj.season_std
     else:
@@ -45,7 +51,9 @@ def build_ranked_prop(proj: Projection, line: float, current_season_values: list
     hit_rate, sample_size = compute_hit_rate(current_season_values, line, direction)
 
     return RankedProp(
-        player_id=proj.player_id, player_name=proj.player_name, stat_col=proj.stat_col,
+        player_id=proj.player_id, player_name=proj.player_name,
+        team=team, opponent=opponent, kickoff=kickoff,
+        stat_col=proj.stat_col,
         line=line, projection=proj.projection, edge_score=edge_score, direction=direction,
         hit_rate=hit_rate, sample_size=sample_size,
         method=proj.method, confidence=proj.confidence,

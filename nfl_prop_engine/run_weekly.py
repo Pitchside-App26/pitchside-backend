@@ -24,14 +24,16 @@ from config import (
     get_current_nfl_season,
 )
 from fetch_odds import consolidate_lines, fetch_all_event_odds, list_events, parse_event_odds
-from fetch_schedule import fetch_week_games, load_schedule_seasons, opponent_map, teams_playing
+from fetch_schedule import fetch_week_games, kickoff_map, load_schedule_seasons, opponent_map, teams_playing
 from fetch_stats import fetch_all_stats
 from match_players import match_props_to_players
 from opponent_stats import add_opponent_column, allowed_rate_table
-from output import print_report
+from output import print_report, write_json
 from projection_engine import Projection, league_fallback_std, project_rookie, project_veteran
 from rank_props import build_ranked_prop, rank
 from results_log import log_weekly_output
+
+SITE_DATA_PATH = "site/data.json"
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +115,7 @@ def run(
             ", ".join(f"{r.away_team}@{r.home_team}" for r in games.itertuples()),
         )
     opp_map = opponent_map(games)
+    kickoff_lookup = kickoff_map(games)
 
     stats = fetch_all_stats(season)
     if stats["offense"].empty and stats["defense"].empty:
@@ -219,11 +222,16 @@ def run(
                 k=SHRINKAGE_K,
             )
 
-        ranked_props.append(build_ranked_prop(proj, row["point"], current_rows[stat_col].tolist()))
+        ranked_props.append(build_ranked_prop(
+            proj, row["point"], current_rows[stat_col].tolist(),
+            team=player_team, opponent=opponent_team or "", kickoff=kickoff_lookup.get(player_team, ""),
+        ))
 
     ranked = rank(ranked_props)
     print_report(ranked, season, week)
     log_weekly_output(ranked, season, week)
+    write_json(ranked, season, week, SITE_DATA_PATH)
+    logger.info("Wrote %d ranked props to %s", len(ranked), SITE_DATA_PATH)
 
 
 def main():

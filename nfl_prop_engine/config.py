@@ -102,6 +102,22 @@ ODDS_API_TEAM_NAME_TO_ABBR = {
     "Washington Commanders": "WAS",
 }
 
+# Human-readable labels for the frontend -- stat_col values are internal
+# (match nflverse's own column names), these are what a viewer sees.
+STAT_LABELS = {
+    "passing_yards": "Pass Yds",
+    "passing_tds": "Pass TDs",
+    "completions": "Completions",
+    "interceptions": "INTs Thrown",
+    "rushing_yards": "Rush Yds",
+    "carries": "Carries",
+    "receiving_yards": "Rec Yds",
+    "receptions": "Receptions",
+    "def_tackles": "Tackles",
+    "def_sacks": "Sacks",
+    "def_interceptions": "INTs",
+}
+
 # ---------------------------------------------------------------------------
 # nflverse data sources
 # ---------------------------------------------------------------------------
