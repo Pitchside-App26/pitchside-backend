@@ -18,6 +18,8 @@ on:
 
 permissions:
   contents: write  # needed to commit results_log.sqlite3 back to the repo
+  pages: write     # needed to publish the results page
+  id-token: write  # required by actions/deploy-pages for its OIDC token
 
 jobs:
   run:
@@ -57,3 +59,22 @@ jobs:
           git add results_log.sqlite3
           git diff --cached --quiet || git commit -m "chore: log week's prop rankings"
           git push
+
+      - name: Upload results page for Pages
+        # run_weekly.py just wrote nfl_prop_engine/site/data.json alongside
+        # the static index.html -- upload the whole directory as this run's
+        # Pages artifact; the deploy job below actually publishes it.
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: nfl_prop_engine/site
+
+  deploy:
+    needs: run
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
