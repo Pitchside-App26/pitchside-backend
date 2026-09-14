@@ -36,8 +36,15 @@ live verification" below.
 
 Every run also writes `site/data.json` alongside the static `site/index.html`
 page, which reads it client-side and renders a ranked, filterable mobile-first
-card list (search by player, filter Over/Under). Nothing server-side --
-it's a plain static page.
+card list (search by player, filter Over/Under, sort by edge/hit-rate/player).
+Nothing server-side -- it's a plain static page.
+
+Each prop also carries a "Why this number?" toggle -- `explain.py` turns the
+projection engine's actual intermediate numbers (current/prior-season
+averages, the blend weighting, the opponent-matchup adjustment, or the
+draft-analog pool for rookies) into a plain-English sentence or two. It's
+built directly from real values the engine already computed, not inferred
+after the fact from the final projection.
 
 **Deployment**: `.github/workflows/nfl-prop-rankings.yml` uploads `site/` as
 a GitHub Pages artifact after every run (scheduled or manual) and deploys it.
@@ -191,6 +198,7 @@ Still worth knowing:
 | `fetch_stats.py` | step 3 |
 | `match_players.py`, `name_overrides.json` | step 4 |
 | `opponent_stats.py`, `projection_engine.py` | step 5 |
+| `explain.py` | turns a Projection's real intermediate numbers into the "Why this number?" text |
 | `rank_props.py` | step 6 |
 | `output.py` | step 7 |
 | `results_log.py` | durable weekly logging (SQLite) for later grading |

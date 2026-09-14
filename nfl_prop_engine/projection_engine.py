@@ -32,6 +32,22 @@ class Projection:
     method: str  # "veteran" | "rookie_prior" | "thin_sample"
     confidence: str  # "normal" | "low"
 
+    # Everything below is optional and populated per method -- not part of
+    # the core math, just carried along so explain.py can describe how a
+    # number was actually reached instead of guessing from the final value.
+    current_season_avg: float | None = None
+    prior_season_avg: float | None = None
+    last5_avg: float | None = None
+    blended_season_avg: float | None = None
+    baseline: float | None = None
+    opp_factor: float | None = None
+    opponent_team: str | None = None
+    team_changed: bool = False
+    prior_weight: float | None = None
+    n_analog_players: int | None = None
+    analog_position: str | None = None
+    analog_pick: int | None = None
+
 
 def _team_changed(current_rows: pd.DataFrame, prior_rows: pd.DataFrame, team_col: str) -> bool:
     if current_rows.empty or prior_rows.empty:
@@ -127,6 +143,10 @@ def project_veteran(
         projection=projection, season_std=std,
         n_current_games=n, n_prior_games=len(prior_values),
         method=method, confidence=confidence,
+        current_season_avg=current_season_avg, prior_season_avg=prior_season_avg,
+        last5_avg=last5_avg, blended_season_avg=blended_season_avg, baseline=baseline,
+        opp_factor=opp_factor, opponent_team=opponent_team, team_changed=team_changed,
+        prior_weight=prior_weight,
     )
 
 
@@ -199,4 +219,5 @@ def project_rookie(
         projection=baseline, season_std=std,
         n_current_games=0, n_prior_games=0,
         method="rookie_prior", confidence="low",
+        n_analog_players=n_analogs, analog_position=position, analog_pick=pick,
     )

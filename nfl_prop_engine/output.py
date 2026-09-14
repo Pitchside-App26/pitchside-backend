@@ -76,6 +76,7 @@ def to_json_records(ranked: list[RankedProp]) -> list[dict]:
             "sample_size": p.sample_size,
             "confidence": p.confidence,
             "method": p.method,
+            "explanation": p.explanation,
         })
     return records
 

@@ -1,6 +1,7 @@
 """Step 6: rank matched player props by standard-deviation-scaled edge."""
 from dataclasses import dataclass
 
+from explain import explain_projection
 from projection_engine import Projection
 
 
@@ -20,6 +21,7 @@ class RankedProp:
     sample_size: int
     method: str
     confidence: str
+    explanation: str = ""
 
 
 def compute_hit_rate(current_values: list[float], line: float, direction: str) -> tuple[float | None, int]:
@@ -57,6 +59,7 @@ def build_ranked_prop(
         line=line, projection=proj.projection, edge_score=edge_score, direction=direction,
         hit_rate=hit_rate, sample_size=sample_size,
         method=proj.method, confidence=proj.confidence,
+        explanation=explain_projection(proj),
     )
 
 
