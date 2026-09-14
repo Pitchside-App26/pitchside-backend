@@ -1,0 +1,6 @@
+{
+  "_comment": "Map an odds-API player name (as it appears in event odds JSON) to the exact nflverse player_display_name. Add entries here as you find persistent mismatches -- expect to build this out over the first couple weeks of real use.",
+  "_example": {
+    "Gabe Davis": "Gabriel Davis"
+  }
+}

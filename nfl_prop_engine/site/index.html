@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFL Prop Rankings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --rule: #c7cdd6;
+    --rule-strong: #1b232e;
+    --text: #1b232e;
+    --sub: #5b6472;
+    --label: #8992a1;
+    --over: #1c6e4a;
+    --under: #a6192e;
+    --low-conf: #a9740f;
+  }
+  /* This project is only ever viewed by one person on one phone -- a
+     single committed light theme (not tied to OS light/dark) is
+     intentional, same call as the dark theme before it. */
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding-block: 24px 48px;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    box-sizing: border-box;
+  }
+
+  header {
+    margin-bottom: 18px;
+  }
+
+  .head-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.6rem;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .update-btn {
+    flex-shrink: 0;
+    display: inline-block;
+    background: var(--text);
+    color: var(--panel);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 12px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .update-note {
+    color: var(--sub);
+    font-size: 0.72rem;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  .meta {
+    color: var(--sub);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0;
+  }
+
+  .controls input[type="search"] {
+    flex: 1 1 100%;
+    min-width: 0;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    color: var(--text);
+    border-radius: 2px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+
+  .controls select {
+    flex: 1 1 120px;
+    min-width: 0;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    color: var(--text);
+    border-radius: 2px;
+    padding: 10px 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+  }
+
+  .controls input::placeholder {
+    color: var(--label);
+  }
+
+  .count {
+    color: var(--sub);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  .list {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .card-top {
+    display: block;
+  }
+
+  .player-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .player {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.08rem;
+  }
+
+  .stat-label {
+    color: var(--sub);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .sub {
+    color: var(--sub);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+
+  .nums {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 0.85rem;
+    max-width: 100%;
+  }
+
+  .nums-left {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .ours {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .line {
+    color: var(--sub);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .edge-badge {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .edge-badge.over { color: var(--over); }
+  .edge-badge.under { color: var(--under); }
+
+  .foot-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .conf-pill {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--rule);
+    color: var(--sub);
+  }
+
+  .conf-pill.low { color: var(--low-conf); border-color: var(--low-conf); }
+
+  .hit-rate {
+    font-size: 0.75rem;
+    color: var(--sub);
+  }
+
+  .why-btn {
+    margin-top: 10px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .why-arrow {
+    display: inline-block;
+    transition: transform 0.15s ease;
+    font-size: 0.65rem;
+    text-decoration: none;
+  }
+
+  .why-btn[aria-expanded="true"] .why-arrow {
+    transform: rotate(180deg);
+  }
+
+  .why-text {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--rule);
+    font-family: "Fraunces", Georgia, serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--sub);
+  }
+
+  .empty, .error {
+    text-align: center;
+    color: var(--sub);
+    padding: 48px 16px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  footer {
+    margin-top: 28px;
+    color: var(--sub);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    border-top: 1px solid var(--rule-strong);
+    padding-top: 14px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="head-row">
+        <h1>NFL Prop Rankings</h1>
+        <a class="update-btn" href="https://github.com/Pitchside-App26/pitchside-backend/actions/workflows/nfl-prop-rankings.yml" target="_blank" rel="noopener">Run update</a>
+      </div>
+      <div class="meta" id="meta">Loading…</div>
+      <div class="update-note">Opens GitHub Actions — tap "Run workflow", leave the branch on main, then "Run workflow" again to refresh this page.</div>
+    </header>
+
+    <div class="controls">
+      <input type="search" id="search" placeholder="Search player…" autocomplete="off">
+      <select id="sideFilter">
+        <option value="all">All</option>
+        <option value="over">Over</option>
+        <option value="under">Under</option>
+      </select>
+      <select id="sortBy">
+        <option value="edge">Sort: Edge</option>
+        <option value="hit_rate">Sort: Hit rate</option>
+        <option value="player">Sort: Player A-Z</option>
+      </select>
+    </div>
+
+    <div class="count" id="count"></div>
+    <div class="list" id="list"></div>
+  </div>
+
+<script>
+(function () {
+  const state = { props: [], search: "", side: "all", sort: "edge" };
+
+  function fmtLine(v) {
+    return Number.isFinite(v) ? (Number.isInteger(v) ? v : v.toFixed(1)) : "-";
+  }
+
+  function edgeMagnitude(p) {
+    // Sort by the same number the badge displays (edge_pct) -- sorting by
+    // edge_score (the std-dev-scaled version used internally for logging)
+    // while displaying edge_pct produced a list that looked unsorted, since
+    // the two don't always agree. Falls back to edge_score only for the
+    // rare prop with a zero line, where edge_pct is null.
+    return Math.abs(p.edge_pct ?? p.edge_score);
+  }
+
+  function sortProps(list) {
+    const arr = list.slice();
+    if (state.sort === "hit_rate") {
+      arr.sort((a, b) => (b.hit_rate ?? -1) - (a.hit_rate ?? -1));
+    } else if (state.sort === "player") {
+      arr.sort((a, b) => a.player.localeCompare(b.player));
+    } else {
+      arr.sort((a, b) => edgeMagnitude(b) - edgeMagnitude(a));
+    }
+    return arr;
+  }
+
+  function render() {
+    const list = document.getElementById("list");
+    const countEl = document.getElementById("count");
+    const q = state.search.trim().toLowerCase();
+
+    let filtered = state.props.filter(p => {
+      if (state.side !== "all" && p.direction !== state.side) return false;
+      if (q && !p.player.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    filtered = sortProps(filtered);
+
+    countEl.textContent = filtered.length + (filtered.length === 1 ? " prop" : " props");
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty">No props match this filter.</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(p => {
+      const edgeSign = p.edge_pct > 0 ? "+" : "";
+      const edgeLabel = p.edge_pct !== null ? `${edgeSign}${p.edge_pct.toFixed(1)}%` : `${p.edge_score.toFixed(2)}σ`;
+      const matchup = [p.team, p.opponent ? `vs ${p.opponent}` : "", p.kickoff].filter(Boolean).join(" · ");
+      const hitRate = p.hit_rate !== null
+        ? `${Math.round(p.hit_rate * 100)}% hit rate (${p.sample_size}g)`
+        : "No games yet this season";
+      const confLabel = p.confidence === "low" ? `low · ${p.method}` : "normal";
+
+      return `
+        <div class="card">
+          <div class="card-top">
+            <div class="player-row">
+              <span class="player">${p.player}</span>
+              <span class="stat-label">${p.stat_label}</span>
+            </div>
+            <div class="sub">${matchup}</div>
+          </div>
+          <div class="nums">
+            <span class="nums-left">
+              <span class="ours">${fmtLine(p.projection)}</span>
+              <span class="line">vs line ${fmtLine(p.line)} (${p.direction})</span>
+            </span>
+            <span class="edge-badge ${p.direction}">${edgeLabel}</span>
+          </div>
+          <div class="foot-row">
+            <span class="conf-pill ${p.confidence}">${confLabel}</span>
+            <span class="hit-rate">${hitRate}</span>
+          </div>
+          ${p.explanation ? `
+          <button class="why-btn" type="button" aria-expanded="false">
+            Why this number? <span class="why-arrow">▾</span>
+          </button>
+          <div class="why-text" hidden>${p.explanation}</div>
+          ` : ""}
+        </div>
+      `;
+    }).join("");
+  }
+
+  function timeAgo(iso) {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.round(diffMs / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.round(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.round(hours / 24)}d ago`;
+  }
+
+  fetch("data.json?_=" + Date.now())
+    .then(r => {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(data => {
+      state.props = data.props || [];
+      const meta = document.getElementById("meta");
+      meta.innerHTML = `<span>Season ${data.season}, Week ${data.week}</span>` +
+        `<span>Updated ${timeAgo(data.generated_at)}</span>` +
+        `<span>${state.props.length} props</span>`;
+      render();
+    })
+    .catch(err => {
+      document.getElementById("meta").textContent = "";
+      document.getElementById("list").innerHTML =
+        `<div class="error">Couldn't load this week's data (${err.message}).<br>` +
+        `If this is the first run, data.json hasn't been published yet.</div>`;
+    });
+
+  document.getElementById("search").addEventListener("input", e => {
+    state.search = e.target.value;
+    render();
+  });
+
+  document.getElementById("sideFilter").addEventListener("change", e => {
+    state.side = e.target.value;
+    render();
+  });
+
+  document.getElementById("sortBy").addEventListener("change", e => {
+    state.sort = e.target.value;
+    render();
+  });
+
+  document.getElementById("list").addEventListener("click", e => {
+    const btn = e.target.closest(".why-btn");
+    if (!btn) return;
+    const text = btn.nextElementSibling;
+    const expanded = btn.getAttribute("aria-expanded") === "true";
+    btn.setAttribute("aria-expanded", String(!expanded));
+    text.hidden = expanded;
+  });
+})();
+</script>
+
+  <div class="wrap">
+    <footer>
+      Heuristic blend, not a backtested statistical model — see the project README for
+      known limitations (opponent data is broad-position only, name matching has gaps,
+      rookie projections are lower-confidence, tackle props may show a data-source offset).
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+nfl_data_py
+pandas
+requests
+python-dotenv
+rapidfuzz
+pytest
