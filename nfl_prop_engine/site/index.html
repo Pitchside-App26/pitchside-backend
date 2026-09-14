@@ -50,12 +50,41 @@
     margin-bottom: 18px;
   }
 
+  .head-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
   h1 {
     font-family: "Fraunces", Georgia, serif;
     font-weight: 600;
     font-size: 1.6rem;
     margin: 0 0 6px;
     letter-spacing: -0.01em;
+  }
+
+  .update-btn {
+    flex-shrink: 0;
+    display: inline-block;
+    background: var(--text);
+    color: var(--panel);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 12px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .update-note {
+    color: var(--sub);
+    font-size: 0.72rem;
+    margin-top: 8px;
+    line-height: 1.4;
   }
 
   .meta {
@@ -287,8 +316,12 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>NFL Prop Rankings</h1>
+      <div class="head-row">
+        <h1>NFL Prop Rankings</h1>
+        <a class="update-btn" href="https://github.com/Pitchside-App26/pitchside-backend/actions/workflows/nfl-prop-rankings.yml" target="_blank" rel="noopener">Run update</a>
+      </div>
       <div class="meta" id="meta">Loading…</div>
+      <div class="update-note">Opens GitHub Actions — tap "Run workflow", leave the branch on main, then "Run workflow" again to refresh this page.</div>
     </header>
 
     <div class="controls">
