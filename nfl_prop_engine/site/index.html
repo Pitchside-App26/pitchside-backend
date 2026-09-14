@@ -337,6 +337,15 @@
     return Number.isFinite(v) ? (Number.isInteger(v) ? v : v.toFixed(1)) : "-";
   }
 
+  function edgeMagnitude(p) {
+    // Sort by the same number the badge displays (edge_pct) -- sorting by
+    // edge_score (the std-dev-scaled version used internally for logging)
+    // while displaying edge_pct produced a list that looked unsorted, since
+    // the two don't always agree. Falls back to edge_score only for the
+    // rare prop with a zero line, where edge_pct is null.
+    return Math.abs(p.edge_pct ?? p.edge_score);
+  }
+
   function sortProps(list) {
     const arr = list.slice();
     if (state.sort === "hit_rate") {
@@ -344,7 +353,7 @@
     } else if (state.sort === "player") {
       arr.sort((a, b) => a.player.localeCompare(b.player));
     } else {
-      arr.sort((a, b) => Math.abs(b.edge_score) - Math.abs(a.edge_score));
+      arr.sort((a, b) => edgeMagnitude(b) - edgeMagnitude(a));
     }
     return arr;
   }
