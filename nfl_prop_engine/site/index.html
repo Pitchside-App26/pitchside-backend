@@ -4,23 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NFL Prop Rankings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
 <style>
   :root {
-    --bg: #0b0e14;
-    --panel: #141822;
-    --panel-2: #1b202c;
-    --border: #262c3a;
-    --text: #eef1f6;
-    --muted: #8891a3;
-    --over: #ff9f43;
-    --over-bg: rgba(255, 159, 67, 0.14);
-    --under: #4aa3ff;
-    --under-bg: rgba(74, 163, 255, 0.14);
-    --low-conf: #d0a23a;
-    --low-conf-bg: rgba(208, 162, 58, 0.14);
-    --normal-conf: #3ac07a;
-    --normal-conf-bg: rgba(58, 192, 122, 0.14);
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --rule: #c7cdd6;
+    --rule-strong: #1b232e;
+    --text: #1b232e;
+    --sub: #5b6472;
+    --label: #8992a1;
+    --over: #1c6e4a;
+    --under: #a6192e;
+    --low-conf: #a9740f;
   }
+  /* This project is only ever viewed by one person on one phone -- a
+     single committed light theme (not tied to OS light/dark) is
+     intentional, same call as the dark theme before it. */
 
   * { box-sizing: border-box; }
 
@@ -33,8 +34,8 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    padding-block: 20px 48px;
+    font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding-block: 24px 48px;
   }
 
   .wrap {
@@ -50,36 +51,39 @@
   }
 
   h1 {
-    font-size: 1.5rem;
-    margin: 0 0 4px;
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.6rem;
+    margin: 0 0 6px;
     letter-spacing: -0.01em;
   }
 
   .meta {
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-
-  .meta span {
-    display: block;
-    line-height: 1.5;
+    color: var(--sub);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
   }
 
   .controls {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin: 16px 0;
+    margin: 18px 0;
   }
 
   .controls input[type="search"] {
     flex: 1 1 100%;
     min-width: 0;
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     color: var(--text);
-    border-radius: 10px;
+    border-radius: 2px;
     padding: 10px 12px;
+    font-family: inherit;
     font-size: 0.95rem;
   }
 
@@ -87,25 +91,31 @@
     flex: 1 1 120px;
     min-width: 0;
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     color: var(--text);
-    border-radius: 10px;
+    border-radius: 2px;
     padding: 10px 8px;
+    font-family: inherit;
     font-size: 0.85rem;
   }
 
+  .controls input::placeholder {
+    color: var(--label);
+  }
+
   .count {
-    color: var(--muted);
-    font-size: 0.8rem;
-    margin-bottom: 10px;
+    color: var(--sub);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule-strong);
   }
 
   .list {
     width: 100%;
     max-width: 100%;
-    /* Plain block flow, not flex -- flex's cross-axis stretch was letting
-       a grid child's intrinsic sizing push .card wider than the viewport
-       across several attempted fixes. Margin-based spacing instead of gap. */
   }
 
   .card {
@@ -113,71 +123,39 @@
     max-width: 100%;
     overflow: hidden;
     box-sizing: border-box;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
   }
-
-  .list .card:last-child { margin-bottom: 0; }
 
   .card-top {
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: 10px;
-    align-items: flex-start;
+    display: block;
   }
-
-  .nums {
-    margin-top: 8px;
-    justify-content: space-between;
-  }
-
-  .foot-row {
-    margin-top: 8px;
-  }
-
-  .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--panel-2);
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.85rem;
-    flex-shrink: 0;
-    border: 1px solid var(--border);
-  }
-
-  .info { min-width: 0; max-width: 100%; overflow: hidden; }
 
   .player-row {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
   .player {
+    font-family: "Fraunces", Georgia, serif;
     font-weight: 600;
-    font-size: 0.98rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 1.08rem;
   }
 
   .stat-label {
-    color: var(--muted);
-    font-size: 0.85rem;
+    color: var(--sub);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .sub {
-    color: var(--muted);
-    font-size: 0.78rem;
+    color: var(--sub);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     margin-top: 2px;
   }
 
@@ -186,6 +164,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+    margin-top: 10px;
     font-size: 0.85rem;
     max-width: 100%;
   }
@@ -199,49 +178,53 @@
   }
 
   .ours {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 
   .line {
-    color: var(--muted);
+    color: var(--sub);
+    font-variant-numeric: tabular-nums;
   }
 
   .edge-badge {
     flex-shrink: 0;
     font-weight: 700;
-    font-size: 0.78rem;
-    padding: 4px 7px;
-    border-radius: 8px;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
 
-  .edge-badge.over { color: var(--over); background: var(--over-bg); }
-  .edge-badge.under { color: var(--under); background: var(--under-bg); }
+  .edge-badge.over { color: var(--over); }
+  .edge-badge.under { color: var(--under); }
 
   .foot-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
+    margin-top: 8px;
   }
 
   .conf-pill {
     flex-shrink: 0;
     font-size: 0.68rem;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: 2px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--rule);
+    color: var(--sub);
   }
 
-  .conf-pill.normal { color: var(--normal-conf); background: var(--normal-conf-bg); }
-  .conf-pill.low { color: var(--low-conf); background: var(--low-conf-bg); }
+  .conf-pill.low { color: var(--low-conf); border-color: var(--low-conf); }
 
   .hit-rate {
-    font-size: 0.72rem;
-    color: var(--muted);
+    font-size: 0.75rem;
+    color: var(--sub);
   }
 
   .why-btn {
@@ -249,9 +232,12 @@
     background: none;
     border: none;
     padding: 0;
-    color: var(--under);
-    font-size: 0.75rem;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.8rem;
     font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -262,6 +248,7 @@
     display: inline-block;
     transition: transform 0.15s ease;
     font-size: 0.65rem;
+    text-decoration: none;
   }
 
   .why-btn[aria-expanded="true"] .why-arrow {
@@ -271,15 +258,17 @@
   .why-text {
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid var(--border);
-    font-size: 0.78rem;
+    border-top: 1px solid var(--rule);
+    font-family: "Fraunces", Georgia, serif;
+    font-style: italic;
+    font-size: 0.85rem;
     line-height: 1.5;
-    color: var(--muted);
+    color: var(--sub);
   }
 
   .empty, .error {
     text-align: center;
-    color: var(--muted);
+    color: var(--sub);
     padding: 48px 16px;
     font-size: 0.9rem;
     line-height: 1.5;
@@ -287,16 +276,11 @@
 
   footer {
     margin-top: 28px;
-    color: var(--muted);
+    color: var(--sub);
     font-size: 0.75rem;
     line-height: 1.5;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule-strong);
     padding-top: 14px;
-  }
-
-  @media (prefers-color-scheme: light) {
-    /* This project only really gets viewed by one person on one phone in
-       dark mode -- intentionally not building a light theme yet. */
   }
 </style>
 </head>
@@ -328,10 +312,6 @@
 <script>
 (function () {
   const state = { props: [], search: "", side: "all", sort: "edge" };
-
-  function initials(name) {
-    return name.split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
-  }
 
   function fmtLine(v) {
     return Number.isFinite(v) ? (Number.isInteger(v) ? v : v.toFixed(1)) : "-";
@@ -389,14 +369,11 @@
       return `
         <div class="card">
           <div class="card-top">
-            <div class="avatar">${initials(p.player)}</div>
-            <div class="info">
-              <div class="player-row">
-                <span class="player">${p.player}</span>
-                <span class="stat-label">${p.stat_label}</span>
-              </div>
-              <div class="sub">${matchup}</div>
+            <div class="player-row">
+              <span class="player">${p.player}</span>
+              <span class="stat-label">${p.stat_label}</span>
             </div>
+            <div class="sub">${matchup}</div>
           </div>
           <div class="nums">
             <span class="nums-left">
