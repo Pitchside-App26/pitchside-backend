@@ -23,7 +23,7 @@ from config import (
     SHRINKAGE_K,
     get_current_nfl_season,
 )
-from fetch_odds import consolidate_lines, fetch_all_event_odds, list_events, parse_event_odds
+from fetch_odds import consolidate_lines, fetch_all_event_odds, list_events, parse_event_odds, pivot_over_under
 from fetch_schedule import (
     fetch_week_games,
     kickoff_map,
@@ -72,7 +72,7 @@ def build_odds_dataframe(
     rows = []
     for event_id, raw in raw_by_event.items():
         rows.extend(parse_event_odds(raw))
-    rows = [r for r in rows if r["side"] == "Over"]  # Over/Under share the same point; one row per prop is enough
+    rows = pivot_over_under(rows)  # one row per prop, carrying BOTH sides' price -- not just the line
     rows = consolidate_lines(rows)
     for r in rows:
         # Same translation, applied here too since roster team columns
@@ -254,6 +254,7 @@ def run(
         ranked_props.append(build_ranked_prop(
             proj, row["point"], current_rows[stat_col].tolist(),
             team=player_team, opponent=opponent_team or "", kickoff=kickoff_lookup.get(player_team, ""),
+            over_price=row.get("over_price"), under_price=row.get("under_price"),
         ))
 
     ranked = rank(ranked_props)

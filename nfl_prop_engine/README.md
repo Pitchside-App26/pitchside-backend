@@ -220,6 +220,39 @@ Still worth knowing:
   uncommon enough on this API that it likely isn't worth a market-key
   guess without evidence).
 
+## Price-aware ranking (pricing.py)
+
+Another gap from the same "what does the model actually know" review: the
+odds API response was already carrying each outcome's American odds price
+(`fetch_odds.py`'s `parse_event_odds()` was parsing it into every row all
+along) -- `run_weekly.py` just discarded it, keeping only the line. That
+meant `edge_pct`/`edge_score` measured distance from the number, never
+whether the price on that side was any good. A prop could clear its line
+by a mile and still be priced so that it isn't a good bet.
+
+`pricing.py` adds:
+- **`market_prob`**: the no-vig implied probability from BOTH sides'
+  prices (the standard de-vig method: normalize each side's raw implied
+  probability so they sum to exactly 100%, removing the book's edge).
+- **`model_prob`**: this engine's own estimate, treating `edge_score` (how
+  many standard deviations the projection clears the line by) as a z-score
+  and taking its normal CDF. This is a real simplification -- actual stat
+  distributions, especially low-count ones like sacks or interceptions,
+  aren't perfectly normal -- and is exactly the kind of thing
+  `grade_results.py` should eventually be used to check, the same way
+  `SHRINKAGE_K` and the game-context weights are flagged as unvalidated
+  starting points.
+- **`value_pct`**: `model_prob - market_prob`, in percentage points. This
+  is the number that actually answers "is this worth betting" -- and is
+  now what `rank()` sorts by, falling back to `edge_score` only when a
+  prop has no price data (e.g. old backtest rows from before this
+  existed).
+
+One side's price alone (`fetch_odds.py`'s old behavior, keeping only the
+Over row) can't be de-vigged -- `pivot_over_under()` was added so both
+sides' prices survive into one row per prop instead of the Under row being
+thrown away immediately after parsing.
+
 ## Game-context adjustment (spread/total)
 
 The projection engine used to know nothing about the specific game a player
@@ -304,6 +337,7 @@ ever read them. That data is not new; it just wasn't wired to anything.
 | `match_players.py`, `name_overrides.json` | step 4 |
 | `opponent_stats.py`, `projection_engine.py`, `game_context.py` | step 5 |
 | `explain.py` | turns a Projection's real intermediate numbers into the "Why this number?" text |
+| `pricing.py` | American-odds price -> no-vig/model probability -> value_pct, used by step 6's ranking |
 | `rank_props.py` | step 6 |
 | `output.py` | step 7 |
 | `results_log.py` | durable weekly logging (SQLite) for later grading |

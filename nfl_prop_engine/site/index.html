@@ -332,6 +332,7 @@
         <option value="under">Under</option>
       </select>
       <select id="sortBy">
+        <option value="value">Sort: Value</option>
         <option value="edge">Sort: Edge</option>
         <option value="hit_rate">Sort: Hit rate</option>
         <option value="player">Sort: Player A-Z</option>
@@ -344,7 +345,7 @@
 
 <script>
 (function () {
-  const state = { props: [], search: "", side: "all", sort: "edge" };
+  const state = { props: [], search: "", side: "all", sort: "value" };
 
   function fmtLine(v) {
     return Number.isFinite(v) ? (Number.isInteger(v) ? v : v.toFixed(1)) : "-";
@@ -359,14 +360,24 @@
     return Math.abs(p.edge_pct ?? p.edge_score);
   }
 
+  function valueMagnitude(p) {
+    // value_pct (model probability vs. the market's own no-vig price) is
+    // what actually answers "is this worth betting" -- edge_pct alone is
+    // just distance from the line, blind to the price. Falls back to
+    // edgeMagnitude for props with no price data (e.g. a backtest run).
+    return p.value_pct !== null && p.value_pct !== undefined ? Math.abs(p.value_pct) : edgeMagnitude(p);
+  }
+
   function sortProps(list) {
     const arr = list.slice();
     if (state.sort === "hit_rate") {
       arr.sort((a, b) => (b.hit_rate ?? -1) - (a.hit_rate ?? -1));
     } else if (state.sort === "player") {
       arr.sort((a, b) => a.player.localeCompare(b.player));
-    } else {
+    } else if (state.sort === "edge") {
       arr.sort((a, b) => edgeMagnitude(b) - edgeMagnitude(a));
+    } else {
+      arr.sort((a, b) => valueMagnitude(b) - valueMagnitude(a));
     }
     return arr;
   }
@@ -393,6 +404,7 @@
     list.innerHTML = filtered.map(p => {
       const edgeSign = p.edge_pct > 0 ? "+" : "";
       const edgeLabel = p.edge_pct !== null ? `${edgeSign}${p.edge_pct.toFixed(1)}%` : `${p.edge_score.toFixed(2)}σ`;
+      const priceLabel = p.price !== null && p.price !== undefined ? `, ${p.price > 0 ? "+" : ""}${p.price}` : "";
       const matchup = [p.team, p.opponent ? `vs ${p.opponent}` : "", p.kickoff].filter(Boolean).join(" · ");
       const hitRate = p.hit_rate !== null
         ? `${Math.round(p.hit_rate * 100)}% hit rate (${p.sample_size}g)`
@@ -411,7 +423,7 @@
           <div class="nums">
             <span class="nums-left">
               <span class="ours">${fmtLine(p.projection)}</span>
-              <span class="line">vs line ${fmtLine(p.line)} (${p.direction})</span>
+              <span class="line">vs line ${fmtLine(p.line)} (${p.direction}${priceLabel})</span>
             </span>
             <span class="edge-badge ${p.direction}">${edgeLabel}</span>
           </div>
