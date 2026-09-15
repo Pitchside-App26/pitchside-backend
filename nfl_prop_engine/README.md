@@ -165,6 +165,56 @@ Still worth knowing:
   uncommon enough on this API that it likely isn't worth a market-key
   guess without evidence).
 
+## Game-context adjustment (spread/total)
+
+The projection engine used to know nothing about the specific game a player
+was playing in -- only their own history and the opponent's season-long
+tendency. `game_context.py` fixes the clearest gap that exposed: found by
+grading real week 1 output against actual results (KC beat DEN 31-10;
+J.K. Dobbins was projected for 76.8 rushing yards and actually got 36,
+because Denver abandoned the run in a blowout -- a game-script effect the
+engine had no way to see coming).
+
+`fetch_schedule.py` was already pulling `spread_line` and `total_line` from
+the schedule for every run -- confirmed by grep that nothing downstream
+ever read them. That data is not new; it just wasn't wired to anything.
+
+- **Sign convention CONFIRMED against real results**, not assumed:
+  `spread_line` is from the home team's perspective, and *positive* means
+  the home team is favored (the opposite of the common bettor-facing "-3"
+  convention). Checked by correlating `spread_line` against actual
+  home-team scoring margin across all 16 real games in 2026 week 1:
+  +0.34, positive as expected. Getting this backwards would have silently
+  flipped every adjustment below.
+- **Two separate effects, not one**, because rushing and passing/receiving
+  volume move in *opposite* directions off the same spread (a favorite
+  protecting a lead runs more and throws less; a trailing underdog does the
+  reverse):
+  - `environment_factor`: this team's implied point total (half the game
+    total, shifted by half their own spread) relative to the league-average
+    team total for that week's real slate. Applied to both rush and pass
+    stats -- a team implied for more points generally does more of
+    everything.
+  - `script_tilt`: -1..+1 from the team's own spread, clipped at 10 points.
+    Boosts rushing volume and suppresses passing/receiving volume for
+    favorites; the reverse for underdogs.
+  - Both are capped-weight heuristics (`GAME_ENV_WEIGHT=0.2`,
+    `GAME_SCRIPT_WEIGHT=0.15` in `config.py`), same unvalidated-starting-point
+    status as `SHRINKAGE_K` -- real weights once there's enough graded data
+    to tune against.
+  - **Defensive stats are deliberately untouched for now.** A defender's
+    tackle/sack opportunities scale with the *opponent's* plays run, not
+    this team's own implied total -- a different, more complex relationship
+    this first pass doesn't attempt to guess at.
+- **Honest limit, checked against the Dobbins case that motivated this**:
+  re-running the real numbers, this adjustment would have pulled his
+  76.8-yard projection down to about 72.3 -- directionally right, nowhere
+  near enough to flip the pick, because Denver was only a 2.5-point
+  underdog on paper. The market itself didn't see that blowout coming
+  either. This adjustment uses the same signal the market had, which is a
+  real improvement over using none of it -- but it was never going to
+  predict a blowout the spread itself didn't predict.
+
 ## Design choices worth knowing about (not explicit in the spec)
 
 - **Non-rookie players with a genuinely thin combined sample** (e.g. a
@@ -197,7 +247,7 @@ Still worth knowing:
 | `fetch_odds.py`, `verify_markets.py` | step 2 |
 | `fetch_stats.py` | step 3 |
 | `match_players.py`, `name_overrides.json` | step 4 |
-| `opponent_stats.py`, `projection_engine.py` | step 5 |
+| `opponent_stats.py`, `projection_engine.py`, `game_context.py` | step 5 |
 | `explain.py` | turns a Projection's real intermediate numbers into the "Why this number?" text |
 | `rank_props.py` | step 6 |
 | `output.py` | step 7 |

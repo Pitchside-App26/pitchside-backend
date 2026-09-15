@@ -155,6 +155,27 @@ ROOKIE_DRAFT_SLOT_WINDOW = 20  # +/- picks considered "similar draft slot"
 ROOKIE_MIN_GAMES_FOR_PRIOR = 1  # analog players need at least 1 of games 1-3 logged
 MIN_COMBINED_GAMES_FOR_VETERAN_PROJECTION = 3
 
+# Which stat columns get the game-context (spread/total) adjustment in
+# game_context.py, and how. Sets, not a single "offense" bucket, because
+# rushing and passing/receiving volume move in OPPOSITE directions off the
+# same spread (a big favorite runs more and throws less; a big underdog does
+# the reverse) -- see game_context.apply_game_context. Defensive stats are
+# deliberately left out for now: their real relationship to game script
+# (tackle opportunities scale with the OPPONENT's plays run, not this team's
+# own implied total) is a different, more complex mechanism this first pass
+# doesn't attempt to guess at.
+RUSH_VOLUME_STATS = {"rushing_yards", "carries"}
+PASS_VOLUME_STATS = {
+    "passing_yards", "passing_tds", "completions", "interceptions",
+    "receiving_yards", "receptions",
+}
+
+# Both starting points, same as SHRINKAGE_K above -- unvalidated until
+# results_log.sqlite3 has enough graded weeks to actually tune them.
+GAME_ENV_WEIGHT = 0.2  # how much this team's implied total (vs. league-average) scales volume
+GAME_SCRIPT_WEIGHT = 0.15  # how much the spread tilts the rush/pass mix
+GAME_SCRIPT_SCALE = 10.0  # points of spread that reach the full script tilt; clipped beyond this
+
 # Position-group mapping between nflverse (fine-grained) and stat markets
 # (coarse: QB/RB/WR/TE/DEF). WR and TE are pooled into the same opponent
 # "allowed" pool per the spec's stated limitation (no slot/outside splits).
