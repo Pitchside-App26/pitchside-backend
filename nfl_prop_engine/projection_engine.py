@@ -12,11 +12,14 @@ from dataclasses import dataclass
 import pandas as pd
 
 from config import (
+    GAME_ENV_WEIGHT,
+    GAME_SCRIPT_WEIGHT,
     MIN_COMBINED_GAMES_FOR_VETERAN_PROJECTION,
     ROOKIE_DRAFT_SLOT_WINDOW,
     ROOKIE_MIN_GAMES_FOR_PRIOR,
     SHRINKAGE_K,
 )
+from game_context import apply_game_context, script_tilt
 from opponent_stats import blended_opponent_factor
 
 
@@ -47,6 +50,10 @@ class Projection:
     n_analog_players: int | None = None
     analog_position: str | None = None
     analog_pick: int | None = None
+
+    # Game-context (spread/total) adjustment -- see game_context.py.
+    team_spread: float | None = None
+    game_context_pct: float | None = None
 
 
 def _team_changed(current_rows: pd.DataFrame, prior_rows: pd.DataFrame, team_col: str) -> bool:
@@ -98,6 +105,8 @@ def project_veteran(
     team_col: str,
     league_fallback: float,
     k: int = SHRINKAGE_K,
+    env_factor: float | None = None,
+    team_spread_value: float | None = None,
 ) -> Projection:
     current_values = current_rows.sort_values("week")[stat_col].tolist()
     prior_values = prior_rows[stat_col].tolist()
@@ -132,6 +141,16 @@ def project_veteran(
     )
 
     projection = baseline * (1 + 0.25 * (opp_factor - 1))
+
+    tilt = script_tilt(team_spread_value)
+    projection_with_context = apply_game_context(
+        projection, stat_col, env_factor, tilt, GAME_ENV_WEIGHT, GAME_SCRIPT_WEIGHT
+    )
+    game_context_pct = (
+        (projection_with_context / projection - 1) * 100 if projection else None
+    )
+    projection = projection_with_context
+
     std = _season_std(current_values, prior_values, league_fallback)
 
     combined_games = n + len(prior_values)
@@ -147,6 +166,7 @@ def project_veteran(
         last5_avg=last5_avg, blended_season_avg=blended_season_avg, baseline=baseline,
         opp_factor=opp_factor, opponent_team=opponent_team, team_changed=team_changed,
         prior_weight=prior_weight,
+        team_spread=team_spread_value, game_context_pct=game_context_pct,
     )
 
 
@@ -208,16 +228,27 @@ def project_rookie(
     pick: int | None,
     draft_picks_df: pd.DataFrame,
     weekly_df: pd.DataFrame,
+    env_factor: float | None = None,
+    team_spread_value: float | None = None,
 ) -> Projection | None:
     baseline, n_analogs = rookie_analog_baseline(draft_picks_df, weekly_df, stat_col, position, pick)
     if baseline is None:
         return None  # no basis at all -- never show a number with nothing behind it
 
+    # A rookie's projection has no opponent adjustment either (see the
+    # module docstring above) -- but the game they're actually playing in
+    # this week is just as real for them as for anyone else on the roster,
+    # so the same spread/total adjustment still applies.
+    tilt = script_tilt(team_spread_value)
+    projection = apply_game_context(baseline, stat_col, env_factor, tilt, GAME_ENV_WEIGHT, GAME_SCRIPT_WEIGHT)
+    game_context_pct = (projection / baseline - 1) * 100 if baseline else None
+
     std = league_fallback_std(weekly_df, stat_col)
     return Projection(
         player_id=player_id, player_name=player_name, stat_col=stat_col,
-        projection=baseline, season_std=std,
+        projection=projection, season_std=std,
         n_current_games=0, n_prior_games=0,
         method="rookie_prior", confidence="low",
         n_analog_players=n_analogs, analog_position=position, analog_pick=pick,
+        team_spread=team_spread_value, game_context_pct=game_context_pct,
     )

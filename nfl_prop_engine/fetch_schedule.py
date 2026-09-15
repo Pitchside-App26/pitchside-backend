@@ -91,6 +91,20 @@ def kickoff_map(games: pd.DataFrame) -> dict[str, str]:
     return mapping
 
 
+def team_game_context(games: pd.DataFrame) -> dict[str, dict]:
+    """team -> {'spread_line', 'total_line', 'is_home'} for this week's
+    game, fed to game_context.py's environment/script adjustment. spread_line
+    and total_line are already in `games` (fetch_week_games pulls them) --
+    this just reshapes them per-team instead of per-game."""
+    mapping = {}
+    for _, row in games.iterrows():
+        spread = row.get("spread_line")
+        total = row.get("total_line")
+        mapping[row["home_team"]] = {"spread_line": spread, "total_line": total, "is_home": True}
+        mapping[row["away_team"]] = {"spread_line": spread, "total_line": total, "is_home": False}
+    return mapping
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     games = fetch_week_games()

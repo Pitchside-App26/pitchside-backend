@@ -24,8 +24,16 @@ from config import (
     get_current_nfl_season,
 )
 from fetch_odds import consolidate_lines, fetch_all_event_odds, list_events, parse_event_odds
-from fetch_schedule import fetch_week_games, kickoff_map, load_schedule_seasons, opponent_map, teams_playing
+from fetch_schedule import (
+    fetch_week_games,
+    kickoff_map,
+    load_schedule_seasons,
+    opponent_map,
+    team_game_context,
+    teams_playing,
+)
 from fetch_stats import fetch_all_stats
+from game_context import environment_factor, team_implied_total, team_spread as team_spread_fn
 from match_players import match_props_to_players
 from opponent_stats import add_opponent_column, allowed_rate_table
 from output import print_report, write_json
@@ -107,6 +115,15 @@ def run(
 ) -> None:
     games = fetch_week_games(season, week)
     week = int(games["week"].iloc[0])  # resolve once so every downstream call uses the same week
+    # League-average implied team total computed from the FULL week's slate,
+    # before any --teams scoping below -- a cheap test run limited to one
+    # game shouldn't change what "average" means for the environment_factor
+    # comparison.
+    league_avg_team_total = (
+        games["total_line"].mean() / 2
+        if "total_line" in games.columns and games["total_line"].notna().any()
+        else None
+    )
     if teams_filter:
         games = games[games["home_team"].isin(teams_filter) | games["away_team"].isin(teams_filter)]
         logger.info(
@@ -116,6 +133,7 @@ def run(
         )
     opp_map = opponent_map(games)
     kickoff_lookup = kickoff_map(games)
+    game_ctx_map = team_game_context(games)
 
     stats = fetch_all_stats(season)
     if stats["offense"].empty and stats["defense"].empty:
@@ -193,6 +211,14 @@ def run(
         player_team = current_rows[team_col].iloc[-1] if not current_rows.empty else prior_rows[team_col].mode().iat[0]
         opponent_team = opp_map.get(player_team)
 
+        ctx = game_ctx_map.get(player_team)
+        if ctx:
+            implied_total = team_implied_total(ctx["total_line"], ctx["spread_line"], ctx["is_home"])
+            env_factor = environment_factor(implied_total, league_avg_team_total)
+            team_spread_value = team_spread_fn(ctx["spread_line"], ctx["is_home"])
+        else:
+            env_factor, team_spread_value = None, None
+
         cur_allowed, cur_league_avg, n_league_games = allowed_tables[(stat_col, season)]
         pri_allowed, pri_league_avg, _ = allowed_tables[(stat_col, season - 1)]
 
@@ -203,13 +229,16 @@ def run(
                 opponent_team, cur_allowed, cur_league_avg, n_league_games,
                 pri_allowed, pri_league_avg, team_col,
                 league_fallback_std(source_df[source_df["season"] == season], stat_col),
-                k=SHRINKAGE_K,
+                k=SHRINKAGE_K, env_factor=env_factor, team_spread_value=team_spread_value,
             )
         elif prior_rows.empty:
             draft_row = draft_picks_df[draft_picks_df["gsis_id"] == player_id]
             position = draft_row["position"].iloc[0] if not draft_row.empty else current_rows["position"].iloc[0]
             pick = int(draft_row["pick"].iloc[0]) if not draft_row.empty else None
-            proj = project_rookie(player_id, row["matched_player"], stat_col, position, pick, draft_picks_df, source_df)
+            proj = project_rookie(
+                player_id, row["matched_player"], stat_col, position, pick, draft_picks_df, source_df,
+                env_factor=env_factor, team_spread_value=team_spread_value,
+            )
             if proj is None:
                 logger.warning("No rookie-analog basis for %s / %s -- skipping.", row["matched_player"], stat_col)
                 continue
@@ -219,7 +248,7 @@ def run(
                 opponent_team, cur_allowed, cur_league_avg, n_league_games,
                 pri_allowed, pri_league_avg, team_col,
                 league_fallback_std(source_df[source_df["season"] == season], stat_col),
-                k=SHRINKAGE_K,
+                k=SHRINKAGE_K, env_factor=env_factor, team_spread_value=team_spread_value,
             )
 
         ranked_props.append(build_ranked_prop(

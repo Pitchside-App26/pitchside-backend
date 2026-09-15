@@ -114,6 +114,65 @@ def test_project_veteran_opponent_factor_moves_projection():
     assert proj.projection == pytest.approx(20.0 * 0.875)
 
 
+def _rows_for(stat_col, weeks, values, team="KC"):
+    return pd.DataFrame({"week": weeks, stat_col: values, "team": [team] * len(weeks)})
+
+
+def test_project_veteran_game_context_tilts_rush_and_pass_oppositely():
+    # Same neutral opponent, same inputs, differing only by stat category --
+    # a favored team (positive team_spread) should end up with a HIGHER
+    # rushing_yards projection but a LOWER passing_yards projection than the
+    # no-context baseline, not the same direction for both.
+    empty_series = pd.Series(dtype=float)
+
+    rush_current = _rows_for("rushing_yards", [1, 2, 3], [20.0, 20.0, 20.0])
+    rush_prior = pd.DataFrame(columns=["week", "rushing_yards", "team"])
+    baseline_rush_proj = project_veteran(
+        "p1", "Test Player", "rushing_yards", rush_current, rush_prior, "LAC",
+        empty_series, float("nan"), 0, empty_series, float("nan"),
+        "team", 5.0, k=4,
+    )
+    rush_proj = project_veteran(
+        "p1", "Test Player", "rushing_yards", rush_current, rush_prior, "LAC",
+        empty_series, float("nan"), 0, empty_series, float("nan"),
+        "team", 5.0, k=4, team_spread_value=10.0,
+    )
+
+    pass_current = _rows_for("passing_yards", [1, 2, 3], [20.0, 20.0, 20.0])
+    pass_prior = pd.DataFrame(columns=["week", "passing_yards", "team"])
+    baseline_pass_proj = project_veteran(
+        "p1", "Test Player", "passing_yards", pass_current, pass_prior, "LAC",
+        empty_series, float("nan"), 0, empty_series, float("nan"),
+        "team", 5.0, k=4,
+    )
+    pass_proj = project_veteran(
+        "p1", "Test Player", "passing_yards", pass_current, pass_prior, "LAC",
+        empty_series, float("nan"), 0, empty_series, float("nan"),
+        "team", 5.0, k=4, team_spread_value=10.0,
+    )
+
+    assert rush_proj.projection > baseline_rush_proj.projection
+    assert pass_proj.projection < baseline_pass_proj.projection
+    assert rush_proj.team_spread == 10.0
+    assert rush_proj.game_context_pct == pytest.approx((rush_proj.projection / baseline_rush_proj.projection - 1) * 100)
+
+
+def test_project_rookie_applies_game_context():
+    draft_df = pd.DataFrame({
+        "position": ["RB"], "pick": [15], "season": [2023], "gsis_id": ["r1"],
+    })
+    weekly_df = pd.DataFrame({
+        "player_id": ["r1", "r1"], "season": [2023, 2023], "week": [1, 2],
+        "rushing_yards": [40.0, 60.0],
+    })
+    no_context = project_rookie("new1", "Rookie", "rushing_yards", "RB", 12, draft_df, weekly_df)
+    with_context = project_rookie(
+        "new1", "Rookie", "rushing_yards", "RB", 12, draft_df, weekly_df, team_spread_value=10.0,
+    )
+    assert with_context.projection > no_context.projection
+    assert with_context.game_context_pct is not None
+
+
 def test_find_draft_analogs_respects_window_and_position():
     draft_df = pd.DataFrame({
         "position": ["WR", "WR", "RB", "WR"],

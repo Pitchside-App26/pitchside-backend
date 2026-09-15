@@ -19,12 +19,14 @@ def explain_projection(proj: Projection) -> str:
 def _explain_rookie(proj: Projection) -> str:
     slot = f"pick #{proj.analog_pick}" if proj.analog_pick else "similar undrafted rookies"
     n = proj.n_analog_players or 0
-    return (
+    parts = [
         f"No NFL games played yet, so this is a historical-analogue projection, not "
         f"a real track record: the median first-3-game production of {n} other "
         f"{proj.analog_position or 'players'} drafted near {slot} was {_fmt(proj.projection)}. "
         f"No opponent adjustment applied at this sample size -- treat as low confidence."
-    )
+    ]
+    parts.append(_game_context_sentence(proj))
+    return " ".join(p for p in parts if p)
 
 
 def _explain_veteran(proj: Projection) -> str:
@@ -68,6 +70,10 @@ def _explain_veteran(proj: Projection) -> str:
             direction = "tougher" if pct < 0 else "more favorable"
             parts.append(f"Adjusted {pct:+.0f}% for a {direction}-than-average matchup against {proj.opponent_team}.")
 
+    context_sentence = _game_context_sentence(proj)
+    if context_sentence:
+        parts.append(context_sentence)
+
     if proj.method == "thin_sample":
         parts.append(
             "Flagged low confidence: very few combined games (current + prior season) "
@@ -75,3 +81,15 @@ def _explain_veteran(proj: Projection) -> str:
         )
 
     return " ".join(parts)
+
+
+def _game_context_sentence(proj: Projection) -> str:
+    """Describes the spread/total adjustment, but only when it moved the
+    number enough to matter -- same >=3% threshold explain.py already uses
+    for the opponent adjustment, so a negligible tilt doesn't clutter every
+    single prop's explanation with boilerplate."""
+    if proj.game_context_pct is None or abs(proj.game_context_pct) < 3:
+        return ""
+    role = "favored by" if (proj.team_spread or 0) > 0 else "an underdog by"
+    spread_note = f" (team {role} {abs(proj.team_spread):.1f})" if proj.team_spread is not None else ""
+    return f"Adjusted {proj.game_context_pct:+.0f}% for this week's spread/total{spread_note}."
