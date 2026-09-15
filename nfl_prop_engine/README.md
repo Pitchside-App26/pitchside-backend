@@ -220,6 +220,60 @@ Still worth knowing:
   uncommon enough on this API that it likely isn't worth a market-key
   guess without evidence).
 
+## Injury status and receiving usage (fetch_injuries.py, fetch_receiving_usage)
+
+Two more facets from the same review, both CONFIRMED against real 2026
+data before being wired in:
+
+- **Injury status** (`fetch_injuries.py`): `nfl_data_py.import_injuries()`
+  returns one row per (player, week) -- already the week's final report,
+  not a per-practice-day log needing deduplication (checked directly: 0 of
+  182 week 1 players had more than one row). Real `report_status` values:
+  `Out`, `Doubtful`, `Questionable`, or not on the report at all. A player
+  listed **Out is excluded from the ranked output entirely** -- a prop for
+  someone who isn't playing isn't a real recommendation, same reasoning as
+  never showing a rookie projection with zero basis behind it.
+  `Doubtful`/`Questionable` stay in, tagged with a visible badge and a
+  caution line in the "why" explanation, so it's visible rather than
+  silently baked into the number. Real example from week 1: Malik Nabers
+  (NYG) was listed Questionable (knee) -- confirmed directly against the
+  real injury report, not a hypothetical.
+- **Receiving usage** (`fetch_stats.fetch_receiving_usage`): Next Gen
+  Stats' `targets` and target-share data, added as **context only** --
+  shown in the "why" explanation for receiving props (e.g. "Averaging 5.0
+  targets/game this season"), NOT folded into the projection number
+  itself. Usage-based projection is a real, separate piece of work that
+  needs backtesting before it's trusted the way the existing formula is;
+  this is the deliberately smaller, lower-risk first step.
+  **Found and fixed a real data gotcha while verifying this**: NGS
+  receiving data includes a `week=0` row per player alongside the real
+  per-week rows -- a season-to-date aggregate, not an actual game. Left
+  in, it would have silently double-counted into any per-player average
+  (confirmed directly: week 0 and week 1 had identical row counts and, in
+  week 1, identical target totals). Filtered out in
+  `fetch_receiving_usage` before it reaches anything that averages by
+  player.
+
+Deliberately NOT built in this pass, with reasons:
+- **Snap counts** -- verified real and populated
+  (`nfl_data_py.import_snap_counts()`), but keyed by `pfr_player_id`
+  rather than this engine's `gsis_id`, needing a crosswalk
+  (`nfl_data_py.import_ids()`, also verified real -- 7,818 players have
+  both IDs). Mostly duplicates what NGS targets already covers for
+  receiving; lower priority until there's a concrete use (e.g. RB/QB
+  usage, which NGS receiving doesn't cover) worth the join.
+- **Red-zone / situational usage** -- derivable from the play-by-play file
+  already in use (same way `derive_stats_from_pbp.py` works), but folding
+  it into TD-likelihood props specifically doesn't have anywhere to land
+  yet: `config.py`'s `OFFENSE_MARKETS` only tracks `passing_tds`, not
+  `rushing_tds`/`receiving_tds` as markets at all. Wiring red-zone context
+  in without a market to attach it to would be building ahead of what's
+  actually rankable.
+- **Weather** -- genuinely needs a new external data source (the schedule
+  only has `roof`, dome vs. outdoor, not wind or temperature); an actual
+  new integration rather than another nflverse pull, so it's the one item
+  from the original list still awaiting a decision on which provider.
+
 ## Price-aware ranking (pricing.py)
 
 Another gap from the same "what does the model actually know" review: the
@@ -333,7 +387,8 @@ ever read them. That data is not new; it just wasn't wired to anything.
 | `config.py` | shared constants; read this first -- it documents what's verified vs. guessed |
 | `fetch_schedule.py` | step 1 |
 | `fetch_odds.py`, `verify_markets.py` | step 2 |
-| `fetch_stats.py` | step 3 |
+| `fetch_stats.py` | step 3; also NGS receiving usage (targets/target share) |
+| `fetch_injuries.py` | weekly injury report -- excludes OUT players, flags Questionable/Doubtful |
 | `match_players.py`, `name_overrides.json` | step 4 |
 | `opponent_stats.py`, `projection_engine.py`, `game_context.py` | step 5 |
 | `explain.py` | turns a Projection's real intermediate numbers into the "Why this number?" text |

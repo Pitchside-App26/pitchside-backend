@@ -32,6 +32,7 @@ from fetch_schedule import (
     team_game_context,
     teams_playing,
 )
+from fetch_injuries import fetch_injury_report
 from fetch_stats import fetch_all_stats
 from game_context import environment_factor, team_implied_total, team_spread as team_spread_fn
 from match_players import match_props_to_players
@@ -134,6 +135,7 @@ def run(
     opp_map = opponent_map(games)
     kickoff_lookup = kickoff_map(games)
     game_ctx_map = team_game_context(games)
+    injury_report = fetch_injury_report(season, week)
 
     stats = fetch_all_stats(season)
     if stats["offense"].empty and stats["defense"].empty:
@@ -157,6 +159,17 @@ def run(
     defense_df = add_opponent_column(stats["defense"], schedule_multi, team_col="team")
     defense_df = prep_position_group(defense_df, "position", constant="DEF")
     draft_picks_df = stats["draft_picks"]
+
+    # {player_id: avg targets/game so far this season} -- informational
+    # context for receiving props only (see explain.py), not a projection
+    # input. Current season only: last year's target share says little
+    # about a player who may have changed role or team since.
+    usage_df = stats["receiving_usage"]
+    avg_targets_by_player: dict[str, float] = {}
+    if not usage_df.empty:
+        current_usage = usage_df[usage_df["season"] == season]
+        if not current_usage.empty:
+            avg_targets_by_player = current_usage.groupby("player_id")["targets"].mean().to_dict()
 
     allowed_tables = build_allowed_tables(offense_df, defense_df, [season - 1, season])
 
@@ -211,6 +224,14 @@ def run(
         player_team = current_rows[team_col].iloc[-1] if not current_rows.empty else prior_rows[team_col].mode().iat[0]
         opponent_team = opp_map.get(player_team)
 
+        injury_status = injury_report.get(player_id)
+        if injury_status == "Out":
+            # Not a real recommendation if the player isn't going to play --
+            # exclude entirely rather than rank a dead prop, same reasoning
+            # as never showing a rookie projection with zero basis behind it.
+            logger.info("Skipping %s / %s -- listed OUT this week.", row["matched_player"], stat_col)
+            continue
+
         ctx = game_ctx_map.get(player_team)
         if ctx:
             implied_total = team_implied_total(ctx["total_line"], ctx["spread_line"], ctx["is_home"])
@@ -251,10 +272,13 @@ def run(
                 k=SHRINKAGE_K, env_factor=env_factor, team_spread_value=team_spread_value,
             )
 
+        avg_targets = avg_targets_by_player.get(player_id) if stat_col in ("receptions", "receiving_yards") else None
+
         ranked_props.append(build_ranked_prop(
             proj, row["point"], current_rows[stat_col].tolist(),
             team=player_team, opponent=opponent_team or "", kickoff=kickoff_lookup.get(player_team, ""),
             over_price=row.get("over_price"), under_price=row.get("under_price"),
+            injury_status=injury_status, avg_targets=avg_targets,
         ))
 
     ranked = rank(ranked_props)

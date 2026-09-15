@@ -89,6 +89,8 @@ def to_json_records(ranked: list[RankedProp]) -> list[dict]:
             "market_prob": round(p.market_prob * 100, 1) if p.market_prob is not None else None,
             "model_prob": round(p.model_prob * 100, 1) if p.model_prob is not None else None,
             "value_pct": round(p.value_pct, 1) if p.value_pct is not None else None,
+            "injury_status": p.injury_status,
+            "avg_targets": round(p.avg_targets, 1) if p.avg_targets is not None else None,
         })
     return records
 

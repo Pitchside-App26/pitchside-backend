@@ -251,6 +251,18 @@
 
   .conf-pill.low { color: var(--low-conf); border-color: var(--low-conf); }
 
+  .injury-pill {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--under);
+    color: var(--under);
+  }
+
   .hit-rate {
     font-size: 0.75rem;
     color: var(--sub);
@@ -429,6 +441,7 @@
           </div>
           <div class="foot-row">
             <span class="conf-pill ${p.confidence}">${confLabel}</span>
+            ${p.injury_status ? `<span class="injury-pill">${p.injury_status}</span>` : ""}
             <span class="hit-rate">${hitRate}</span>
           </div>
           ${p.explanation ? `

@@ -33,6 +33,17 @@ class RankedProp:
     model_prob: float | None = None
     value_pct: float | None = None
 
+    # "Questionable" | "Doubtful" | None -- see fetch_injuries.py. "Out"
+    # players never reach here at all: run_weekly.py excludes them before
+    # calling build_ranked_prop, since a prop for someone who isn't going
+    # to play isn't a real recommendation.
+    injury_status: str | None = None
+
+    # Average targets/game this season so far (receiving props only) --
+    # informational context from NGS data, not a projection input. See
+    # fetch_stats.fetch_receiving_usage.
+    avg_targets: float | None = None
+
 
 def compute_hit_rate(current_values: list[float], line: float, direction: str) -> tuple[float | None, int]:
     """Fraction of this player's own games this season that would have
@@ -54,6 +65,7 @@ def build_ranked_prop(
     proj: Projection, line: float, current_season_values: list[float],
     team: str = "", opponent: str = "", kickoff: str = "",
     over_price: float | None = None, under_price: float | None = None,
+    injury_status: str | None = None, avg_targets: float | None = None,
 ) -> RankedProp:
     if proj.season_std and proj.season_std > 0:
         edge_score = (proj.projection - line) / proj.season_std
@@ -73,6 +85,13 @@ def build_ranked_prop(
     value_sentence = explain_value(price, market_prob, model_prob)
     if value_sentence:
         explanation = f"{explanation} {value_sentence}"
+    if injury_status:
+        explanation = (
+            f"{explanation} Listed {injury_status} on this week's injury report -- "
+            f"treat this number with extra caution."
+        )
+    if avg_targets is not None:
+        explanation = f"{explanation} Averaging {avg_targets:.1f} targets/game this season."
 
     return RankedProp(
         player_id=proj.player_id, player_name=proj.player_name,
@@ -83,6 +102,7 @@ def build_ranked_prop(
         method=proj.method, confidence=proj.confidence,
         explanation=explanation,
         price=price, market_prob=market_prob, model_prob=model_prob, value_pct=val_pct,
+        injury_status=injury_status, avg_targets=avg_targets,
     )
 
 
