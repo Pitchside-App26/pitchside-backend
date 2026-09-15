@@ -32,6 +32,61 @@ output.
 `verify_markets.py` is a separate one-time tool -- see "What still needs
 live verification" below.
 
+## Grading past weeks (grade_results.py)
+
+```
+python grade_results.py            # grade every ungraded logged week, then report
+python grade_results.py --report   # skip grading, just report on what's already graded
+```
+
+`results_log.py` has logged every ranked prop since the very first real
+run, but until this existed nothing ever read `actual_value` back in --
+"is this ranking any good" was an unanswered question no matter how many
+weeks accumulated. This closes that loop: pulls real final stats the same
+way `run_weekly.py` does (same `fetch_all_stats()` / play-by-play fallback,
+no separate unverified data path), fills in `actual_value` for every prop
+whose game has a final score, and reports hit rate broken down by stat,
+confidence tier, and `|edge_score|` bucket -- not just one overall number,
+which grading week 1 by hand already proved can be badly misleading on its
+own (see "Week 1 grading" below).
+
+A player with a completed game but no row in that week's stats is graded
+as a hard 0 (they recorded none of that stat) -- this engine has no
+injury/inactive feed yet, so a genuinely-inactive player and a
+zero-production active one currently grade the same way. Known
+simplification, not a bug; revisit if it turns out to matter.
+
+Intended to run on a schedule (see below) the same way the ranking run
+does, so the track record builds up automatically week over week.
+
+### Week 1 grading (2026-09-15, real results)
+
+First real backtest, graded against KC's actual 31-10 win over DEN and
+NYG's 28-20 win over DAL: 345 logged rows, 46.9% hit rate overall (161
+hit / 182 miss). That overall number is noisy in a specific, informative
+way, not just "not great":
+
+- **10% of the props were individual-defender "under 0.5 sacks" bets**,
+  which structurally hit most of the time regardless of the model (most
+  role players record zero sacks in a given game -- low variance inflates
+  `edge_score` for these, see `game_context.py`'s note on why defensive
+  stats don't get the same adjustment yet).
+- **Every single passing_yards and completions prop missed (0% on both)**
+  -- real, not a bug (checked the underlying rows directly): all three
+  quarterbacks that week (Mahomes, Nix, Dak, Dart) landed on the wrong side
+  of their number, in both directions -- the "over" picks missed low, the
+  "under" pick missed high. One bad week for a whole stat category, not
+  evidence the category is broken.
+- **`|edge_score|` buckets are NOT cleanly monotonic** (0.50-1.00 graded
+  worse than 0.25-0.50) -- with an n this small and this many dev-test
+  re-runs of the same single week mixed into the numbers (see the report's
+  own duplicate-run caveat), this is not yet a real signal either way.
+
+Bottom line: one graded week proves nothing statistically, which is the
+point of building this now rather than trusting the ranking on vibes --
+the real test is whether the hit rate (and the edge-bucket monotonicity)
+looks any different after several genuine, independent weekly runs.
+
 ## The results page (site/)
 
 Every run also writes `site/data.json` alongside the static `site/index.html`
@@ -252,6 +307,7 @@ ever read them. That data is not new; it just wasn't wired to anything.
 | `rank_props.py` | step 6 |
 | `output.py` | step 7 |
 | `results_log.py` | durable weekly logging (SQLite) for later grading |
+| `grade_results.py` | fills in real outcomes and reports hit rate -- the "later" `results_log.py` was built for |
 | `run_weekly.py` | orchestrator / CLI entrypoint |
 | `tests/` | unit tests for the pure-logic pieces (projection math, matching, ranking) |
 
@@ -265,6 +321,14 @@ durability of its own across runs -- the workflow's last step commits
 actually accumulates. If you'd rather run this locally, set up a cron job
 (Mac/Linux) or Task Scheduler (Windows) to run `run_weekly.py` Sunday
 morning before kickoff instead.
+
+`.github/workflows/grade-results.yml` runs `grade_results.py` every
+Tuesday at 12:00 UTC -- after Monday Night Football, so the whole week's
+slate has a final score by the time it runs -- and commits the newly
+graded `results_log.sqlite3` back the same way. Games it can't grade yet
+(mid-week internationally-scheduled games, or a week that hasn't finished)
+just stay ungraded until the following Tuesday; nothing needs to be
+re-triggered by hand for that.
 
 ## Known limitations (carried into the printed output, not hidden)
 

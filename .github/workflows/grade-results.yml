@@ -1,0 +1,44 @@
+name: Grade Prop Results (weekly)
+
+on:
+  schedule:
+    # Tuesday 12:00 UTC -- after Monday Night Football, so the whole
+    # week's real slate has a final score by the time this runs.
+    - cron: "0 12 * * 2"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write  # needed to commit the graded results_log.sqlite3 back to the repo
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nfl_prop_engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Grade logged props against real results
+        # No ODDS_API_KEY needed -- this only pulls real final stats from
+        # nflverse to grade against, never calls the odds API.
+        run: python grade_results.py
+
+      - name: Commit graded results log
+        # Same reasoning as the ranking workflow's commit step -- a fresh
+        # checkout every run means the SQLite file has no durability of its
+        # own, so the graded actual_value/graded_at columns only persist if
+        # this commits them back.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results_log.sqlite3
+          git diff --cached --quiet || git commit -m "chore: grade last week's prop results"
+          git push
