@@ -271,8 +271,10 @@ Deliberately NOT built in this pass, with reasons:
   actually rankable.
 - **Weather** -- genuinely needs a new external data source (the schedule
   only has `roof`, dome vs. outdoor, not wind or temperature); an actual
-  new integration rather than another nflverse pull, so it's the one item
-  from the original list still awaiting a decision on which provider.
+  new integration rather than another nflverse pull. Deliberately skipped:
+  only matters for outdoor games and mainly affects passing volume via
+  wind, not worth a new account/API key relative to what's already
+  shipped. Revisit if it turns out to matter after a few weeks of grading.
 
 ## Price-aware ranking (pricing.py)
 
