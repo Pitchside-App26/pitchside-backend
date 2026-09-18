@@ -128,19 +128,53 @@ def parse_event_odds(raw: dict) -> list[dict]:
     return rows
 
 
+def pivot_over_under(rows: list[dict]) -> list[dict]:
+    """One row per (event, market, player, bookmaker), carrying BOTH sides'
+    price. The old code kept only the Over row on the reasoning that "Over
+    and Under share the same point, one row is enough" -- true for the
+    line, but Over and Under almost never share the same American odds
+    (the vig split isn't even), so that also silently threw away the price
+    of whichever side actually gets bet. `point` is the same at a given
+    book regardless of which side's row it's read from, by construction.
+    """
+    from collections import defaultdict
+
+    grouped: dict = defaultdict(dict)
+    for r in rows:
+        key = (r["event_id"], r["market"], r["player_name"], r["bookmaker"])
+        entry = grouped[key]
+        entry.setdefault("event_id", r["event_id"])
+        entry.setdefault("home_team", r["home_team"])
+        entry.setdefault("away_team", r["away_team"])
+        entry.setdefault("bookmaker", r["bookmaker"])
+        entry.setdefault("market", r["market"])
+        entry.setdefault("player_name", r["player_name"])
+        if r["point"] is not None:
+            entry["point"] = r["point"]
+        if r["side"] == "Over":
+            entry["over_price"] = r["price"]
+        elif r["side"] == "Under":
+            entry["under_price"] = r["price"]
+    return list(grouped.values())
+
+
 def consolidate_lines(rows: list[dict], preferred_book: str = "draftkings") -> list[dict]:
-    """Multiple books can quote slightly different lines for the same prop.
-    Prefer one consistent book when it has a line; otherwise take the median
-    point across books offering that (event, market, player, side). This is
-    a simplifying design choice, not something the spec mandates -- revisit
-    if book selection turns out to matter for accuracy.
+    """Multiple books can quote slightly different lines (and prices) for
+    the same prop. Prefer one consistent book when it has a line;
+    otherwise take the median point across books offering that (event,
+    market, player) -- prices from that first book are kept as-is rather
+    than also medianed, since American odds don't average meaningfully the
+    way a yardage line does. This is a simplifying design choice, not
+    something the spec mandates -- revisit if book selection turns out to
+    matter for accuracy. Expects rows already pivoted by pivot_over_under
+    (no more "side" field -- both prices live on one row).
     """
     import statistics
     from collections import defaultdict
 
     grouped = defaultdict(list)
     for row in rows:
-        key = (row["event_id"], row["market"], row["player_name"], row["side"])
+        key = (row["event_id"], row["market"], row["player_name"])
         grouped[key].append(row)
 
     consolidated = []
@@ -149,7 +183,7 @@ def consolidate_lines(rows: list[dict], preferred_book: str = "draftkings") -> l
         if preferred:
             consolidated.append(preferred[0])
         else:
-            points = [r["point"] for r in group if r["point"] is not None]
+            points = [r["point"] for r in group if r.get("point") is not None]
             if not points:
                 continue
             base = dict(group[0])

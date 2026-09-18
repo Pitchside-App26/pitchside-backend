@@ -35,16 +35,24 @@ def format_hit_rate(hit_rate: float | None, sample_size: int) -> str:
     return f"{hit_rate:.0%} ({sample_size}g)"
 
 
+def _fmt_price(price: float | None) -> str:
+    return "-" if price is None else f"{price:+.0f}"
+
+
+def _fmt_pct(pct: float | None) -> str:
+    return "-" if pct is None else f"{pct:+.1f}%"
+
+
 def to_markdown_table(ranked: list[RankedProp]) -> str:
-    header = "| Player | Stat | Line | Projection | Edge | Hit Rate | Confidence |"
-    sep = "|---|---|---|---|---|---|---|"
+    header = "| Player | Stat | Line | Projection | Edge | Price | Value | Hit Rate | Confidence |"
+    sep = "|---|---|---|---|---|---|---|---|---|"
     rows = [header, sep]
     for p in ranked:
         confidence_label = p.confidence if p.method == "veteran" else f"{p.confidence} ({p.method})"
         rows.append(
             f"| {p.player_name} | {p.stat_col} | {_fmt(p.line)} | {_fmt(p.projection)} "
-            f"({p.direction}) | {p.edge_score:+.2f} | {format_hit_rate(p.hit_rate, p.sample_size)} "
-            f"| {confidence_label} |"
+            f"({p.direction}) | {p.edge_score:+.2f} | {_fmt_price(p.price)} | {_fmt_pct(p.value_pct)} "
+            f"| {format_hit_rate(p.hit_rate, p.sample_size)} | {confidence_label} |"
         )
     return "\n".join(rows)
 
@@ -77,6 +85,12 @@ def to_json_records(ranked: list[RankedProp]) -> list[dict]:
             "confidence": p.confidence,
             "method": p.method,
             "explanation": p.explanation,
+            "price": p.price,
+            "market_prob": round(p.market_prob * 100, 1) if p.market_prob is not None else None,
+            "model_prob": round(p.model_prob * 100, 1) if p.model_prob is not None else None,
+            "value_pct": round(p.value_pct, 1) if p.value_pct is not None else None,
+            "injury_status": p.injury_status,
+            "avg_targets": round(p.avg_targets, 1) if p.avg_targets is not None else None,
         })
     return records
 

@@ -94,12 +94,43 @@ def fetch_draft_picks(seasons: list[int] | None = None) -> pd.DataFrame:
     return df
 
 
+def fetch_receiving_usage(seasons: list[int]) -> pd.DataFrame:
+    """Next Gen Stats receiving data -- targets and target share, CONFIRMED
+    against real 2026 week 1 data to carry `player_gsis_id` directly (no ID
+    crosswalk needed, unlike snap counts which key on pfr_player_id).
+    Informational only right now (see explain.py) -- not folded into the
+    projection itself, since usage-based projection would need real
+    backtesting before trusting it the way the existing formula is.
+
+    CONFIRMED real-data gotcha: nflverse includes a week=0 row per player
+    alongside the real per-week rows -- a season-to-date aggregate, not an
+    actual game (checked directly: week 0 and week 1 had the identical row
+    count and, in week 1, identical target totals, since "season to date"
+    and "week 1" are the same thing that early). Left in, this would
+    silently double-count and skew any average computed from these rows
+    once more real weeks exist -- dropped here before it reaches anything
+    that averages by player.
+    """
+    frames = []
+    for season in seasons:
+        try:
+            df = nfl.import_ngs_data("receiving", [season])
+            df = df[df["week"] != 0]
+            frames.append(df.rename(columns={"player_gsis_id": "player_id"}))
+        except Exception as exc:
+            logger.warning("No NGS receiving data for season %s (%s) -- skipping usage context.", season, exc)
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, ignore_index=True)
+
+
 def fetch_all_stats(current_season: int) -> dict[str, pd.DataFrame]:
     seasons = [current_season - 1, current_season]
     return {
         "offense": fetch_offense_weekly(seasons),
         "defense": fetch_defense_weekly(seasons),
         "draft_picks": fetch_draft_picks(),
+        "receiving_usage": fetch_receiving_usage(seasons),
     }
 
 
