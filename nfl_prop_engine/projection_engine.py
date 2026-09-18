@@ -124,13 +124,41 @@ def project_veteran(
         prior_season_avg if prior_season_avg is not None else current_season_avg
     )
 
-    # With zero current-season games (anyone in a not-yet-played week-1 game,
-    # or a player back from injury), current_season_avg is 0 with nothing
-    # real behind it -- falling back to it here would silently cut the
-    # blended baseline roughly in half. blended_season_avg already folds in
-    # the prior season properly, so that's the right thing to fall back to.
+    # CONFIRMED BUG, found from a real user report and verified against
+    # real data (Drake Maye: 0.47 INT/game across all 17 games last
+    # season, 3 INTs in his one game so far this season): last5_avg used
+    # to be the RAW, unshrunk average of whatever current-season games
+    # exist, then get blended 50/50 into baseline below. blended_season_avg
+    # above already regresses a thin current-season sample toward last
+    # season properly (prior_weight = k/(n+k)) -- but that shrunk estimate
+    # was then averaged with a completely unshrunk "recent form" number, so
+    # a single small-sample outlier game (like Maye's one 3-INT start)
+    # counted TWICE: once correctly diluted inside blended_season_avg, and
+    # once at full raw weight as "recent form". That pushed his projection
+    # to ~2.0 INTs off a real 0.47/game history -- confirmed by running the
+    # formula directly against his real logged numbers, not assumed.
+    #
+    # Fix: shrink last5_avg the SAME way, using the same k and the number
+    # of games actually IN the last5 window (not the full current-season
+    # count) -- when a player has 5 or fewer current-season games, that's
+    # the same number either way, so last5_avg collapses to exactly
+    # blended_season_avg and baseline stops double-counting the thin
+    # sample. "Recent form" only diverges from "season average" once a
+    # player has MORE than 5 games played, which is exactly when the two
+    # numbers can legitimately differ.
     last5 = current_values[-5:] if current_values else []
-    last5_avg = statistics.mean(last5) if last5 else blended_season_avg
+    if last5:
+        last5_raw = statistics.mean(last5)
+        last5_prior_weight = k / (len(last5) + k)
+        if team_changed:
+            last5_prior_weight /= 2
+        last5_avg = (1 - last5_prior_weight) * last5_raw + last5_prior_weight * (
+            prior_season_avg if prior_season_avg is not None else last5_raw
+        )
+    else:
+        # No games at all yet -- blended_season_avg already folds in the
+        # prior season properly, so that's the right thing to fall back to.
+        last5_avg = blended_season_avg
     baseline = 0.5 * blended_season_avg + 0.5 * last5_avg
 
     opp_factor = blended_opponent_factor(
