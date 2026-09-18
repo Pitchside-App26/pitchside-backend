@@ -178,6 +178,26 @@ everything below was checked against the actual data rather than assumed:
   average). Fixed to fall back to `blended_season_avg` instead, which
   already properly incorporates the prior season. Covered by
   `test_project_veteran_zero_current_games_uses_prior_season_not_zero`.
+- **Second formula bug, found from a real user report and confirmed
+  against real data**: `last5_avg` was the RAW, unshrunk average of
+  whatever current-season games existed, then blended 50/50 into
+  `baseline` alongside `blended_season_avg` -- which already properly
+  shrinks a thin current-season sample toward the prior season. The result:
+  a small-sample outlier counted TWICE, once correctly diluted inside
+  `blended_season_avg`, once at full raw weight as "recent form". Real
+  example that surfaced it: Drake Maye threw 0.47 INT/game across all 17
+  games last season, then 3 INTs in his one game so far this season --
+  confirmed directly against his real logged numbers, this formula
+  projected ~2.0 INTs, nearly double a properly regressed estimate. Fixed
+  by shrinking `last5_avg` the same way `blended_season_avg` already is
+  (same `k`, keyed on the number of games actually in the last-5 window)
+  -- with 5 or fewer current-season games, "recent form" and "season
+  average" are the same games and now correctly collapse to the same
+  shrunk number instead of double-counting; the two only diverge once a
+  player has genuinely played more than 5 games, which is exactly when a
+  real hot/cold streak should be able to move the projection. Covered by
+  `test_project_veteran_one_bad_game_does_not_double_count_against_a_real_history`
+  and `test_project_veteran_recent_form_can_still_diverge_past_five_games`.
 - **The Odds API's `/events` list call and its credit formula**
   (`markets_requested x regions_requested`) were confirmed via its public
   docs through search (the domain itself was unreachable directly).

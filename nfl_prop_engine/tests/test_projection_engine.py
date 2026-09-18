@@ -37,9 +37,19 @@ def test_season_std_falls_back_to_prior_then_league():
 
 
 def test_project_veteran_blends_toward_prior_season_for_thin_current_sample():
-    # n=1 current game, k=4 -> prior_weight = 4/5 = 0.8, so the blended
-    # season avg should sit much closer to the prior-season average than
-    # to this season's single data point.
+    # n=1 current game, k=4 -> prior_weight = 4/5 = 0.8, so BOTH
+    # blended_season_avg and the (now also shrunk) last5_avg should sit
+    # close to the prior-season average, not the single current-season
+    # data point.
+    #
+    # This test used to assert 22.0 -- the OLD, buggy last5_avg used the
+    # single game's RAW value (10) with zero shrinkage, double-counting a
+    # thin sample against the already-shrunk blended_season_avg. Confirmed
+    # as a real bug from a real user report (Drake Maye: 0.47 INT/game
+    # across 17 games last season, one 3-INT game this season projected to
+    # ~2.0 INTs -- nearly double what a properly shrunk estimate says).
+    # Fixed: last5_avg is now shrunk the same way, using the same k and
+    # the number of games actually in the last5 window.
     current = _rows([1], [10.0])
     prior = _rows(list(range(1, 6)), [40.0] * 5)
     empty_series = pd.Series(dtype=float)
@@ -54,9 +64,56 @@ def test_project_veteran_blends_toward_prior_season_for_thin_current_sample():
     )
     # opp_factor should be neutral (1.0) since there's no opponent data at all,
     # so projection == baseline == 0.5*blended_season_avg + 0.5*last5_avg
-    # blended_season_avg = 0.2*10 + 0.8*40 = 34; last5_avg = 10 (only 1 game)
-    # baseline = 0.5*34 + 0.5*10 = 22
-    assert proj.projection == pytest.approx(22.0)
+    # blended_season_avg = 0.2*10 + 0.8*40 = 34
+    # last5_avg (n_last5=1, same shrinkage as above) = 0.2*10 + 0.8*40 = 34
+    # baseline = 0.5*34 + 0.5*34 = 34 -- with <=5 current games, "recent
+    # form" and "season average" are the same games, so they now correctly
+    # collapse to the same shrunk number instead of double-counting.
+    assert proj.projection == pytest.approx(34.0)
+
+
+def test_project_veteran_one_bad_game_does_not_double_count_against_a_real_history():
+    # The actual real-world case that surfaced this bug: Drake Maye threw
+    # 0.47 INT/game across all 17 games last season, then 3 INTs in his
+    # one game so far this season. The OLD formula projected ~2.0 INTs off
+    # that -- nearly double the real prior-season rate, from one small-
+    # sample outlier game. A properly shrunk estimate should land much
+    # closer to his real history than to that single game.
+    current = pd.DataFrame({"week": [1], "interceptions": [3.0], "team": ["NE"]})
+    prior = pd.DataFrame({
+        "week": list(range(1, 18)),
+        "interceptions": [0.0] * 9 + [1.0] * 8,  # sums to 8, mean ~0.47
+        "team": ["NE"] * 17,
+    })
+    empty_series = pd.Series(dtype=float)
+
+    proj = project_veteran(
+        "p1", "Drake Maye-like Player", "interceptions", current, prior, "OPP",
+        empty_series, float("nan"), 0, empty_series, float("nan"),
+        "team", league_fallback=0.6, k=4,
+    )
+    # Should sit close to the real ~0.47/game history, nowhere near the
+    # single 3-INT outlier game -- not "regressed a bit", genuinely close.
+    assert proj.projection < 1.2
+    assert proj.projection == pytest.approx(0.9764705882352941)
+
+
+def test_project_veteran_recent_form_can_still_diverge_past_five_games():
+    # The fix must not flatten "recent form" into a no-op entirely -- once
+    # a player has MORE than 5 current-season games, the last-5 window is
+    # a real subset of the season, not the same games as current_season_avg,
+    # so it can legitimately pull the baseline toward a real hot/cold streak.
+    current = _rows(list(range(1, 8)), [10.0] * 2 + [50.0] * 5)  # cold start, hot last 5
+    prior = pd.DataFrame(columns=["week", "yards", "team"])
+    empty_series = pd.Series(dtype=float)
+
+    proj = project_veteran(
+        "p1", "Streaky Player", "yards", current, prior, "LAC",
+        empty_series, float("nan"), 0, empty_series, float("nan"),
+        "team", league_fallback=5.0, k=4,
+    )
+    current_season_avg = (10.0 * 2 + 50.0 * 5) / 7  # ~35.7
+    assert proj.projection > current_season_avg  # pulled up toward the hot streak, not flattened
 
 
 def test_project_veteran_method_tagging_by_combined_sample_size():
