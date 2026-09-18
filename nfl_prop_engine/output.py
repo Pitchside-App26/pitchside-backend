@@ -5,6 +5,7 @@ ranking logic was defensible before building a UI on top of it; the JSON
 export is that next step now that a real run has produced sane output.
 """
 import json
+import math
 from datetime import datetime, timezone
 
 from config import STAT_LABELS
@@ -64,10 +65,29 @@ def print_report(ranked: list[RankedProp], season: int, week: int) -> None:
     print(KNOWN_LIMITATIONS)
 
 
+def _clean(value: float | None, digits: int | None = None) -> float | None:
+    """None (and rounds) any numeric field before it reaches json.dump --
+    guards against float NaN specifically, which Python's json module will
+    happily write as a bare `NaN` token (valid Python, NOT valid JSON) and
+    which a plain `is not None` check does not catch, since NaN is not
+    None. Confirmed live: a prop with only one side's price recorded
+    produced exactly this, and the site's fetch() failed to parse the
+    resulting data.json entirely -- not a display bug, the whole page went
+    blank. `json.dump(..., allow_nan=False)` below is the second half of
+    this guard: if anything still slips past `_clean`, generation fails
+    loudly here instead of shipping broken JSON to the live page again.
+    """
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return None
+    return round(value, digits) if digits is not None else value
+
+
 def to_json_records(ranked: list[RankedProp]) -> list[dict]:
     records = []
     for p in ranked:
         edge_pct = (p.projection - p.line) / p.line if p.line else None
+        market_prob = _clean(p.market_prob)
+        model_prob = _clean(p.model_prob)
         records.append({
             "player": p.player_name,
             "team": p.team,
@@ -75,22 +95,22 @@ def to_json_records(ranked: list[RankedProp]) -> list[dict]:
             "kickoff": p.kickoff,
             "stat": p.stat_col,
             "stat_label": STAT_LABELS.get(p.stat_col, p.stat_col),
-            "line": p.line,
-            "projection": round(p.projection, 1),
+            "line": _clean(p.line),
+            "projection": _clean(p.projection, 1),
             "direction": p.direction,
-            "edge_score": round(p.edge_score, 3),
-            "edge_pct": round(edge_pct * 100, 1) if edge_pct is not None else None,
-            "hit_rate": round(p.hit_rate, 3) if p.hit_rate is not None else None,
+            "edge_score": _clean(p.edge_score, 3),
+            "edge_pct": _clean(edge_pct * 100, 1) if edge_pct is not None else None,
+            "hit_rate": _clean(p.hit_rate, 3),
             "sample_size": p.sample_size,
             "confidence": p.confidence,
             "method": p.method,
             "explanation": p.explanation,
-            "price": p.price,
-            "market_prob": round(p.market_prob * 100, 1) if p.market_prob is not None else None,
-            "model_prob": round(p.model_prob * 100, 1) if p.model_prob is not None else None,
-            "value_pct": round(p.value_pct, 1) if p.value_pct is not None else None,
+            "price": _clean(p.price),
+            "market_prob": round(market_prob * 100, 1) if market_prob is not None else None,
+            "model_prob": round(model_prob * 100, 1) if model_prob is not None else None,
+            "value_pct": _clean(p.value_pct, 1),
             "injury_status": p.injury_status,
-            "avg_targets": round(p.avg_targets, 1) if p.avg_targets is not None else None,
+            "avg_targets": _clean(p.avg_targets, 1),
         })
     return records
 
@@ -103,4 +123,4 @@ def write_json(ranked: list[RankedProp], season: int, week: int, path: str) -> N
         "props": to_json_records(ranked),
     }
     with open(path, "w") as f:
-        json.dump(payload, f, indent=2)
+        json.dump(payload, f, indent=2, allow_nan=False)

@@ -17,12 +17,25 @@ Two probabilities that are NOT the same thing:
 import math
 
 
+def _missing(v: float | None) -> bool:
+    """True for None AND for NaN -- values here often arrive straight from
+    a pandas Series (run_weekly.py's row.get("over_price")/"under_price"),
+    where a value that was never set comes back as float NaN, not None.
+    `v is None` alone lets NaN sail through every arithmetic step below
+    and come out the other end as a JSON `NaN` literal, which is not valid
+    JSON and breaks the site's fetch() with a parse error -- confirmed
+    live: exactly this happened the first time a prop had only one side's
+    price recorded.
+    """
+    return v is None or (isinstance(v, float) and math.isnan(v))
+
+
 def implied_probability(american_price: float | None) -> float | None:
     """Straight conversion, vig included -- NOT a fair/no-vig probability.
     A two-way market's two implied probabilities sum to slightly over 100%
     because of the book's edge; removing that needs both sides' prices,
     see no_vig_probability below."""
-    if american_price is None:
+    if _missing(american_price):
         return None
     if american_price > 0:
         return 100.0 / (american_price + 100.0)
@@ -50,7 +63,7 @@ def model_probability(edge_score: float | None) -> float | None:
     (projection-line)/season_std, i.e. how many standard deviations the
     picked side clears the line by, so this is just its standard normal
     CDF. Unvalidated like every other weight in this engine."""
-    if edge_score is None:
+    if _missing(edge_score):
         return None
     z = abs(edge_score)
     return 0.5 * (1 + math.erf(z / math.sqrt(2)))
@@ -61,7 +74,7 @@ def value_pct(model_prob: float | None, market_prob: float | None) -> float | No
     points -- positive means the model thinks the picked side is MORE
     likely to hit than the price implies. This is the number that actually
     answers "is this worth betting", which edge_pct alone never could."""
-    if model_prob is None or market_prob is None:
+    if _missing(model_prob) or _missing(market_prob):
         return None
     return (model_prob - market_prob) * 100
 
@@ -71,7 +84,7 @@ def explain_value(price: float | None, market_prob: float | None, model_prob: fl
     explain.py's explain_projection() because price/value are market facts
     known only once build_ranked_prop() has a price to work with, not
     anything the projection engine itself computed."""
-    if price is None or market_prob is None or model_prob is None:
+    if _missing(price) or _missing(market_prob) or _missing(model_prob):
         return ""
     gap = (model_prob - market_prob) * 100
     verdict = "looks like real value" if gap >= 3 else "looks about fairly priced" if gap >= -3 else "looks worse than the price suggests"

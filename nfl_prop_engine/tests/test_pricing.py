@@ -16,6 +16,14 @@ def test_implied_probability_none_without_price():
     assert implied_probability(None) is None
 
 
+def test_implied_probability_none_with_nan_price():
+    # Real failure mode, not hypothetical: a pandas row.get() on a missing
+    # column value returns float('nan'), not None -- `is None` alone would
+    # let this through and eventually reach json.dump() as an invalid
+    # `NaN` token, breaking the live site's fetch().json() entirely.
+    assert implied_probability(float("nan")) is None
+
+
 def test_no_vig_probability_normalizes_to_one():
     # Both sides at -110 (a symmetric, standard-vig market) -> no-vig prob
     # should land back at exactly 0.5, the vig cancels out.
@@ -25,6 +33,11 @@ def test_no_vig_probability_normalizes_to_one():
 def test_no_vig_probability_none_if_either_side_missing():
     assert no_vig_probability(-110, None) is None
     assert no_vig_probability(None, -110) is None
+
+
+def test_no_vig_probability_none_if_either_side_nan():
+    assert no_vig_probability(-110, float("nan")) is None
+    assert no_vig_probability(float("nan"), -110) is None
 
 
 def test_model_probability_zero_edge_is_fifty_percent():
