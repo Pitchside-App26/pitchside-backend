@@ -6,7 +6,7 @@ this whole upgrade exists to fix.
 import math
 from dataclasses import dataclass, field
 
-from config import MAX_LEGS, MAX_LEGS_PER_GAME, STAKE_GBP
+from config import MAX_LEGS, MAX_LEGS_PER_GAME, SIDES, STAKE_GBP
 from leg_gates import GateResult
 
 
@@ -15,6 +15,7 @@ class Candidate:
     player: str
     game: str  # e.g. "NE @ NYJ" -- groups legs for the per-game cap and bet-builder tagging
     market: str
+    side: str  # "over" | "under" -- explicit, not assumed, so the overs-only filter has something real to check
     line: float
     price_decimal: float
     fair_prob: float
@@ -27,6 +28,13 @@ class Candidate:
     @property
     def failed_gates(self) -> list[GateResult]:
         return [g for g in self.gates if not g.passed]
+
+
+def filter_by_side(candidates: list[Candidate], sides: list[str] = SIDES) -> list[Candidate]:
+    """Requirement 1: 'The candidate list, report and accumulator builder
+    contain overs only by default.' This is the actual enforcement point --
+    config.SIDES existed before this function did, with nothing reading it."""
+    return [c for c in candidates if c.side in sides]
 
 
 @dataclass
@@ -52,7 +60,8 @@ def build_accumulator(
     correlated a bet on too little confirmed edge): outputs singles
     instead, or "no bet" if nothing passed at all.
     """
-    passing = sorted((c for c in candidates if c.passed_all), key=lambda c: c.fair_prob, reverse=True)
+    on_side = filter_by_side(candidates)
+    passing = sorted((c for c in on_side if c.passed_all), key=lambda c: c.fair_prob, reverse=True)
 
     selected: list[Candidate] = []
     per_game_count: dict[str, int] = {}

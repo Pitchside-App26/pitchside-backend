@@ -1,10 +1,10 @@
-from accumulator import Candidate, build_accumulator
+from accumulator import Candidate, build_accumulator, filter_by_side
 from leg_gates import GateResult
 
 
-def _candidate(player, game, fair_prob=0.6, price=1.9, passed=True, market="player_pass_yds"):
+def _candidate(player, game, fair_prob=0.6, price=1.9, passed=True, market="player_pass_yds", side="over"):
     gates = [GateResult("line", passed, "test")]
-    return Candidate(player=player, game=game, market=market, line=50.0, price_decimal=price, fair_prob=fair_prob, gates=gates)
+    return Candidate(player=player, game=game, market=market, side=side, line=50.0, price_decimal=price, fair_prob=fair_prob, gates=gates)
 
 
 def test_never_pads_below_max_legs():
@@ -88,3 +88,22 @@ def test_stake_never_escalates_and_is_flat_from_config():
     candidates = [_candidate(f"P{i}", f"G{i}") for i in range(3)]
     result = build_accumulator(candidates, stake_gbp=5.0)
     assert result.stake_gbp == 5.0
+
+
+def test_filter_by_side_drops_unders_by_default():
+    candidates = [_candidate("A", "G1", side="over"), _candidate("B", "G2", side="under")]
+    assert [c.player for c in filter_by_side(candidates)] == ["A"]
+
+
+def test_build_accumulator_never_includes_an_under_leg():
+    # Requirement 1: overs only, even if an under leg would otherwise pass
+    # every gate and have a great fair probability.
+    candidates = [
+        _candidate("OverA", "G1", side="over", fair_prob=0.5),
+        _candidate("UnderB", "G2", side="under", fair_prob=0.9),  # best fair_prob, but wrong side
+        _candidate("OverC", "G3", side="over", fair_prob=0.55),
+        _candidate("OverD", "G4", side="over", fair_prob=0.52),
+    ]
+    result = build_accumulator(candidates)
+    assert all(c.side == "over" for c in result.legs)
+    assert "UnderB" not in {c.player for c in result.legs}
