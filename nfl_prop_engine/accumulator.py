@@ -1,0 +1,79 @@
+"""Accumulator builder (Week 4 upgrade spec, Requirement 5). Uses only legs
+that passed every gate in leg_gates.py and never pads to reach a target
+size -- that padding habit is one of the four concrete Week 3 failures
+this whole upgrade exists to fix.
+"""
+import math
+from dataclasses import dataclass, field
+
+from config import MAX_LEGS, MAX_LEGS_PER_GAME, STAKE_GBP
+from leg_gates import GateResult
+
+
+@dataclass
+class Candidate:
+    player: str
+    game: str  # e.g. "NE @ NYJ" -- groups legs for the per-game cap and bet-builder tagging
+    market: str
+    line: float
+    price_decimal: float
+    fair_prob: float
+    gates: list[GateResult]
+
+    @property
+    def passed_all(self) -> bool:
+        return all(g.passed for g in self.gates)
+
+    @property
+    def failed_gates(self) -> list[GateResult]:
+        return [g for g in self.gates if not g.passed]
+
+
+@dataclass
+class AccumulatorResult:
+    legs: list[Candidate]
+    mode: str  # "accumulator" | "singles" | "no_bet"
+    combined_odds: float | None
+    combined_probability: float | None
+    stake_gbp: float
+    bet_builder_groups: dict[str, list[Candidate]] = field(default_factory=dict)
+
+
+def build_accumulator(
+    candidates: list[Candidate],
+    max_legs: int = MAX_LEGS,
+    max_legs_per_game: int = MAX_LEGS_PER_GAME,
+    stake_gbp: float = STAKE_GBP,
+) -> AccumulatorResult:
+    """Selects gate-passing legs only, highest fair-probability first,
+    respecting max_legs and max_legs_per_game. Never adds a failing leg to
+    reach max_legs -- if only 4 pass, the output is a 4-fold, not a padded
+    6-fold. Fewer than 3 passing legs isn't accumulator territory (too
+    correlated a bet on too little confirmed edge): outputs singles
+    instead, or "no bet" if nothing passed at all.
+    """
+    passing = sorted((c for c in candidates if c.passed_all), key=lambda c: c.fair_prob, reverse=True)
+
+    selected: list[Candidate] = []
+    per_game_count: dict[str, int] = {}
+    for c in passing:
+        if len(selected) >= max_legs:
+            break
+        if per_game_count.get(c.game, 0) >= max_legs_per_game:
+            continue
+        selected.append(c)
+        per_game_count[c.game] = per_game_count.get(c.game, 0) + 1
+
+    bet_builder_groups = {
+        game: [c for c in selected if c.game == game]
+        for game, count in per_game_count.items()
+        if count > 1
+    }
+
+    if len(selected) >= 3:
+        combined_odds = math.prod(c.price_decimal for c in selected)
+        combined_probability = math.prod(c.fair_prob for c in selected)
+        return AccumulatorResult(selected, "accumulator", combined_odds, combined_probability, stake_gbp, bet_builder_groups)
+    if selected:
+        return AccumulatorResult(selected, "singles", None, None, stake_gbp, bet_builder_groups)
+    return AccumulatorResult([], "no_bet", None, None, stake_gbp, {})
