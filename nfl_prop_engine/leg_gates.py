@@ -19,6 +19,7 @@ from config import (
     LINE_MOVEMENT_FLAG,
     LINE_THRESHOLD,
     MIN_PRICE_DECIMAL,
+    MIN_SOURCES,
     OUTLIER_MIN_PCT_OF_LINE,
     PASS_VOLUME_STATS,
     ROLE_CHANGE_FLAG_POINTS,
@@ -188,4 +189,16 @@ def teammate_injury_flag(teammates_out: list[str]) -> GateResult:
     return GateResult(
         "teammate_injury", True,
         f"FLAGGED: teammate(s) out this week ({', '.join(teammates_out)}) -- may change this player's volume",
+    )
+
+
+def sources_gate(n_over_sources: int, min_sources: int = MIN_SOURCES) -> GateResult:
+    """Needs analyst_sweep.summarize_sources()'s n_over_sources -- count of
+    independent analysts (syndication-deduped) backing the over. This is
+    the gate that was deferred until the analyst sweep existed to feed it."""
+    if n_over_sources >= min_sources:
+        return GateResult("sources", True, f"{n_over_sources} independent analyst(s) backing the over")
+    return GateResult(
+        "sources", False,
+        f"only {n_over_sources} independent analyst(s) backing the over (need {min_sources})",
     )

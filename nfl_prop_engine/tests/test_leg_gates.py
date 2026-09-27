@@ -10,6 +10,7 @@ from leg_gates import (
     outlier_gate,
     price_gate,
     role_change_flag,
+    sources_gate,
     teammate_injury_flag,
 )
 
@@ -187,3 +188,9 @@ def test_teammate_injury_flag_never_excludes():
     flagged = teammate_injury_flag(["Some Other Player"])
     assert flagged.passed is True
     assert "FLAGGED" in flagged.reason
+
+
+def test_sources_gate_default_minimum_is_two():
+    assert sources_gate(2).passed is True
+    assert sources_gate(1).passed is False
+    assert sources_gate(0).passed is False

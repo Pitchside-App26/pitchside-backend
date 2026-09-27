@@ -4,3 +4,4 @@ requests
 python-dotenv
 rapidfuzz
 pytest
+anthropic
