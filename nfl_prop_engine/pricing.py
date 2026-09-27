@@ -13,8 +13,15 @@ Two probabilities that are NOT the same thing:
     perfectly normal (especially low-count ones like sacks or INTs) --
     this is a starting point to grade against, like every other weight in
     this engine, not a validated model.
+
+Also has decimal-odds helpers (american_to_decimal, decimal_implied_probability,
+us_consensus_line, fair_probability_avg) for the Week 4 accumulator engine,
+which works in decimal odds throughout (bet365's fractional odds convert
+naturally to decimal; American odds convert to decimal here rather than
+forking the probability math into two parallel unit systems).
 """
 import math
+import statistics
 
 
 def _missing(v: float | None) -> bool:
@@ -93,3 +100,60 @@ def explain_value(price: float | None, market_prob: float | None, model_prob: fl
         f"chance -- this projection implies about {model_prob * 100:.0f}%, which {verdict} "
         f"({gap:+.1f}pt gap)."
     )
+
+
+def american_to_decimal(american_price: float | None) -> float | None:
+    """+150 -> 2.50, -110 -> 1.909... . None stays None rather than raising,
+    since a missing US book price is a normal, expected input here (not
+    every book quotes every market)."""
+    if _missing(american_price):
+        return None
+    if american_price > 0:
+        return american_price / 100 + 1.0
+    return 100 / (-american_price) + 1.0
+
+
+def decimal_implied_probability(decimal_price: float | None) -> float | None:
+    """Straight conversion, vig included -- 1/price. Same "not a fair
+    probability on its own" caveat as implied_probability() above."""
+    if _missing(decimal_price):
+        return None
+    return 1.0 / decimal_price
+
+
+def no_vig_probability_decimal(over_decimal: float | None, under_decimal: float | None) -> float | None:
+    """Decimal-odds equivalent of no_vig_probability() -- normalizes both
+    sides' implied probabilities to sum to 100%."""
+    p_over = decimal_implied_probability(over_decimal)
+    p_under = decimal_implied_probability(under_decimal)
+    if p_over is None or p_under is None:
+        return None
+    total = p_over + p_under
+    if not total:
+        return None
+    return p_over / total
+
+
+def us_consensus_line(book_points: list[float | None]) -> float | None:
+    """Median of the lines quoted by US books for this prop. None if fewer
+    than 2 books quoted one -- the Week 4 spec calls this out explicitly as
+    a "thin market" state rather than trusting a single book's line."""
+    valid = [p for p in book_points if p is not None]
+    if len(valid) < 2:
+        return None
+    return statistics.median(valid)
+
+
+def fair_probability_avg(book_price_pairs: list[tuple[float | None, float | None]]) -> float | None:
+    """De-vigs each US book's own over/under pair (at that book's own
+    line), then averages the resulting fair over-probability across books
+    -- the Week 4 spec's method. A simplification worth naming: this
+    averages each book's own de-vigged probability rather than re-deriving
+    a single probability at exactly the consensus line, which the spec
+    doesn't fully resolve for books quoting a different point than the
+    consensus. None if no book supplied a complete over/under pair."""
+    probs = [no_vig_probability_decimal(over, under) for over, under in book_price_pairs]
+    probs = [p for p in probs if p is not None]
+    if not probs:
+        return None
+    return statistics.mean(probs)

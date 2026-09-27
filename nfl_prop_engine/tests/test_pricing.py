@@ -1,6 +1,17 @@
 import pytest
 
-from pricing import explain_value, implied_probability, model_probability, no_vig_probability, value_pct
+from pricing import (
+    american_to_decimal,
+    decimal_implied_probability,
+    explain_value,
+    fair_probability_avg,
+    implied_probability,
+    model_probability,
+    no_vig_probability,
+    no_vig_probability_decimal,
+    us_consensus_line,
+    value_pct,
+)
 
 
 def test_implied_probability_negative_price():
@@ -78,3 +89,46 @@ def test_explain_value_mentions_price_and_both_probabilities():
     assert "-110" in text
     assert "50%" in text
     assert "60%" in text
+
+
+# --- Decimal-odds helpers (Week 4 accumulator engine) -----------------------
+
+def test_american_to_decimal_positive_and_negative():
+    assert american_to_decimal(150) == pytest.approx(2.5)
+    assert american_to_decimal(-110) == pytest.approx(1.9090909, rel=1e-4)
+
+
+def test_american_to_decimal_none_with_missing_or_nan():
+    assert american_to_decimal(None) is None
+    assert american_to_decimal(float("nan")) is None
+
+
+def test_decimal_implied_probability():
+    assert decimal_implied_probability(2.0) == pytest.approx(0.5)
+    assert decimal_implied_probability(1.5) == pytest.approx(2 / 3)
+
+
+def test_no_vig_probability_decimal_symmetric_market():
+    # Both sides at the same decimal price -> vig cancels, lands at 0.5
+    assert no_vig_probability_decimal(1.9, 1.9) == pytest.approx(0.5)
+
+
+def test_us_consensus_line_needs_at_least_two_books():
+    assert us_consensus_line([214.5]) is None
+    assert us_consensus_line([214.5, 210.5]) == pytest.approx(212.5)
+    assert us_consensus_line([214.5, 210.5, 216.5]) == pytest.approx(214.5)
+
+
+def test_us_consensus_line_ignores_missing_books():
+    assert us_consensus_line([214.5, None, 210.5]) == pytest.approx(212.5)
+
+
+def test_fair_probability_avg_averages_devigged_probabilities():
+    # Two books, both symmetric (1.9/1.9) -> average is still 0.5
+    avg = fair_probability_avg([(1.9, 1.9), (1.87, 1.95)])
+    assert avg is not None
+    assert 0.45 < avg < 0.55
+
+
+def test_fair_probability_avg_none_without_any_complete_pair():
+    assert fair_probability_avg([(1.9, None), (None, 1.9)]) is None
