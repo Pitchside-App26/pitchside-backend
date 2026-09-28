@@ -1,0 +1,31 @@
+name: Smoke Test - Analyst Sweep
+
+on:
+  workflow_dispatch: {}
+  # Manual trigger only, deliberately -- this exists to confirm
+  # ANTHROPIC_API_KEY actually works, not to run on any schedule. It costs
+  # one real Claude API call every time it's run.
+
+permissions:
+  contents: read  # read-only -- this doesn't write anything back to the repo
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nfl_prop_engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Smoke-test the analyst sweep against one real game
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python smoke_test_analyst_sweep.py
