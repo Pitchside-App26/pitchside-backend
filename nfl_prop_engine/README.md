@@ -379,6 +379,69 @@ ever read them. That data is not new; it just wasn't wired to anything.
   real improvement over using none of it -- but it was never going to
   predict a blowout the spread itself didn't predict.
 
+## Week 4 upgrade: accumulator engine (docs/week4-upgrade-spec.md)
+
+A second, separate spec on top of the ranking engine above -- written
+after both Week 3 accumulators lost. Full spec saved at
+`docs/week4-upgrade-spec.md`; summary here.
+
+**What it adds:** overs-only filtering (`accumulator.filter_by_side`,
+enforced inside the accumulator builder itself, not just a config value
+sitting unused -- an actual gap found while building the Week 3 replay
+test), a manual bet365 CSV import (`fetch_bet365.py`, scraping bet365 is
+out of scope per their ToS) compared against the US market's de-vigged
+consensus (`pricing.py`'s decimal-odds helpers), seven leg-quality gates
+(`leg_gates.py`: Line, Price, Movement, Form, Outlier, Matchup, Game
+script, Injury, Sources), a no-padding accumulator builder
+(`accumulator.py`), a separate `prop_bets` results log with settlement and
+closing-line-value tracking (`prop_bets_log.py`), and an analyst sweep
+(`analyst_sweep.py`) that calls the Claude API with web search once per
+game to check what independent analysts are saying before a leg is trusted.
+
+**The Week 3 replay is the spec's own acceptance test** (`tests/test_week3_replay.py`):
+fixture data from the real numbers named in the spec confirms Maye Over
+222.5, Garrett Wilson Over 76.5, and Pollard Over 61.5 all fail the line
+gate (bet365's line had drifted too far from the US consensus on all
+three), and that two deliberately-planted under legs (matching the "under
+legs that depended on game script" failure named in the spec's own
+postmortem) get excluded by the overs-only filter even when their own
+gates look clean.
+
+**Injury gate is deliberately stricter here than the main ranking page**:
+any report status (not just Out) fails an accumulator leg, since a
+real-money multi-leg bet has less tolerance for risk than a general
+"worth looking at" ranked list.
+
+**Deliberately incomplete, disclosed rather than hidden:**
+- **Role and teammate-injury gates** are real comparison logic running on
+  placeholder data -- real snap/route-share numbers need the
+  `pfr_player_id` crosswalk work already deferred (see the injury/usage
+  section above). Both currently pass through neutrally.
+- **The CLI** the spec describes (`python -m nfl_prop_engine snapshot|
+  import-bet365|analysts|report|record|settle|review`) hasn't been built
+  yet -- what exists is a tested toolkit (gates, builder, log, sweep), not
+  yet the assembled weekly workflow.
+- **The five snapshot times** (opener/midweek/friday/sunday/close) aren't
+  wired into a GitHub Actions cron yet. Close is the hard one: it needs to
+  fire 30 minutes before EACH game's own kickoff, and NFL games kick off
+  at several different times across a week -- the planned approach is a
+  few fixed crons tuned to the common kickoff windows (1pm/4pm/8pm ET, Mon
+  night) rather than exact per-game precision.
+- **The analyst-scorecard** (each analyst's hit rate and line CLV once
+  they have 5+ logged picks) needs the settlement/CLV data in `prop_bets`
+  to actually accumulate over real weeks first -- the aggregation logic in
+  `analyst_sweep.py` covers per-week independence/contested/crowding, not
+  yet the historical per-analyst tracking the weekly review is meant to show.
+- **The Odds API returning bet365 NFL player props at all** is unconfirmed
+  -- their own docs suggest player-prop markets are "mainly limited to US
+  sports" bookmakers, and the account was out of credits when this was
+  built so it couldn't be tested live either way. The manual CSV import is
+  built as the primary path, not a fallback, so this doesn't block anything.
+- **The Claude API key powering the analyst sweep is a separate
+  Anthropic account/billing** from whatever built this code -- its own
+  `ANTHROPIC_API_KEY` repo secret, Sonnet 5, a $15/month spend cap set in
+  `config.ANALYST_SWEEP`.
+
 ## Design choices worth knowing about (not explicit in the spec)
 
 - **Non-rookie players with a genuinely thin combined sample** (e.g. a
@@ -421,6 +484,12 @@ ever read them. That data is not new; it just wasn't wired to anything.
 | `grade_results.py` | fills in real outcomes and reports hit rate -- the "later" `results_log.py` was built for |
 | `run_weekly.py` | orchestrator / CLI entrypoint |
 | `tests/` | unit tests for the pure-logic pieces (projection math, matching, ranking) |
+| `docs/week4-upgrade-spec.md` | the accumulator-engine spec below, saved in full |
+| `fetch_bet365.py` | manual bet365 CSV import + fractional odds parsing |
+| `leg_gates.py` | the 8 leg-quality gates (Line/Price/Movement/Form/Outlier/Matchup/Game script/Injury/Sources) |
+| `accumulator.py` | no-padding accumulator builder, overs-only enforcement |
+| `prop_bets_log.py` | separate `prop_bets` log: settlement, void handling, closing line value |
+| `analyst_sweep.py` | Claude API + web search, once per game -- independent analyst picks, deduped and aggregated |
 
 ## Scheduling
 

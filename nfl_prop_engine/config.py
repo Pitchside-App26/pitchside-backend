@@ -199,3 +199,66 @@ def get_current_nfl_season(today: date | None = None) -> int:
 NAME_OVERRIDES_PATH = os.path.join(os.path.dirname(__file__), "name_overrides.json")
 ODDS_CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
 RESULTS_DB_PATH = os.path.join(os.path.dirname(__file__), "results_log.sqlite3")
+
+# ---------------------------------------------------------------------------
+# Accumulator engine (Week 4 upgrade spec) -- see docs/week4-upgrade-spec.md
+# ---------------------------------------------------------------------------
+# Written after both Week 3 accumulators lost. The failures were: under legs
+# that depended on game script, lines taken after they'd moved (bet365 sat
+# well above the US market on several), filler legs added just to reach six,
+# and picks leaning on a single analyst. This section's settings exist to
+# make each of those a gate a leg can fail, not a judgment call made in the
+# moment.
+SIDES = ["over"]  # config, not a constant someone forgot to make configurable -- flip deliberately, not by accident
+UNDERS_WATCHLIST = False  # True -> unders get their own report section, never the accumulator builder
+ONE_PLAY_MARKETS = False  # longest rush/reception, anytime TD -- excluded from accumulators; one play decides them
+
+LINE_THRESHOLD = {"yards": 2.0, "counts": 0.0}  # bet365 line must be <= US consensus + this, or the leg fails
+MIN_PRICE_DECIMAL = 1.80  # bet365 over price must clear this (~4/5) or the leg fails regardless of the line
+LINE_MOVEMENT_FLAG = {"yards": 3.0, "counts": 1.0}  # flag (not fail) if the consensus line moved this much since the opener
+
+FORM_WINDOW = 6  # games of recent form the Form/Outlier gates look at, reaching into the prior season if needed
+FORM_MIN_HIT_RATE = 0.5  # Form gate: fraction of the last FORM_WINDOW games clearing the line
+OUTLIER_MIN_PCT_OF_LINE = 0.90  # Outlier gate: average of the OTHER games (best one dropped) must reach this % of the line -- the Jahmyr Gibbs check: 104/game from a 156 and a 52 is not a trend
+ROLE_CHANGE_FLAG_POINTS = 15.0  # Role gate: snap/route share swing (percentage points) vs. prior season that gets flagged for manual review
+GAME_SCRIPT_RUSHING_MAX_DOG = 3.0  # Game-script gate, rushing overs: team must be favored, or an underdog by no more than this many points
+GAME_SCRIPT_PASSING_MIN_TOTAL = 45.0  # Game-script gate, passing/receiving overs: pass unless the team is an underdog OR the total is at least this
+
+MIN_SOURCES = 2  # Sources gate: independent analysts (from the sweep) backing the over
+MAX_LEGS = 6
+MAX_LEGS_PER_GAME = 2  # same-game pairs are tagged as bet-builder legs -- bet365 prices those separately
+STAKE_GBP = 5.0  # flat stake; never rises after a loss
+
+TIMEZONE = "Europe/London"  # display only -- everything is stored in UTC
+ODDS_API_REGIONS_ACCA = ["us"]
+CREDIT_CAP = 500  # print the estimated credit cost (events x markets x regions) and refuse to run over this
+
+# Which LINE_THRESHOLD/LINE_MOVEMENT_FLAG entry a stat uses -- yardage props
+# get more tolerance than count props, per the spec (2.0 yards vs 0.0 for
+# receptions/attempts, since a single reception is a much bigger relative
+# swing than a single yard).
+YARDAGE_STATS = {"passing_yards", "rushing_yards", "receiving_yards"}
+COUNT_STATS = {"completions", "interceptions", "carries", "receptions", "passing_tds"}
+
+
+def market_kind_for(stat_col: str) -> str:
+    if stat_col in YARDAGE_STATS:
+        return "yards"
+    return "counts"  # anything not explicitly yardage is treated as a count stat
+
+
+ANALYST_SWEEP = {
+    "enabled": True,
+    "model": "claude-sonnet-5",  # structured extraction against a schema, not deep reasoning -- Sonnet over Opus on cost
+    "max_games": 16,
+    "max_age_days": 7,
+    "crowding_flag_outlets": 4,  # 4+ independent outlets backing a leg -> flag as crowded (the line has likely already moved)
+    "flag_contested": True,  # any analyst backing the under -> flag the leg for manual review (the Mayfield lesson)
+    "spend_cap_usd": 15.0,  # hard monthly cap on the separate console.anthropic.com account this calls -- see README
+    "min_picks_for_scorecard": 5,  # an analyst's hit rate only shows once they have this many logged picks
+    "outlets": [
+        "Action Network", "Covers", "SI", "FanDuel Research", "Sharp Football Analysis",
+        "SportsBettingDime", "SBR", "Fantasy Life", "VSiN", "RotoWire", "ESPN",
+        "Dimers", "Action Network player projections",
+    ],
+}
