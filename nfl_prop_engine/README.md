@@ -420,7 +420,8 @@ real-money multi-leg bet has less tolerance for risk than a general
 - **The CLI** the spec describes (`python -m nfl_prop_engine snapshot|
   import-bet365|analysts|report|record|settle|review`) hasn't been built
   yet -- what exists is a tested toolkit (gates, builder, log, sweep), not
-  yet the assembled weekly workflow.
+  yet the assembled weekly workflow. `record` is covered by bet-slip issues
+  (see "Logging placed bets" below).
 - **The five snapshot times** (opener/midweek/friday/sunday/close) aren't
   wired into a GitHub Actions cron yet. Close is the hard one: it needs to
   fire 30 minutes before EACH game's own kickoff, and NFL games kick off
@@ -441,6 +442,47 @@ real-money multi-leg bet has less tolerance for risk than a general
   Anthropic account/billing** from whatever built this code -- its own
   `ANTHROPIC_API_KEY` repo secret, Sonnet 5, a $15/month spend cap set in
   `config.ANALYST_SWEEP`.
+
+## Logging placed bets (bet-slip issues)
+
+This replaces the spec's `record` command, because the bets actually placed
+often differ from what the report recommended.
+
+1. On GitHub, open a new issue with the **Bet slip** template, or any issue
+   titled "Bet slip…". Attach a screenshot of the placed bet (bet365 → My
+   Bets). Several screenshots are fine, and you can add them in a comment
+   instead of the issue itself.
+2. `.github/workflows/bet-slip.yml` reads the screenshots with the Claude API
+   and comments with what it found: each bet's type, stake, odds and
+   returns, plus each leg. It also lists anything that looks misread. Leg odds
+   that don't multiply to the slip's total, or a stake × odds that doesn't
+   match the returns, are the main misread signals.
+3. Reply **confirm** to log it, **cancel** to discard it, or describe what's
+   wrong in plain words (`leg 2 line is 64.5`, `week is 5`) and it reads the
+   slip again. Nothing is logged until you confirm. Confirming again after a
+   correction replaces what was logged, so a bet is never counted twice.
+   Once a bet is settled, it can't be changed. GitHub can drop a reply's run
+   when several arrive at once. If a reply gets no answer within a few
+   minutes, send it again.
+
+Logged bets go to `bet_slips` (one row per bet: stake, total odds, returns)
+and `prop_bets` (one row per leg), both in `results_log.sqlite3`.
+
+**The repo is public.** Only the repo owner's own issues and comments are
+acted on; anyone else's are ignored, including images and anything that looks
+like a draft. The screenshots and the logged bets are publicly visible,
+though, so crop out balance, name and bet reference before attaching.
+
+Not built yet:
+- **Consensus line and fair probability at bet time** stay empty until the
+  odds snapshots run (the Odds API account resets on 1 Oct). They're kept as
+  columns so they can be backfilled from the midweek snapshot.
+- **Settling whole bets.** Leg-level settlement exists (`settle_week`).
+  Deciding each bet's result and returns from its legs (voids, bet builders)
+  is part of the `settle` step.
+- **Showing logged bets on the results page.** The page is published only by
+  the rankings workflow. The committed `site/data.json` is stale, so this
+  workflow deliberately doesn't republish the site.
 
 ## Design choices worth knowing about (not explicit in the spec)
 
@@ -490,6 +532,8 @@ real-money multi-leg bet has less tolerance for risk than a general
 | `accumulator.py` | no-padding accumulator builder, overs-only enforcement |
 | `prop_bets_log.py` | separate `prop_bets` log: settlement, void handling, closing line value |
 | `analyst_sweep.py` | Claude API + web search, once per game -- independent analyst picks, deduped and aggregated |
+| `bet_slips.py` | reads bet-slip screenshots (Claude API), checks them, renders the draft for confirmation |
+| `bet_slip_bot.py` | GitHub side of bet-slip issues, run by `.github/workflows/bet-slip.yml` |
 
 ## Scheduling
 

@@ -1,0 +1,139 @@
+name: Bet Slip Intake
+
+# Open an issue using the "Bet slip" template (or titled "Bet slip...", or
+# labelled bet-slip) with a screenshot of a placed bet365 slip attached.
+# This reads it, comments with what it found, and logs it to
+# results_log.sqlite3 only after you reply "confirm".
+#
+# The repo is public, so every job only runs for the repo owner's own
+# issues and comments. Anyone else's are ignored.
+#
+# Issue and comment events always run this file from main, so changes here
+# only take effect once merged.
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  intake:
+    if: >-
+      github.event_name == 'issues' &&
+      github.event.issue.user.login == github.repository_owner &&
+      (
+        (github.event.action == 'opened' &&
+          (contains(github.event.issue.labels.*.name, 'bet-slip') || startsWith(github.event.issue.title, 'bet slip'))) ||
+        (github.event.action == 'labeled' && github.event.label.name == 'bet-slip')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    # A new issue with the label already applied fires both "opened" and
+    # "labeled". Running them one at a time lets the second see the first's
+    # reply and skip.
+    concurrency:
+      group: bet-slip-issue-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: nfl_prop_engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Read the slip and post a draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: python bet_slip_bot.py intake
+
+      - name: Say something went wrong
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          printf 'Something went wrong reading this slip (details: %s). Reply **retry** to try again.\n\n<!-- bet-slip-status -->\n' "$RUN_URL" > "$RUNNER_TEMP/error.md"
+          python bet_slip_bot.py reply --file "$RUNNER_TEMP/error.md"
+
+  command:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      github.event.comment.user.login == github.repository_owner &&
+      (contains(github.event.issue.labels.*.name, 'bet-slip') || startsWith(github.event.issue.title, 'bet slip'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    # Shared with every workflow that commits results_log.sqlite3, so two
+    # runs never write the file at once. If a "confirm" ever gets no reply,
+    # reply "confirm" again: logging replaces, it never double-counts.
+    concurrency:
+      group: results-db
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: nfl_prop_engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Handle the reply
+        id: handle
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: python bet_slip_bot.py comment --file "$RUNNER_TEMP/reply.md"
+
+      - name: Commit results log
+        if: steps.handle.outputs.logged == 'true'
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results_log.sqlite3
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: log bet slip from issue #$ISSUE_NUMBER"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 5))
+          done
+          exit 1
+
+      - name: Confirm on the issue
+        if: steps.handle.outputs.logged == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: python bet_slip_bot.py reply --file "$RUNNER_TEMP/reply.md" --close
+
+      - name: Say something went wrong
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          printf 'Something went wrong handling that reply (details: %s). Send the same reply again to retry. A repeated **confirm** replaces what was logged, so it never double-counts.\n\n<!-- bet-slip-status -->\n' "$RUN_URL" > "$RUNNER_TEMP/error.md"
+          python bet_slip_bot.py reply --file "$RUNNER_TEMP/error.md"

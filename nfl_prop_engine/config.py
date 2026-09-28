@@ -262,3 +262,13 @@ ANALYST_SWEEP = {
         "Dimers", "Action Network player projections",
     ],
 }
+
+# Bet-slip intake: Dan opens a GitHub issue with a screenshot of the slip he
+# actually placed; the bet-slip workflow reads it with the Claude API, posts
+# what it parsed for him to check, and only logs it once he replies "confirm".
+BET_SLIP = {
+    "model": "claude-sonnet-5",  # same account/key/spend cap as the analyst sweep; the confirm step, not model tier, is the accuracy backstop
+    "label": "bet-slip",
+    "max_images": 4,
+    "max_image_bytes": 5_000_000,  # Claude API per-image limit
+}

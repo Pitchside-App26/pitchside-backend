@@ -24,6 +24,11 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
+    # Shared with every workflow that commits results_log.sqlite3, so two
+    # runs never write the file at once.
+    concurrency:
+      group: results-db
+      cancel-in-progress: false
     defaults:
       run:
         working-directory: nfl_prop_engine
