@@ -61,7 +61,12 @@ def fetch_analyst_picks(game_description: str, week: int, api_key: str | None = 
     try:
         response = client.messages.create(
             model=ANALYST_SWEEP["model"],
-            max_tokens=4096,
+            # 16000 (not 4096): Sonnet 5 runs adaptive thinking on by
+            # default, and thinking + the web_search tool's own turns share
+            # this same max_tokens budget with the final text/JSON. A tight
+            # cap risks stop_reason="max_tokens" before any real output is
+            # written, which looks identical to "found nothing" downstream.
+            max_tokens=16000,
             system=system,
             tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 6}],
             messages=[{"role": "user", "content": f"Game: {game_description}. NFL Week {week}."}],
@@ -70,8 +75,27 @@ def fetch_analyst_picks(game_description: str, week: int, api_key: str | None = 
         logger.warning("Analyst sweep API call failed for %r (%s) -- skipping this game.", game_description, exc)
         return []
 
+    block_types = [block.type for block in response.content]
+    logger.info(
+        "Analyst sweep response for %r: stop_reason=%s, blocks=%s",
+        game_description, response.stop_reason, block_types,
+    )
+    if response.stop_reason == "max_tokens":
+        logger.warning(
+            "Analyst sweep for %r hit max_tokens before finishing -- output was likely "
+            "truncated. Consider raising max_tokens further.", game_description,
+        )
+
     text = "".join(block.text for block in response.content if block.type == "text")
-    return parse_picks_json(text, game_description)
+    if not text.strip():
+        logger.warning(
+            "Analyst sweep for %r got no text block back (stop_reason=%s, blocks=%s) -- "
+            "nothing to parse.", game_description, response.stop_reason, block_types,
+        )
+    picks = parse_picks_json(text, game_description)
+    if not picks and text.strip():
+        logger.info("Analyst sweep for %r raw text (first 2000 chars): %s", game_description, text[:2000])
+    return picks
 
 
 def parse_picks_json(text: str, game_description: str = "") -> list[dict]:
