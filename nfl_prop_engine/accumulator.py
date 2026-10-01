@@ -20,6 +20,10 @@ class Candidate:
     price_decimal: float
     fair_prob: float
     gates: list[GateResult]
+    # Selection order. Defaults to fair_prob, but de-vigged US probabilities
+    # all sit near 50%, so the weekly report passes the projection's margin
+    # over the worst acceptable line instead.
+    score: float | None = None
 
     @property
     def passed_all(self) -> bool:
@@ -61,7 +65,11 @@ def build_accumulator(
     instead, or "no bet" if nothing passed at all.
     """
     on_side = filter_by_side(candidates)
-    passing = sorted((c for c in on_side if c.passed_all), key=lambda c: c.fair_prob, reverse=True)
+    passing = sorted(
+        (c for c in on_side if c.passed_all),
+        key=lambda c: c.score if c.score is not None else c.fair_prob,
+        reverse=True,
+    )
 
     selected: list[Candidate] = []
     per_game_count: dict[str, int] = {}

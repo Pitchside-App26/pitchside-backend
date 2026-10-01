@@ -250,7 +250,16 @@ def market_kind_for(stat_col: str) -> str:
 ANALYST_SWEEP = {
     "enabled": True,
     "model": "claude-sonnet-5",  # structured extraction against a schema, not deep reasoning -- Sonnet over Opus on cost
-    "max_games": 16,
+    # Only games that still have a leg after every other gate are swept; this
+    # caps how many, keeping the games with the most surviving legs. One game
+    # took 5m40s live, so they run a few at a time.
+    "max_games": 8,
+    "max_workers": 4,
+    "max_continuations": 3,  # resumes after stop_reason="pause_turn"
+    # List prices, used only to log an estimated cost per run.
+    "usd_per_mtok_input": 2.0,
+    "usd_per_mtok_output": 10.0,
+    "usd_per_web_search": 0.01,
     "max_age_days": 7,
     "crowding_flag_outlets": 4,  # 4+ independent outlets backing a leg -> flag as crowded (the line has likely already moved)
     "flag_contested": True,  # any analyst backing the under -> flag the leg for manual review (the Mayfield lesson)

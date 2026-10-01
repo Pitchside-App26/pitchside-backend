@@ -323,6 +323,182 @@
     border-top: 1px solid var(--rule-strong);
     padding-top: 14px;
   }
+
+  /* ── Accumulator section ── */
+  .acca {
+    margin: 4px 0 26px;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    flex-wrap: wrap;
+    border-top: 3px double var(--rule-strong);
+    padding-top: 10px;
+  }
+
+  h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .kicker {
+    color: var(--sub);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .acca-summary {
+    margin: 8px 0 4px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .acca-summary strong {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+  }
+
+  .leg {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .target {
+    margin-top: 10px;
+    background: var(--panel);
+    border: 1px solid var(--rule-strong);
+    border-left-width: 4px;
+    border-left-color: var(--over);
+    padding: 9px 12px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .target .big {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .leg-facts {
+    margin-top: 8px;
+    color: var(--sub);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .pill {
+    font-size: 0.68rem;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--rule);
+    color: var(--sub);
+  }
+
+  .pill.warn { color: var(--low-conf); border-color: var(--low-conf); }
+
+  .sources {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .sources a { color: var(--text); text-underline-offset: 2px; }
+  .sources .against { color: var(--under); }
+
+  details.gates, details.more {
+    margin-top: 8px;
+  }
+
+  details.gates summary, details.more summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  details.more summary {
+    font-size: 0.85rem;
+    padding: 8px 0;
+  }
+
+  details summary:focus-visible, .sources a:focus-visible, .why-btn:focus-visible, .update-btn:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+
+  .gate-list {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .gate-list li {
+    display: grid;
+    grid-template-columns: 1.1em 6.2em 1fr;
+    gap: 6px;
+    padding: 3px 0;
+  }
+
+  .gate-list .mark { font-weight: 700; }
+  .gate-list .ok .mark { color: var(--over); }
+  .gate-list .no .mark { color: var(--under); }
+  .gate-list .name { font-weight: 600; text-transform: capitalize; }
+  .gate-list .why { color: var(--sub); overflow-wrap: anywhere; }
+
+  .excl-row {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .excl-row .who { font-weight: 600; }
+  .excl-row .why { color: var(--sub); overflow-wrap: anywhere; }
+
+  .acca-notes {
+    margin-top: 12px;
+    color: var(--sub);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .acca-notes ul { margin: 4px 0 0; padding-left: 18px; }
+
+  .acca-empty {
+    margin: 10px 0 4px;
+    padding: 12px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  .ranked-head {
+    margin-bottom: 0;
+  }
 </style>
 </head>
 <body>
@@ -335,6 +511,12 @@
       <div class="meta" id="meta">Loading…</div>
       <div class="update-note">Opens GitHub Actions — tap "Run workflow", leave the branch on main, then "Run workflow" again to refresh this page.</div>
     </header>
+
+    <section class="acca" id="acca" hidden aria-labelledby="acca-title"></section>
+
+    <div class="section-head ranked-head">
+      <h2>All ranked props</h2>
+    </div>
 
     <div class="controls">
       <input type="search" id="search" placeholder="Search player…" autocomplete="off">
@@ -455,6 +637,141 @@
     }).join("");
   }
 
+  // Analyst names and links come from web search, so every value is
+  // escaped before it reaches innerHTML.
+  function esc(v) {
+    return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function safeUrl(u) {
+    return /^https?:\/\//i.test(u || "") ? u : "";
+  }
+
+  function pct(p) {
+    return Number.isFinite(p) ? `${Math.round(p * 100)}%` : "–";
+  }
+
+  const GATE_NAMES = { game_script: "Game script" };
+  function gateName(g) {
+    return GATE_NAMES[g] || (g.charAt(0).toUpperCase() + g.slice(1));
+  }
+
+  function money(v) {
+    return Number.isFinite(v) ? v.toFixed(2) : "–";
+  }
+
+  function gateList(gates) {
+    return `<ul class="gate-list">${gates.map(g => `
+      <li class="${g.passed ? "ok" : "no"}">
+        <span class="mark" aria-label="${g.passed ? "passed" : "failed"}">${g.passed ? "✓" : "✗"}</span>
+        <span class="name">${esc(gateName(g.gate))}</span>
+        <span class="why">${esc(g.reason)}</span>
+      </li>`).join("")}</ul>`;
+  }
+
+  function sourceLinks(list) {
+    return list.map(s => {
+      const label = esc([s.outlet, s.analyst].filter(Boolean).join(", ") || "unnamed source");
+      const url = safeUrl(s.url);
+      return url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label;
+    }).join("; ");
+  }
+
+  function legCard(leg, opts = {}) {
+    const passed = leg.gates.filter(g => g.passed).length;
+    const failed = leg.gates.filter(g => !g.passed);
+    const pills = [
+      leg.bet_builder ? `<span class="pill">Same game: bet365 prices these as a bet builder</span>` : "",
+      ...leg.flags.map(f => `<span class="pill warn">${esc(f)}</span>`),
+    ].join("");
+    const over = leg.sources?.over || [];
+    const under = leg.sources?.under || [];
+    const target = leg.max_line !== null && leg.max_line !== undefined
+      ? `<div class="target">Bet only if bet365's line is <span class="big">${esc(fmtLine(leg.max_line))} or lower</span>,
+           at <span class="big">${esc(leg.min_price_fractional)}</span> (${esc(money(leg.min_price_decimal))}) or bigger.</div>`
+      : "";
+    return `
+      <div class="leg">
+        <div class="player-row">
+          <span class="player">${esc(leg.player)}</span>
+          <span class="stat-label">${esc(leg.stat_label)} over</span>
+        </div>
+        <div class="sub">${esc([leg.game, leg.kickoff].filter(Boolean).join(" · "))}</div>
+        ${opts.failedOnly ? `<div class="leg-facts">Failed: ${failed.map(g => `<strong>${esc(gateName(g.gate))}</strong>, ${esc(g.reason)}`).join("; ")}</div>` : target}
+        <div class="leg-facts">US consensus ${esc(fmtLine(leg.consensus_line))} (${esc(leg.n_books)} books) · projection ${esc(fmtLine(leg.projection))} · fair chance ${pct(leg.fair_prob)}</div>
+        ${pills ? `<div class="pills">${pills}</div>` : ""}
+        ${over.length ? `<div class="sources">Backed by: ${sourceLinks(over)}</div>` : ""}
+        ${under.length ? `<div class="sources against">Against: ${sourceLinks(under)}</div>` : ""}
+        <details class="gates">
+          <summary>${passed} of ${leg.gates.length} gates passed</summary>
+          ${gateList(leg.gates)}
+        </details>
+      </div>`;
+  }
+
+  function renderAcca(a) {
+    const el = document.getElementById("acca");
+    if (!a) return;  // older data.json without the section
+    el.hidden = false;
+    const head = `
+      <div class="section-head">
+        <h2 id="acca-title">This week's accumulator</h2>
+        <span class="kicker">Overs only · Week 4 spec gates</span>
+      </div>`;
+    if (a.error) {
+      el.innerHTML = head + `<div class="acca-empty">The accumulator report failed on this run (${esc(a.error)}). The rankings below are unaffected.</div>`;
+      return;
+    }
+
+    let summary;
+    if (a.mode === "accumulator") {
+      summary = `<p class="acca-summary"><strong>${a.legs.length}-fold</strong>, £${esc(a.stake_gbp)} flat stake.
+        Fair odds ${esc(money(a.combined_fair_odds))}: bet365's acca price needs to beat that to be value.
+        Rough chance it lands: ${pct(a.combined_probability)} (assumes the legs are independent, which same-game legs aren't).</p>`;
+    } else if (a.mode === "singles") {
+      summary = `<p class="acca-summary">Only <strong>${a.legs.length}</strong> leg${a.legs.length === 1 ? "" : "s"} passed every gate.
+        Too few for an accumulator, so take ${a.legs.length === 1 ? "it as a single" : "them as singles"} or leave it.</p>`;
+    } else {
+      const top = Object.entries(a.gate_failure_counts || {}).slice(0, 3)
+        .map(([g, n]) => `${esc(gateName(g))} (${n})`).join(", ");
+      summary = `<div class="acca-empty"><strong>No bet this week.</strong> None of the ${esc(a.n_candidates)} overs passed every gate.
+        ${top ? `Most common failures: ${top}.` : ""} The near misses below are worth a look, not a bet.</div>`;
+    }
+
+    const legs = (a.legs || []).map(l => legCard(l)).join("");
+    const near = (a.near_misses || []).filter(m => !(a.legs || []).some(l => l.player === m.player && l.stat === m.stat));
+    const nearHtml = near.length ? `
+      <details class="more" ${a.mode === "no_bet" ? "open" : ""}>
+        <summary>Near misses: failed one gate (${near.length})</summary>
+        ${near.map(l => legCard(l, { failedOnly: true })).join("")}
+      </details>` : "";
+    const excluded = a.excluded || [];
+    const exclHtml = excluded.length ? `
+      <details class="more">
+        <summary>Every excluded over, and why (${excluded.length})</summary>
+        ${excluded.map(e => `
+          <div class="excl-row">
+            <span class="who">${esc(e.player)}</span> · ${esc(e.stat_label)} · ${esc(e.game)}
+            <div class="why">${e.failed.map(f => `<strong>${esc(gateName(f.gate))}</strong>: ${esc(f.reason)}`).join("<br>")}</div>
+          </div>`).join("")}
+      </details>` : "";
+
+    const sweep = a.analyst_sweep || {};
+    const sweepNote = sweep.ran
+      ? `Analyst sweep covered ${sweep.games.length} game${sweep.games.length === 1 ? "" : "s"}${sweep.usage ? `, estimated cost $${esc(money(sweep.usage.estimated_cost_usd))}` : ""}.`
+      : `Analyst sweep: ${esc(sweep.note || "didn't run")}.`;
+    const feedNote = a.bet365_in_feed
+      ? "bet365 is in the odds feed this week, so the line check could be automated."
+      : `bet365 isn't in the odds feed (books seen: ${esc((a.bookmakers_seen || []).join(", ") || "none")}).`;
+
+    el.innerHTML = head + summary + legs + nearHtml + exclHtml + `
+      <div class="acca-notes">
+        ${sweepNote} ${feedNote}
+        <div>Not checked automatically:</div>
+        <ul>${(a.not_checked || []).map(n => `<li>${esc(n)}</li>`).join("")}</ul>
+      </div>`;
+  }
+
   function timeAgo(iso) {
     const diffMs = Date.now() - new Date(iso).getTime();
     const mins = Math.round(diffMs / 60000);
@@ -476,6 +793,7 @@
       meta.innerHTML = `<span>Season ${data.season}, Week ${data.week}</span>` +
         `<span>Updated ${timeAgo(data.generated_at)}</span>` +
         `<span>${state.props.length} props</span>`;
+      renderAcca(data.accumulator);
       render();
     })
     .catch(err => {

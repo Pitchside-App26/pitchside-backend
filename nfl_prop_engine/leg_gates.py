@@ -137,10 +137,13 @@ def matchup_gate(opp_factor: float) -> GateResult:
     >1.0 means the opponent allows more than league average at this stat,
     which is what an over needs. Same number the projection engine's own
     opponent adjustment is already built from, just gated instead of
-    blended in."""
-    if opp_factor >= 1.0:
-        return GateResult("matchup", True, f"opponent allows {opp_factor:.2f}x league average -- at or worse than average")
-    return GateResult("matchup", False, f"opponent allows {opp_factor:.2f}x league average -- better than average, working against the over")
+    blended in. Decided on the same 2-decimal figure the reason shows: a
+    real Week 4 run had a defence at 0.9998x failing as "better than
+    average" while displaying 1.00x."""
+    shown = round(opp_factor, 2)
+    if shown >= 1.0:
+        return GateResult("matchup", True, f"opponent allows {shown:.2f}x league average -- at or worse than average")
+    return GateResult("matchup", False, f"opponent allows {shown:.2f}x league average -- better than average, working against the over")
 
 
 def game_script_gate(stat_col: str, team_spread_value: float | None, total_line: float | None) -> GateResult:
