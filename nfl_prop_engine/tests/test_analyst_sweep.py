@@ -244,3 +244,57 @@ def test_sweep_games_totals_usage_and_cost(monkeypatch):
     assert totals["web_searches"] == 10
     # 200k in x $2/M + 20k out x $10/M + 10 searches x $0.01
     assert totals["estimated_cost_usd"] == pytest.approx(0.4 + 0.2 + 0.1)
+
+
+# The exact shape of the reply that lost every pick on the first live run
+# (PIT @ CLE, Week 4): narration, then a fenced JSON block.
+LIVE_WEEK4_REPLY = '''Good, there's real content. Let me fetch details from the most relevant and reputable sources.```json
+[
+  {
+    "outlet": "Sports Illustrated (SI)",
+    "analyst": null,
+    "player": "Jaylen Warren",
+    "market": "Rush + Receiving Yards",
+    "side": "over",
+    "line": 94.5,
+    "price": -111,
+    "book": "DraftKings",
+    "publish_date": "2026-10-01",
+    "url": "https://www.si.com/betting/steelers-vs-browns-best-nfl-prop-bets-for-thursday-night-football-in-week-4-bet-on-jaylen-warren",
+    "track_record": null
+  },
+  {
+    "outlet": "CBS Sports",
+    "analyst": null,
+    "player": "Jaylen Warren",
+    "market": "Rushing Yards",
+    "side": "over",
+    "line": 70.5,
+    "price": -120,
+    "book": "BetMGM",
+    "publish_date": "2026-10-01",
+    "url": "https://www.cbssports.com/betting/news/steelers-vs-browns-odds-picks-prediction-best",
+    "track_record": null
+  }
+]
+```'''
+
+
+def test_parse_picks_json_survives_narration_before_the_json():
+    picks = parse_picks_json(LIVE_WEEK4_REPLY)
+    assert [p["outlet"] for p in picks] == ["Sports Illustrated (SI)", "CBS Sports"]
+    matched = match_picks_to_candidate(picks, "Jaylen Warren", "player_rush_yds", 70.5)
+    assert [p["outlet"] for p in matched] == ["CBS Sports"]  # the combo market is correctly not a rushing-yards pick
+
+
+def test_parse_picks_json_finds_a_bare_array_after_prose():
+    assert parse_picks_json('Here is what I found:\n[{"outlet": "Covers"}]\nThat is all.') == [{"outlet": "Covers"}]
+
+
+def test_parse_picks_json_prefers_the_last_fenced_block():
+    text = 'Draft:```json\n[{"outlet": "old"}]\n```Final:```json\n[{"outlet": "new"}]\n```'
+    assert parse_picks_json(text) == [{"outlet": "new"}]
+
+
+def test_parse_picks_json_still_rejects_text_with_no_json():
+    assert parse_picks_json("I couldn't find any picks for this game.") == []
