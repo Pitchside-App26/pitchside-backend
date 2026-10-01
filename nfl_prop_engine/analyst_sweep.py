@@ -18,6 +18,7 @@ actually reported finding.
 """
 import json
 import logging
+import re
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -161,21 +162,35 @@ def parse_picks_json(text: str, game_description: str = "") -> list[dict]:
     API call. Tolerant of the model wrapping its JSON in a markdown fence
     despite being told not to -- a real, observed model behavior, not a
     hypothetical."""
-    cleaned = text.strip()
-    if cleaned.startswith("```"):
-        cleaned = cleaned.strip("`")
-        if cleaned.lower().startswith("json"):
-            cleaned = cleaned[4:]
-        cleaned = cleaned.strip()
-    try:
-        picks = json.loads(cleaned)
-    except json.JSONDecodeError:
+    picks = None
+    for candidate in _json_candidates(text):
+        try:
+            picks = json.loads(candidate)
+            break
+        except json.JSONDecodeError:
+            continue
+    if picks is None:
         logger.warning("Analyst sweep for %r returned non-JSON output -- skipping.", game_description)
         return []
     if not isinstance(picks, list):
         logger.warning("Analyst sweep for %r returned JSON that wasn't a list -- skipping.", game_description)
         return []
     return picks
+
+
+def _json_candidates(text: str) -> list[str]:
+    """Where the JSON might be, most likely first. The model narrates
+    between web searches, so the reply can open with prose before a
+    ```json fence -- a live Week 4 run lost every pick to exactly that
+    ("Good, there's real content. Let me fetch details...```json [...]")."""
+    cleaned = text.strip()
+    candidates = [cleaned]
+    fences = re.findall(r"```(?:json)?\s*(.*?)```", cleaned, flags=re.DOTALL | re.IGNORECASE)
+    candidates += [f.strip() for f in reversed(fences)]
+    start, end = cleaned.find("["), cleaned.rfind("]")
+    if 0 <= start < end:
+        candidates.append(cleaned[start:end + 1])
+    return candidates
 
 
 def _same_player(pick_name: str | None, candidate_name: str, threshold: int = 85) -> bool:

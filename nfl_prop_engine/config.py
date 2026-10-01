@@ -251,9 +251,10 @@ ANALYST_SWEEP = {
     "enabled": True,
     "model": "claude-sonnet-5",  # structured extraction against a schema, not deep reasoning -- Sonnet over Opus on cost
     # Only games that still have a leg after every other gate are swept; this
-    # caps how many, keeping the games with the most surviving legs. One game
-    # took 5m40s live, so they run a few at a time.
-    "max_games": 8,
+    # caps how many, keeping the games with the most surviving legs. The
+    # first live run cost $0.84 for one game (~300k input tokens of search
+    # results), so 3 keeps a weekly run near $2.50, inside the $15/month cap.
+    "max_games": 3,
     "max_workers": 4,
     "max_continuations": 3,  # resumes after stop_reason="pause_turn"
     # List prices, used only to log an estimated cost per run.

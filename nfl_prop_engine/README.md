@@ -461,7 +461,8 @@ For each over:
    projects under), Form, Outlier, Matchup, Game script, Injury. Teammates
    ruled out are a flag, not a failure.
 4. **Analyst sweep** on the games where a leg survived all of that, most
-   surviving legs first, up to `ANALYST_SWEEP["max_games"]` (8), four at a
+   surviving legs first, up to `ANALYST_SWEEP["max_games"]` (3, since the
+   first live run cost $0.84 for one game), four at a
    time. Then the **Sources** gate (2+ independent analysts). Any analyst on
    the under marks the leg contested, and 4+ outlets marks it crowded.
 5. **Accumulator builder.** Max 6 legs, max 2 per game, never padded. The
