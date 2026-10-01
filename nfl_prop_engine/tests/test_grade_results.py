@@ -101,12 +101,13 @@ from grade_results import acca_groups
 from results_log import grade_acca_week, log_acca_legs
 
 
-def _acca_row(player_id, passed=True, selected=False, checked=True, n_over=0, n_under=0, max_line=50.5, stat="rushing_yards"):
+def _acca_row(player_id, passed=True, selected=False, checked=True, n_over=0, n_under=0, max_line=50.5, stat="rushing_yards",
+              filler=False):
     return {
         "player_id": player_id, "player_name": player_id, "stat_col": stat, "market": "player_rush_yds",
         "game": "NE @ BUF", "consensus_line": max_line - 2, "max_line": max_line, "projection": 60.0,
         "fair_prob": 0.5, "passed_gates": passed, "failed_gates": None if passed else "form",
-        "selected": selected, "sources_checked": checked,
+        "selected": selected, "filler": filler, "window": "early", "sources_checked": checked,
         "n_over_sources": n_over if checked else None, "n_under_sources": n_under if checked else None,
     }
 
@@ -117,7 +118,7 @@ def test_acca_legs_are_logged_graded_and_grouped(tmp_path):
         _acca_row("backed", n_over=2, selected=True),
         _acca_row("lonely", n_over=0),
         _acca_row("unchecked", checked=False),
-        _acca_row("failed", passed=False, checked=False),
+        _acca_row("failed", passed=False, checked=False, selected=True, filler=True),
     ], 2026, 4, db_path=db)
 
     # Weeks/pairs needing grades now include acca legs.
@@ -136,7 +137,8 @@ def test_acca_legs_are_logged_graded_and_grouped(tmp_path):
     assert list(groups["passed, 2+ analysts"]["player_id"]) == ["backed"]
     assert list(groups["passed, 0 analysts"]["player_id"]) == ["lonely"]
     assert list(groups["passed, not checked"]["player_id"]) == ["unchecked"]
-    assert list(groups["selected for the acca"]["player_id"]) == ["backed"]
+    assert list(groups["selected, passed every gate"]["player_id"]) == ["backed"]
+    assert list(groups["selected as a filler"]["player_id"]) == ["failed"]
 
 
 def test_acca_groups_count_a_leg_once_per_week_from_its_latest_run(tmp_path):

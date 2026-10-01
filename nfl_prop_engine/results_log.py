@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS acca_legs (
     stat_col TEXT,
     market TEXT,
     game TEXT,
+    window TEXT,
     consensus_line REAL,
     max_line REAL,
     projection REAL,
@@ -54,6 +55,7 @@ CREATE TABLE IF NOT EXISTS acca_legs (
     passed_gates INTEGER NOT NULL,
     failed_gates TEXT,
     selected INTEGER NOT NULL,
+    filler INTEGER NOT NULL DEFAULT 0,
     sources_checked INTEGER NOT NULL,
     n_over_sources INTEGER,
     n_under_sources INTEGER,
@@ -63,10 +65,19 @@ CREATE TABLE IF NOT EXISTS acca_legs (
 """
 
 
+# Columns added after acca_legs first shipped, so a database created by an
+# earlier run gets them too (CREATE TABLE IF NOT EXISTS won't add them).
+ACCA_ADDED_COLUMNS = {"window": "TEXT", "filler": "INTEGER NOT NULL DEFAULT 0"}
+
+
 def _connect(db_path: str = RESULTS_DB_PATH) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.execute(SCHEMA)
     conn.execute(ACCA_SCHEMA)
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(acca_legs)")}
+    for column, decl in ACCA_ADDED_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE acca_legs ADD COLUMN {column} {decl}")
     return conn
 
 
@@ -76,16 +87,16 @@ def log_acca_legs(rows: list[dict], season: int, week: int, db_path: str = RESUL
     with conn:
         conn.executemany(
             """INSERT INTO acca_legs
-               (logged_at, season, week, player_id, player_name, stat_col, market, game, consensus_line,
-                max_line, projection, fair_prob, passed_gates, failed_gates, selected, sources_checked,
+               (logged_at, season, week, player_id, player_name, stat_col, market, game, window, consensus_line,
+                max_line, projection, fair_prob, passed_gates, failed_gates, selected, filler, sources_checked,
                 n_over_sources, n_under_sources)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             [
                 (
                     logged_at, season, week, r["player_id"], r["player_name"], r["stat_col"], r["market"],
-                    r["game"], r["consensus_line"], r["max_line"], r["projection"], r["fair_prob"],
-                    int(r["passed_gates"]), r["failed_gates"], int(r["selected"]), int(r["sources_checked"]),
-                    r["n_over_sources"], r["n_under_sources"],
+                    r["game"], r.get("window"), r["consensus_line"], r["max_line"], r["projection"], r["fair_prob"],
+                    int(r["passed_gates"]), r["failed_gates"], int(r["selected"]), int(r.get("filler", False)),
+                    int(r["sources_checked"]), r["n_over_sources"], r["n_under_sources"],
                 )
                 for r in rows
             ],

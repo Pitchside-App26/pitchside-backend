@@ -221,7 +221,8 @@ def acca_groups(df: pd.DataFrame) -> list[tuple[str, pd.DataFrame]]:
     return [
         ("passed every gate", passed),
         ("failed a gate", df[df["passed_gates"] == 0]),
-        ("selected for the acca", df[df["selected"] == 1]),
+        ("selected, passed every gate", df[(df["selected"] == 1) & (df["filler"] == 0)]),
+        ("selected as a filler", df[df["filler"] == 1]),
         ("passed, 2+ analysts", checked[checked["n_over_sources"] >= 2]),
         ("passed, 1 analyst", checked[checked["n_over_sources"] == 1]),
         ("passed, 0 analysts", checked[checked["n_over_sources"] == 0]),

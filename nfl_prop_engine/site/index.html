@@ -499,6 +499,15 @@
   .ranked-head {
     margin-bottom: 0;
   }
+
+  .window-head {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin: 18px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule-strong);
+  }
 </style>
 </head>
 <body>
@@ -681,6 +690,7 @@
     const passed = leg.gates.filter(g => g.passed).length;
     const failed = leg.gates.filter(g => !g.passed);
     const pills = [
+      leg.filler ? `<span class="pill warn">Filler: failed ${esc(failed.map(g => gateName(g.gate)).join(", "))}</span>` : "",
       leg.bet_builder ? `<span class="pill">Same game: bet365 prices these as a bet builder</span>` : "",
       ...leg.flags.map(f => `<span class="pill warn">${esc(f)}</span>`),
     ].join("");
@@ -697,7 +707,8 @@
           <span class="stat-label">${esc(leg.stat_label)} over</span>
         </div>
         <div class="sub">${esc([leg.game, leg.kickoff].filter(Boolean).join(" · "))}</div>
-        ${opts.failedOnly ? `<div class="leg-facts">Failed: ${failed.map(g => `<strong>${esc(gateName(g.gate))}</strong>, ${esc(g.reason)}`).join("; ")}</div>` : target}
+        ${opts.failedOnly || leg.filler ? `<div class="leg-facts">Failed: ${failed.map(g => `<strong>${esc(gateName(g.gate))}</strong>, ${esc(g.reason)}`).join("; ")}</div>` : ""}
+        ${opts.failedOnly ? "" : target}
         <div class="leg-facts">US consensus ${esc(fmtLine(leg.consensus_line))} (${esc(leg.n_books)} books) · projection ${esc(fmtLine(leg.projection))} · fair chance ${pct(leg.fair_prob)}</div>
         ${pills ? `<div class="pills">${pills}</div>` : ""}
         ${over.length ? `<div class="sources">Backed by: ${sourceLinks(over)}</div>` : ""}
@@ -717,7 +728,7 @@
     el.hidden = false;
     const head = `
       <div class="section-head">
-        <h2 id="acca-title">This week's accumulator</h2>
+        <h2 id="acca-title">This week's accumulators</h2>
         <span class="kicker">Overs only · Week 4 spec gates</span>
       </div>`;
     if (a.error) {
@@ -725,25 +736,37 @@
       return;
     }
 
-    let summary;
-    if (a.mode === "accumulator") {
-      summary = `<p class="acca-summary"><strong>${a.legs.length}-fold</strong>, £${esc(a.stake_gbp)} flat stake.
-        Fair odds ${esc(money(a.combined_fair_odds))}: bet365's acca price needs to beat that to be value.
-        Rough chance it lands: ${pct(a.combined_probability)} (assumes the legs are independent, which same-game legs aren't).</p>`;
-    } else if (a.mode === "singles") {
-      summary = `<p class="acca-summary">Only <strong>${a.legs.length}</strong> leg${a.legs.length === 1 ? "" : "s"} passed every gate.
-        Too few for an accumulator, so take ${a.legs.length === 1 ? "it as a single" : "them as singles"} or leave it.</p>`;
-    } else {
-      const top = Object.entries(a.gate_failure_counts || {}).slice(0, 3)
-        .map(([g, n]) => `${esc(gateName(g))} (${n})`).join(", ");
-      summary = `<div class="acca-empty"><strong>No bet this week.</strong> None of the ${esc(a.n_candidates)} overs passed every gate.
-        ${top ? `Most common failures: ${top}.` : ""} The near misses below are worth a look, not a bet.</div>`;
+    function windowHtml(w) {
+      const n = w.legs.length;
+      const makeup = w.n_fillers
+        ? `${w.n_passed} passed every gate, ${w.n_fillers} filler${w.n_fillers === 1 ? "" : "s"} that failed one gate (marked)`
+        : `all ${n} passed every gate`;
+      const short = a.fill_with_near_misses && n < 6
+        ? ` Only ${n} leg${n === 1 ? "" : "s"} available: not enough legs passed or nearly passed to reach 6.` : "";
+      let summary;
+      if (w.mode === "accumulator") {
+        summary = `<p class="acca-summary"><strong>${n}-fold</strong>: ${makeup}. £${esc(a.stake_gbp)} flat stake.${short}
+          Fair odds ${esc(money(w.combined_fair_odds))}: bet365's acca price needs to beat that to be value.
+          Rough chance it lands: ${pct(w.combined_probability)} (assumes the legs are independent, which same-game legs aren't).</p>`;
+      } else if (w.mode === "singles") {
+        summary = `<p class="acca-summary">Only <strong>${n}</strong> leg${n === 1 ? "" : "s"} available (${makeup}).
+          Too few for an accumulator, so take ${n === 1 ? "it as a single" : "them as singles"} or leave it.</p>`;
+      } else {
+        summary = `<div class="acca-empty"><strong>No bet.</strong> None of the ${esc(w.n_legs_in_window)} overs in these games passed, or failed only one gate.</div>`;
+      }
+      const when = w.kickoff_uk ? ` · ${esc(w.kickoff_uk)} UK` : "";
+      return `<h3 class="window-head">${esc(w.label)}${when}</h3>` + summary + w.legs.map(l => legCard(l)).join("");
     }
 
-    const legs = (a.legs || []).map(l => legCard(l)).join("");
-    const near = (a.near_misses || []).filter(m => !(a.legs || []).some(l => l.player === m.player && l.stat === m.stat));
+    const accas = a.accumulators || [];
+    const body = accas.length
+      ? accas.map(windowHtml).join("")
+      : `<div class="acca-empty">No early or late Sunday games in this run, so no accumulators. Thursday, Sunday night, Monday and London games are ranked below but not used.</div>`;
+    const anyBet = accas.some(w => w.mode !== "no_bet");
+
+    const near = a.near_misses || [];
     const nearHtml = near.length ? `
-      <details class="more" ${a.mode === "no_bet" ? "open" : ""}>
+      <details class="more" ${anyBet ? "" : "open"}>
         <summary>Near misses: failed one gate (${near.length})</summary>
         ${near.map(l => legCard(l, { failedOnly: true })).join("")}
       </details>` : "";
@@ -766,12 +789,14 @@
       ? "bet365 is in the odds feed this week, so the line check could be automated."
       : `bet365 isn't in the odds feed (books seen: ${esc((a.bookmakers_seen || []).join(", ") || "none")}).`;
 
+    const outsideNote = a.n_outside_windows
+      ? `${esc(a.n_outside_windows)} overs from games outside the two windows aren't used.` : "";
     const modeNote = a.sources_mode === "signal"
       ? "Analyst picks are shown as a signal, not a gate: a leg doesn't need analysts behind it to be suggested. Each leg's backing is logged so the weekly grading can show whether backed legs actually hit more."
       : "";
-    el.innerHTML = head + summary + legs + nearHtml + exclHtml + `
+    el.innerHTML = head + body + nearHtml + exclHtml + `
       <div class="acca-notes">
-        ${esc(modeNote)} ${sweepNote} ${feedNote}
+        ${esc(modeNote)} ${sweepNote} ${feedNote} ${outsideNote}
         <div>Not checked automatically:</div>
         <ul>${(a.not_checked || []).map(n => `<li>${esc(n)}</li>`).join("")}</ul>
       </div>`;

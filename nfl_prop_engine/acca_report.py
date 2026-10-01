@@ -11,14 +11,20 @@ target has passed them.
 """
 import logging
 import os
+from collections import Counter
 from dataclasses import dataclass, field
+from math import prod
 from fractions import Fraction
 from urllib.parse import urlparse
 
 from accumulator import Candidate, build_accumulator
 from config import (
+    ACCA_WINDOWS,
     ANALYST_SWEEP,
+    FILL_WITH_NEAR_MISSES,
     LINE_THRESHOLD,
+    MAX_LEGS,
+    MAX_LEGS_PER_GAME,
     MIN_PRICE_DECIMAL,
     ODDS_API_TEAM_NAME_TO_ABBR,
     STAKE_GBP,
@@ -69,6 +75,7 @@ class LegContext:
     recent_values: list[float]
     teammates_out: list[str] = field(default_factory=list)
     player_id: str = ""
+    window: str | None = None  # key into config.ACCA_WINDOWS, None outside both
 
     @property
     def game(self) -> str:
@@ -200,10 +207,12 @@ def apply_sources(
         matched = match_picks_to_candidate(picks_by_game[game], leg.ctx.player, leg.ctx.market, leg.consensus_line)
         consensus = summarize_sources(matched)
         leg.sources_checked = True
-        gate = sources_gate(consensus.n_over_sources)
-        leg.sources_note = gate.reason
         if as_gate:
+            gate = sources_gate(consensus.n_over_sources)
+            leg.sources_note = gate.reason
             leg.gates.append(gate)
+        else:
+            leg.sources_note = f"{consensus.n_over_sources} independent analyst(s) backing the over"
         leg.sources = {
             "over": [_safe_source(p) for p in consensus.over_sources],
             "under": [_safe_source(p) for p in consensus.under_sources],
@@ -221,7 +230,7 @@ def _fractional(decimal_odds: float) -> str:
     return "evens" if frac == 1 else f"{frac.numerator}/{frac.denominator}"
 
 
-def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None) -> dict:
+def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None, filler: bool = False) -> dict:
     ctx = leg.ctx
     return {
         "player": ctx.player,
@@ -245,16 +254,18 @@ def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None) -> dict:
         "sources": leg.sources,
         "sources_checked": leg.sources_checked,
         "sources_note": leg.sources_note,
+        "filler": filler,
     }
 
 
-def _log_row(leg: Leg, selected: bool) -> dict:
+def _log_row(leg: Leg, selected: bool, filler: bool) -> dict:
     return {
         "player_id": leg.ctx.player_id or None,
         "player_name": leg.ctx.player,
         "stat_col": leg.ctx.stat_col,
         "market": leg.ctx.market,
         "game": leg.ctx.game,
+        "window": leg.ctx.window,
         "consensus_line": leg.consensus_line,
         "max_line": leg.max_line,
         "projection": leg.ctx.projection,
@@ -262,6 +273,7 @@ def _log_row(leg: Leg, selected: bool) -> dict:
         "passed_gates": not leg.failed,
         "failed_gates": ",".join(g.gate for g in leg.failed) or None,
         "selected": selected,
+        "filler": filler,
         "sources_checked": leg.sources_checked,
         "n_over_sources": len(leg.sources["over"]) if leg.sources_checked else None,
         "n_under_sources": len(leg.sources["under"]) if leg.sources_checked else None,
@@ -275,7 +287,18 @@ def _games_by_count(legs: list[Leg]) -> list[str]:
     return sorted(counts, key=lambda g: counts[g], reverse=True)
 
 
-def _build(surviving: list[Leg]):
+def _games_across_windows(legs: list[Leg]) -> list[str]:
+    """Games ordered so the capped analyst sweep alternates between windows
+    (busiest game of each window first), rather than spending the whole
+    budget on the early games and leaving the late acca unchecked."""
+    per_window = [_games_by_count([leg for leg in legs if leg.ctx.window == w]) for w in ACCA_WINDOWS]
+    ordered = []
+    for i in range(max((len(games) for games in per_window), default=0)):
+        ordered += [games[i] for games in per_window if i < len(games)]
+    return ordered
+
+
+def _build(surviving: list[Leg]) -> list[Leg]:
     candidates, by_candidate = [], {}
     for leg in surviving:
         candidate = Candidate(
@@ -285,8 +308,51 @@ def _build(surviving: list[Leg]):
         )
         candidates.append(candidate)
         by_candidate[id(candidate)] = leg
-    result = build_accumulator(candidates)
-    return result, candidates, [by_candidate[id(c)] for c in result.legs]
+    return [by_candidate[id(c)] for c in build_accumulator(candidates).legs]
+
+
+def select_window(window_legs: list[Leg]) -> tuple[list[Leg], list[Leg]]:
+    """(legs that passed every gate, fillers) for one window. Fillers top
+    the acca up to MAX_LEGS from legs that failed exactly one gate, best
+    projection margin first, still at most MAX_LEGS_PER_GAME per game. A
+    leg that failed the Market gate is never a filler: with no consensus
+    line there's no bet365 target to give."""
+    chosen = _build([leg for leg in window_legs if not leg.failed])
+    fillers: list[Leg] = []
+    if FILL_WITH_NEAR_MISSES and len(chosen) < MAX_LEGS:
+        per_game = Counter(leg.ctx.game for leg in chosen)
+        pool = sorted(
+            (leg for leg in window_legs if len(leg.failed) == 1 and leg.failed[0].gate != "market"),
+            key=lambda leg: leg.score, reverse=True,
+        )
+        for leg in pool:
+            if len(chosen) + len(fillers) >= MAX_LEGS:
+                break
+            if per_game[leg.ctx.game] >= MAX_LEGS_PER_GAME:
+                continue
+            fillers.append(leg)
+            per_game[leg.ctx.game] += 1
+    return chosen, fillers
+
+
+def _window_record(key: str, kickoff_uk: str, chosen: list[Leg], fillers: list[Leg], n_window_legs: int) -> dict:
+    legs = chosen + fillers
+    per_game = Counter(leg.ctx.game for leg in legs)
+    builder_games = {game for game, n in per_game.items() if n > 1}
+    filler_ids = {id(leg) for leg in fillers}
+    is_acca = len(legs) >= 3
+    return {
+        "window": key,
+        "label": ACCA_WINDOWS[key]["label"],
+        "kickoff_uk": kickoff_uk,
+        "mode": "accumulator" if is_acca else "singles" if legs else "no_bet",
+        "legs": [_leg_record(leg, builder_games, filler=id(leg) in filler_ids) for leg in legs],
+        "n_passed": len(chosen),
+        "n_fillers": len(fillers),
+        "n_legs_in_window": n_window_legs,
+        "combined_fair_odds": round(prod(1 / leg.fair_prob for leg in legs), 2) if is_acca else None,
+        "combined_probability": round(prod(leg.fair_prob for leg in legs), 4) if is_acca else None,
+    }
 
 
 def build_acca_report(
@@ -297,26 +363,34 @@ def build_acca_report(
     sweep=None,
     api_key_present: bool | None = None,
     log_rows=None,
+    window_kickoffs: dict[str, str] | None = None,
 ) -> dict:
-    """sweep(game_descriptions, week, max_workers) -> ({game: picks}, usage);
-    defaults to analyst_sweep.sweep_games. Injected so tests never call the
-    Claude API. log_rows(rows), if given, receives one row per evaluated
-    leg for results_log.log_acca_legs."""
+    """One accumulator per window in config.ACCA_WINDOWS. sweep(game_descriptions,
+    week, max_workers) -> ({game: picks}, usage) defaults to
+    analyst_sweep.sweep_games; injected so tests never call the Claude API.
+    log_rows(rows), if given, receives one row per evaluated leg for
+    results_log.log_acca_legs. window_kickoffs: {window: "18:00"} in UK time."""
     as_gate = ANALYST_SWEEP["sources_gate"]
+    window_kickoffs = window_kickoffs or {}
     consensus = consensus_by_prop(per_book_rows)
     bookmakers = sorted({r["bookmaker"] for r in per_book_rows if r.get("bookmaker")})
     legs = [evaluate_leg(ctx, consensus.get((ctx.event_id, ctx.market, ctx.odds_player_name))) for ctx in contexts]
-    surviving = [leg for leg in legs if not leg.failed]
+    in_window = [leg for leg in legs if leg.ctx.window in ACCA_WINDOWS]
+    by_window = {w: [leg for leg in in_window if leg.ctx.window == w] for w in ACCA_WINDOWS}
+    by_window = {w: window_legs for w, window_legs in by_window.items() if window_legs}
+    surviving = [leg for leg in in_window if not leg.failed]
 
     # The sweep costs money and minutes per game, so it covers few games.
     # As a gate it goes where the most legs are still alive. As a signal the
-    # accumulator doesn't depend on it, so it goes to the games of the legs
+    # accumulators don't depend on it, so it goes to the games of the legs
     # actually suggested first, then the other games with surviving legs.
+    selections: dict[str, tuple[list[Leg], list[Leg]]] = {}
     if as_gate:
-        ranked_games = _games_by_count(surviving)
+        ranked_games = _games_across_windows(surviving)
     else:
-        result, candidates, chosen = _build(surviving)
-        ranked_games = list(dict.fromkeys(_games_by_count(chosen) + _games_by_count(surviving)))
+        selections = {w: select_window(window_legs) for w, window_legs in by_window.items()}
+        suggested = [leg for chosen, fillers in selections.values() for leg in chosen + fillers]
+        ranked_games = list(dict.fromkeys(_games_across_windows(suggested) + _games_across_windows(surviving)))
     to_sweep = ranked_games[: ANALYST_SWEEP["max_games"]]
     skipped = {
         g: f"not checked: the analyst sweep is capped at {ANALYST_SWEEP['max_games']} games per run"
@@ -340,35 +414,36 @@ def build_acca_report(
         picks_by_game = {g.rsplit(", NFL Week", 1)[0]: picks for g, picks in picks_by_game.items()}
         sweep_info.update(ran=True, games=to_sweep, usage=usage)
     else:
-        sweep_info["note"] = "no leg survived the other gates, so there was nothing to sweep"
+        sweep_info["note"] = "no leg in either window survived the other gates, so there was nothing to sweep"
     if not sweep_info["ran"]:
         skipped.update({g: sweep_info["note"] for g in ranked_games})
-    apply_sources(surviving, picks_by_game, skipped, as_gate)
+    fillers_so_far = [leg for _, fillers in selections.values() for leg in fillers]
+    apply_sources(surviving + fillers_so_far, picks_by_game, skipped, as_gate)
 
     if as_gate:
-        result, candidates, chosen = _build(surviving)
-    builder_games = set(result.bet_builder_groups)
+        selections = {w: select_window(window_legs) for w, window_legs in by_window.items()}
 
+    selected_ids = {id(leg) for chosen, fillers in selections.values() for leg in chosen + fillers}
+    filler_ids = {id(leg) for _, fillers in selections.values() for leg in fillers}
     if log_rows is not None:
-        chosen_ids = {id(leg) for leg in chosen}
-        log_rows([_log_row(leg, id(leg) in chosen_ids) for leg in legs])
+        log_rows([_log_row(leg, id(leg) in selected_ids, id(leg) in filler_ids) for leg in legs])
 
-    near_misses = sorted((leg for leg in legs if len(leg.failed) == 1), key=lambda leg: leg.score, reverse=True)[:10]
-    excluded = [leg for leg in legs if leg.failed]
+    unused_failures = [leg for leg in in_window if leg.failed and id(leg) not in filler_ids]
+    near_misses = sorted((leg for leg in unused_failures if len(leg.failed) == 1), key=lambda leg: leg.score, reverse=True)[:10]
     failure_counts: dict[str, int] = {}
-    for leg in excluded:
+    for leg in unused_failures:
         for gate in leg.failed:
             failure_counts[gate.gate] = failure_counts.get(gate.gate, 0) + 1
 
     return {
-        "mode": result.mode,
+        "accumulators": [
+            _window_record(w, window_kickoffs.get(w, ""), *selections[w], len(by_window[w])) for w in by_window
+        ],
+        "fill_with_near_misses": FILL_WITH_NEAR_MISSES,
         "sources_mode": "gate" if as_gate else "signal",
         "stake_gbp": STAKE_GBP,
-        "legs": [_leg_record(leg, builder_games) for leg in chosen],
-        "combined_fair_odds": round(result.combined_odds, 2) if result.combined_odds else None,
-        "combined_probability": round(result.combined_probability, 4) if result.combined_probability else None,
-        "n_candidates": len(legs),
-        "n_passed": sum(1 for c in candidates if c.passed_all),
+        "n_candidates": len(in_window),
+        "n_outside_windows": len(legs) - len(in_window),
         "near_misses": [_leg_record(leg) for leg in near_misses],
         "excluded": [
             {
@@ -378,7 +453,7 @@ def build_acca_report(
                 "consensus_line": leg.consensus_line,
                 "failed": [{"gate": g.gate, "reason": g.reason} for g in leg.failed],
             }
-            for leg in sorted(excluded, key=lambda leg: (leg.ctx.player, leg.ctx.stat_col))
+            for leg in sorted(unused_failures, key=lambda leg: (leg.ctx.player, leg.ctx.stat_col))
         ],
         "gate_failure_counts": dict(sorted(failure_counts.items(), key=lambda kv: kv[1], reverse=True)),
         "analyst_sweep": sweep_info,

@@ -10,7 +10,7 @@ from datetime import date
 import nfl_data_py as nfl
 import pandas as pd
 
-from config import SCHEDULES_FALLBACK_URL, get_current_nfl_season
+from config import ACCA_WINDOWS, SCHEDULES_FALLBACK_URL, get_current_nfl_season
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +89,45 @@ def kickoff_map(games: pd.DataFrame) -> dict[str, str]:
         mapping[row["home_team"]] = label
         mapping[row["away_team"]] = label
     return mapping
+
+
+def game_window(weekday, gametime) -> str | None:
+    """Which accumulator window a kickoff belongs to (config.ACCA_WINDOWS),
+    from nflverse's Eastern-time weekday/gametime. None for everything else
+    (London mornings, Thursday/Sunday/Monday nights, Saturdays)."""
+    if weekday != "Sunday" or not isinstance(gametime, str):
+        return None
+    for key, spec in ACCA_WINDOWS.items():
+        if spec["start_et"] <= gametime < spec["end_et"]:
+            return key
+    return None
+
+
+def window_map(games: pd.DataFrame) -> dict[str, str | None]:
+    """team -> accumulator window key (or None)."""
+    mapping = {}
+    for _, row in games.iterrows():
+        window = game_window(row.get("weekday"), row.get("gametime"))
+        mapping[row["home_team"]] = window
+        mapping[row["away_team"]] = window
+    return mapping
+
+
+def window_uk_kickoffs(games: pd.DataFrame) -> dict[str, str]:
+    """window key -> UK kickoff time(s), e.g. "21:05/21:25", converted from
+    the real date rather than assumed: UK and US clocks change a week apart
+    in late October/early November."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    times: dict[str, set[str]] = {}
+    for _, row in games.iterrows():
+        window = game_window(row.get("weekday"), row.get("gametime"))
+        if window is None or not isinstance(row.get("gameday"), str):
+            continue
+        et = datetime.fromisoformat(f"{row['gameday']}T{row['gametime']}").replace(tzinfo=ZoneInfo("America/New_York"))
+        times.setdefault(window, set()).add(et.astimezone(ZoneInfo("Europe/London")).strftime("%H:%M"))
+    return {w: "/".join(sorted(t)) for w, t in times.items()}
 
 
 def team_game_context(games: pd.DataFrame) -> dict[str, dict]:

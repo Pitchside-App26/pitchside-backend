@@ -33,6 +33,8 @@ from fetch_schedule import (
     opponent_map,
     team_game_context,
     teams_playing,
+    window_map,
+    window_uk_kickoffs,
 )
 from fetch_injuries import fetch_injury_report
 from fetch_stats import fetch_all_stats
@@ -157,6 +159,7 @@ def run(
     opp_map = opponent_map(games)
     kickoff_lookup = kickoff_map(games)
     game_ctx_map = team_game_context(games)
+    window_lookup = window_map(games)
     injury_report = fetch_injury_report(season, week)
 
     stats = fetch_all_stats(season)
@@ -310,6 +313,7 @@ def run(
             recent_values=pd.concat([prior_rows, current_rows])[stat_col].dropna().tolist()[-FORM_WINDOW:],
             teammates_out=[n for n in out_by_team.get(player_team, []) if n != row["matched_player"]],
             player_id=player_id,
+            window=window_lookup.get(player_team),
         ))
 
         ranked_props.append(build_ranked_prop(
@@ -329,11 +333,14 @@ def run(
         accumulator = build_acca_report(
             acca_contexts, per_book_rows, week, season,
             log_rows=lambda rows: log_acca_legs(rows, season, week),
+            window_kickoffs=window_uk_kickoffs(games),
         )
-        logger.info(
-            "Accumulator report: %s, %d of %d legs passed every gate; sweep %s",
-            accumulator["mode"], accumulator["n_passed"], accumulator["n_candidates"], accumulator["analyst_sweep"],
-        )
+        for acca in accumulator["accumulators"]:
+            logger.info(
+                "Accumulator (%s): %s, %d legs passed every gate + %d fillers, from %d in the window",
+                acca["window"], acca["mode"], acca["n_passed"], acca["n_fillers"], acca["n_legs_in_window"],
+            )
+        logger.info("Analyst sweep: %s", accumulator["analyst_sweep"])
     except Exception as exc:
         logger.exception("Accumulator report failed")
         accumulator = {"error": f"{type(exc).__name__}: {exc}"}
