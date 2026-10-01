@@ -58,7 +58,7 @@ def build_accumulator(
     stake_gbp: float = STAKE_GBP,
 ) -> AccumulatorResult:
     """Selects gate-passing legs only, highest fair-probability first,
-    respecting max_legs and max_legs_per_game. Never adds a failing leg to
+    respecting max_legs, max_legs_per_game and one leg per player. Never adds a failing leg to
     reach max_legs -- if only 4 pass, the output is a 4-fold, not a padded
     6-fold. Fewer than 3 passing legs isn't accumulator territory (too
     correlated a bet on too little confirmed edge): outputs singles
@@ -77,6 +77,10 @@ def build_accumulator(
         if len(selected) >= max_legs:
             break
         if per_game_count.get(c.game, 0) >= max_legs_per_game:
+            continue
+        # One leg per player: two overs on the same player are close to one
+        # bet twice (a quiet game sinks both), which the acca's price ignores.
+        if any(s.player == c.player for s in selected):
             continue
         selected.append(c)
         per_game_count[c.game] = per_game_count.get(c.game, 0) + 1

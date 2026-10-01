@@ -46,3 +46,18 @@ def test_uk_kickoff_times_follow_both_clock_changes():
     assert window_uk_kickoffs(games)["early"] == "17:00"
     games["gameday"] = "2026-11-08"
     assert window_uk_kickoffs(games)["early"] == "18:00"
+
+
+def test_a_shared_name_resolves_to_the_player_in_this_game():
+    from run_weekly import rows_for_matched_player
+
+    df = pd.DataFrame([
+        {"player_id": "LA1", "player_display_name": "Byron Young", "team": "LA", "season": 2026, "week": 1, "def_sacks": 1.0},
+        {"player_id": "LA1", "player_display_name": "Byron Young", "team": "LA", "season": 2026, "week": 2, "def_sacks": 2.0},
+        {"player_id": "PHI1", "player_display_name": "Byron Young", "team": "PHI", "season": 2026, "week": 2, "def_sacks": 0.0},
+        {"player_id": "X", "player_display_name": "Someone Else", "team": "LA", "season": 2026, "week": 2, "def_sacks": 0.0},
+    ])
+    rows = rows_for_matched_player(df, "Byron Young", {"LA", "SF"}, "team")
+    assert set(rows["player_id"]) == {"LA1"} and len(rows) == 2
+    assert set(rows_for_matched_player(df, "Byron Young", {"PHI", "DAL"}, "team")["player_id"]) == {"PHI1"}
+    assert len(rows_for_matched_player(df, "Someone Else", {"NE"}, "team")) == 1

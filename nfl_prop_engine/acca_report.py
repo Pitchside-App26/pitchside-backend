@@ -11,6 +11,8 @@ target has passed them.
 """
 import logging
 import os
+import re
+import statistics
 from collections import Counter
 from dataclasses import dataclass, field
 from math import prod
@@ -25,6 +27,7 @@ from config import (
     LINE_THRESHOLD,
     MAX_LEGS,
     MAX_LEGS_PER_GAME,
+    MAX_US_FAIR_PROB,
     MIN_PRICE_DECIMAL,
     ODDS_API_TEAM_NAME_TO_ABBR,
     STAKE_GBP,
@@ -76,6 +79,7 @@ class LegContext:
     teammates_out: list[str] = field(default_factory=list)
     player_id: str = ""
     window: str | None = None  # key into config.ACCA_WINDOWS, None outside both
+    season_std: float | None = None  # the projection's game-to-game spread for this stat
 
     @property
     def game(self) -> str:
@@ -109,18 +113,38 @@ class Leg:
 
     @property
     def score(self) -> float:
-        if not self.max_line:
+        """How many of this player's usual game-to-game swings the projection
+        clears the max line by -- the same standardised edge rank_props uses.
+        Dividing by the line instead made every 0.5 line (pass TDs, INTs)
+        outrank every yardage leg, however thin its real edge."""
+        spread = self.ctx.season_std
+        if not spread or spread <= 0:
+            recent = self.ctx.recent_values
+            spread = statistics.stdev(recent) if len(recent) >= 2 else 0
+        if self.max_line is None or not spread:
             return float("-inf")
-        return (self.ctx.projection - self.max_line) / self.max_line
+        return (self.ctx.projection - self.max_line) / spread
+
+
+_SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "v"}
+
+
+def name_key(name: str | None) -> str:
+    """Books don't always spell a player the same way ("Kenneth Walker III"
+    vs "Kenneth Walker", "D.J. Moore" vs "DJ Moore"); this is what the
+    consensus groups on, so one spelling difference doesn't split a prop
+    into two thin markets."""
+    words = re.sub(r"[^a-z ]", "", str(name or "").lower().replace("-", " ")).split()
+    return " ".join(w for w in words if w not in _SUFFIXES)
 
 
 def consensus_by_prop(per_book_rows: list[dict]) -> dict[tuple, dict]:
-    """{(event_id, market, odds player name): {line, fair_prob, n_books}}
+    """{(event_id, market, name_key(player)): {line, fair_prob, n_books}}
     from every US book's own line and prices, before the weekly run
     collapses them to a single book."""
     grouped: dict[tuple, list[dict]] = {}
     for row in per_book_rows:
-        grouped.setdefault((row["event_id"], row["market"], row["player_name"]), []).append(row)
+        grouped.setdefault((row["event_id"], row["market"], name_key(row["player_name"])), []).append(row)
 
     result = {}
     for key, rows in grouped.items():
@@ -142,6 +166,17 @@ def _market_gate(consensus_line: float | None, n_books: int, fair_prob: float | 
     return GateResult("market", True, f"{n_books} US books, consensus {consensus_line:g}")
 
 
+def _odds_gate(fair_prob: float, stat_col: str) -> GateResult:
+    cap = MAX_US_FAIR_PROB[market_kind_for(stat_col)]
+    fair_odds = 1 / fair_prob
+    if fair_prob <= cap:
+        return GateResult("odds", True, f"US fair odds {fair_odds:.2f} ({fair_prob:.0%}), room for bet365 to reach {MIN_PRICE_DECIMAL:.2f}")
+    return GateResult(
+        "odds", False,
+        f"US fair odds {fair_odds:.2f} ({fair_prob:.0%}): too short for bet365 to offer {MIN_PRICE_DECIMAL:.2f} after its margin",
+    )
+
+
 def _model_gate(projection: float, max_line: float) -> GateResult:
     if projection > max_line:
         return GateResult("model", True, f"projection {projection:.1f} is above the max line {max_line:g}")
@@ -158,6 +193,7 @@ def evaluate_leg(ctx: LegContext, consensus: dict | None) -> Leg:
     if gates[0].passed:
         max_line = line + LINE_THRESHOLD[market_kind_for(ctx.stat_col)]
         gates += [
+            _odds_gate(consensus["fair_prob"], ctx.stat_col),
             _model_gate(ctx.projection, max_line),
             form_gate(ctx.recent_values, max_line),
             outlier_gate(ctx.recent_values, max_line),
@@ -314,29 +350,39 @@ def _build(surviving: list[Leg]) -> list[Leg]:
 
 
 SPARES_PER_WINDOW = 10
+# A leg that failed one of these is never a filler or spare: Market means
+# there's no consensus line to set a bet365 target from, Odds means bet365
+# won't realistically offer MIN_PRICE_DECIMAL on it.
+NEVER_FILL_GATES = {"market", "odds"}
+
+
+def _can_fill(leg: Leg) -> bool:
+    return len(leg.failed) == 1 and leg.failed[0].gate not in NEVER_FILL_GATES
 
 
 def select_window(window_legs: list[Leg]) -> tuple[list[Leg], list[Leg], list[Leg]]:
     """(legs that passed every gate, fillers, spares) for one window. Fillers top
     the acca up to MAX_LEGS from legs that failed exactly one gate, best
-    projection margin first, still at most MAX_LEGS_PER_GAME per game. A
-    leg that failed the Market gate is never a filler: with no consensus
-    line there's no bet365 target to give."""
+    projection margin first, still at most MAX_LEGS_PER_GAME per game and
+    one leg per player. NEVER_FILL_GATES lists the failures that rule a leg
+    out as a filler."""
     chosen = _build([leg for leg in window_legs if not leg.failed])
     fillers: list[Leg] = []
     if FILL_WITH_NEAR_MISSES and len(chosen) < MAX_LEGS:
         per_game = Counter(leg.ctx.game for leg in chosen)
+        players = {leg.ctx.player for leg in chosen}
         pool = sorted(
-            (leg for leg in window_legs if len(leg.failed) == 1 and leg.failed[0].gate != "market"),
+            (leg for leg in window_legs if _can_fill(leg)),
             key=lambda leg: leg.score, reverse=True,
         )
         for leg in pool:
             if len(chosen) + len(fillers) >= MAX_LEGS:
                 break
-            if per_game[leg.ctx.game] >= MAX_LEGS_PER_GAME:
+            if per_game[leg.ctx.game] >= MAX_LEGS_PER_GAME or leg.ctx.player in players:
                 continue
             fillers.append(leg)
             per_game[leg.ctx.game] += 1
+            players.add(leg.ctx.player)
     return chosen, fillers, _spares(window_legs, chosen + fillers)
 
 
@@ -344,14 +390,15 @@ def _spares(window_legs: list[Leg], used: list[Leg]) -> list[Leg]:
     """Replacements the page offers when a leg fails the bet365 check:
     unused legs that passed every gate first, then (when fillers are on)
     unused one-gate failures, best projection margin first. The page applies
-    the per-game cap itself, since it depends on which legs are still in."""
+    the per-game and per-player caps itself, since they depend on which legs
+    are still in."""
     used_ids = {id(leg) for leg in used}
     rest = [leg for leg in window_legs if id(leg) not in used_ids]
     passing = sorted((leg for leg in rest if not leg.failed), key=lambda leg: leg.score, reverse=True)
     near = []
     if FILL_WITH_NEAR_MISSES:
         near = sorted(
-            (leg for leg in rest if len(leg.failed) == 1 and leg.failed[0].gate != "market"),
+            (leg for leg in rest if _can_fill(leg)),
             key=lambda leg: leg.score, reverse=True,
         )
     return (passing + near)[:SPARES_PER_WINDOW]
@@ -399,7 +446,15 @@ def build_acca_report(
     window_kickoffs = window_kickoffs or {}
     consensus = consensus_by_prop(per_book_rows)
     bookmakers = sorted({r["bookmaker"] for r in per_book_rows if r.get("bookmaker")})
-    legs = [evaluate_leg(ctx, consensus.get((ctx.event_id, ctx.market, ctx.odds_player_name))) for ctx in contexts]
+    # One context per prop: a second spelling of the same player in the feed
+    # would otherwise become a duplicate leg (and a duplicate graded row).
+    unique: dict[tuple, LegContext] = {}
+    for ctx in contexts:
+        unique.setdefault((ctx.event_id, ctx.market, ctx.player), ctx)
+    legs = [
+        evaluate_leg(ctx, consensus.get((ctx.event_id, ctx.market, name_key(ctx.odds_player_name))))
+        for ctx in unique.values()
+    ]
     in_window = [leg for leg in legs if leg.ctx.window in ACCA_WINDOWS]
     by_window = {w: [leg for leg in in_window if leg.ctx.window == w] for w in ACCA_WINDOWS}
     by_window = {w: window_legs for w, window_legs in by_window.items() if window_legs}
@@ -433,11 +488,16 @@ def build_acca_report(
     elif to_sweep:
         if sweep is None:
             from analyst_sweep import sweep_games as sweep
-        picks_by_game, usage = sweep(
-            [f"{g}, NFL Week {week} {season}" for g in to_sweep], week, max_workers=ANALYST_SWEEP["max_workers"]
-        )
-        picks_by_game = {g.rsplit(", NFL Week", 1)[0]: picks for g, picks in picks_by_game.items()}
-        sweep_info.update(ran=True, games=to_sweep, usage=usage)
+        try:
+            picks_by_game, usage = sweep(
+                [f"{g}, NFL Week {week} {season}" for g in to_sweep], week, max_workers=ANALYST_SWEEP["max_workers"]
+            )
+        except Exception as exc:  # the accas mustn't depend on a paid web-search call succeeding
+            logger.exception("Analyst sweep failed")
+            sweep_info["note"] = f"the analyst sweep failed ({type(exc).__name__}), so no leg was checked"
+        else:
+            picks_by_game = {g.rsplit(", NFL Week", 1)[0]: picks for g, picks in picks_by_game.items()}
+            sweep_info.update(ran=True, games=to_sweep, usage=usage)
     else:
         sweep_info["note"] = "no leg in either window survived the other gates, so there was nothing to sweep"
     if not sweep_info["ran"]:

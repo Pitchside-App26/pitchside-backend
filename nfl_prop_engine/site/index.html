@@ -879,10 +879,10 @@
 
   function nextSpare(w, rows, failedLeg) {
     const used = new Set(rows.map(r => r.leg.key));
-    const perGame = {};
+    const perGame = {}, players = new Set();
     rows.filter(r => !r.replacedBy && r.leg.key !== failedLeg.key)
-      .forEach(r => { perGame[r.leg.game] = (perGame[r.leg.game] || 0) + 1; });
-    return (w.spares || []).find(s => !used.has(s.key) && (perGame[s.game] || 0) < 2) || null;
+      .forEach(r => { perGame[r.leg.game] = (perGame[r.leg.game] || 0) + 1; players.add(r.leg.player); });
+    return (w.spares || []).find(s => !used.has(s.key) && !players.has(s.player) && (perGame[s.game] || 0) < 2) || null;
   }
 
   function chartSvg(leg) {
@@ -934,7 +934,7 @@
       ? (spare
         ? `<div class="swap-offer">Swap in the next best leg: <strong>${esc(spare.player)}</strong>, ${esc(spare.stat_label)} over ≤ ${esc(fmtLine(spare.max_line))}${spare.filler ? " (filler)" : ""}
              <button class="swap-btn" type="button" data-swap="${esc(leg.key)}" data-spare="${esc(spare.key)}" data-window="${esc(w.window)}">Swap in</button></div>`
-        : `<div class="swap-offer">No replacement available that keeps to 2 legs per game.</div>`)
+        : `<div class="swap-offer">No replacement available that keeps to 2 legs per game and 1 per player.</div>`)
       : "";
     return `<div class="slip-row">
       <button class="slip-btn" type="button" data-open="${esc(w.window)}|${esc(leg.key)}" aria-expanded="${open}">

@@ -62,27 +62,39 @@ jobs:
           path: nfl_prop_engine/results_log.sqlite3
           if-no-files-found: ignore
 
-      - name: Commit results log
-        # A fresh checkout every run means the SQLite file has no durability
-        # of its own -- committing it back to the branch is what actually
-        # satisfies "log every week's output somewhere durable" across runs.
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add results_log.sqlite3
-          git diff --cached --quiet || git commit -m "chore: log week's prop rankings"
-          git push
-
       - name: Upload results page for Pages
         # run_weekly.py just wrote nfl_prop_engine/site/data.json alongside
         # the static index.html -- upload the whole directory as this run's
-        # Pages artifact; the deploy job below actually publishes it.
+        # Pages artifact; the deploy job below actually publishes it. Runs
+        # before the commit so a failed push can't stop the page publishing.
         uses: actions/upload-pages-artifact@v3
         with:
           path: nfl_prop_engine/site
 
+      - name: Commit results log
+        # A fresh checkout every run means the SQLite file has no durability
+        # of its own -- committing it back to the branch is what actually
+        # satisfies "log every week's output somewhere durable" across runs.
+        # Rebases first, since main may have moved during the run (only the
+        # results-db group writes this file, so the rebase can't conflict).
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results_log.sqlite3
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: log week's prop rankings"
+          for attempt in 1 2 3; do
+            git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
+            sleep $((attempt * 5))
+          done
+          exit 1
+
   deploy:
     needs: run
+    # Publishes even if only the results-log commit failed: the page artifact
+    # is uploaded before that step. The run job still shows red, so a lost
+    # log commit doesn't go unnoticed.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

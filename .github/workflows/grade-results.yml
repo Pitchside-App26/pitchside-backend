@@ -45,5 +45,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add results_log.sqlite3
-          git diff --cached --quiet || git commit -m "chore: grade last week's prop results"
-          git push
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: grade last week's prop results"
+          for attempt in 1 2 3; do
+            git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
+            sleep $((attempt * 5))
+          done
+          exit 1

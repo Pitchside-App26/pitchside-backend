@@ -456,23 +456,32 @@ For each over:
 2. **The target.** No feed carries UK bet365 NFL props, so the line and
    price gates become instructions on the page: bet only if bet365's line is
    at or below consensus + 2 (yards) or + 0 (counts), at 4/5 (1.80) or bigger.
-3. **Gates, judged at that worst acceptable line:** Model (projection above
-   it; an addition to the spec, so the page never suggests an over the engine
-   projects under), Form, Outlier, Matchup, Game script, Injury. Teammates
-   ruled out are a flag, not a failure.
+3. **Gates, judged at that worst acceptable line:** Odds, Model (projection
+   above it; an addition to the spec, so the page never suggests an over the
+   engine projects under), Form, Outlier, Matchup, Game script, Injury.
+   Teammates ruled out are a flag, not a failure. **Odds** (added 1 Oct)
+   fails an over the US books rate too likely for bet365 to offer 4/5 on
+   (`MAX_US_FAIR_PROB`: over 58% fair for yards, 56% for counts), e.g. over
+   0.5 pass TDs at -224. Without it those legs topped the slip and then
+   failed the bet365 price check every time.
 4. **Accumulator builder, one per Sunday window** (`ACCA_WINDOWS`):
    - **Early** is the 1pm ET kickoffs and **late** is the 4:05/4:25pm ET
      kickoffs. The page shows UK times, converted from the real date, since
      UK and US clocks change a week apart.
    - Games outside both windows (London mornings, Thursday, Sunday and
      Monday nights) are ranked and logged but never used for an acca.
-   - Each window takes up to 6 legs that passed every gate, max 2 per game.
+   - Each window takes up to 6 legs that passed every gate, max 2 per game
+     and 1 per player (two overs on one player mostly win or lose together).
+   - Legs are picked by standardised edge: how far the projection clears the
+     max line, in that player's usual game-to-game spread for the stat (the
+     same measure the rankings use). Dividing by the line instead let every
+     0.5 line outrank every yardage leg.
    - **Fillers (Dan's call, 1 Oct, against the spec's never-pad rule):** if
      fewer than 6 pass, the acca is topped up with legs that failed exactly
      one gate, best projection margin first. Fillers are marked on the page
      with the gate they failed, and logged as `filler` so grading can show
-     whether they drag results down. Legs with no consensus line are never
-     fillers, since there's no bet365 target to give.
+     whether they drag results down. Legs that failed Market (no target to
+     give) or Odds (bet365 won't pay 4/5) are never fillers or spares.
    - `FILL_WITH_NEAR_MISSES = False` restores the never-pad rule.
    - The page shows fair combined odds; bet365's acca price must beat them
      to be value.
@@ -504,7 +513,7 @@ acceptable bet365 line. If backed legs clearly hit more over 4–6 weeks, set
   the reason not to.
 - When a leg fails, the page offers the next-best spare. Spares are the
   report's unused passing legs first, then one-gate failures, and the page
-  keeps to 2 legs per game. A swap can be undone.
+  keeps to 2 legs per game and 1 per player. A swap can be undone.
 - Once every leg is checked, the entered prices are compared with fair odds.
 - Entries and swaps are kept in the browser's localStorage, so they stay on
   that phone and nowhere else.

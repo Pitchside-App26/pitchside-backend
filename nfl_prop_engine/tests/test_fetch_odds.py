@@ -63,3 +63,27 @@ def test_consolidate_lines_falls_back_to_median_point_without_preferred_book():
     assert len(consolidated) == 1
     assert consolidated[0]["point"] == 51.5  # median of 50.5, 52.5
     assert consolidated[0]["bookmaker"] == "median_of_2_books"
+
+
+def test_one_failed_game_is_skipped_not_fatal(monkeypatch):
+    import fetch_odds
+
+    def fake_fetch(event_id, markets, use_cache=False):
+        if event_id == "bad":
+            raise fetch_odds.OddsApiError("404 from /events/bad/odds")
+        return {"id": event_id}
+
+    monkeypatch.setattr(fetch_odds, "fetch_event_odds", fake_fetch)
+    assert fetch_odds.fetch_all_event_odds(["a", "bad", "b"], ["m"], pause_seconds=0) == {"a": {"id": "a"}, "b": {"id": "b"}}
+
+
+def test_every_game_failing_is_an_error(monkeypatch):
+    import pytest
+    import fetch_odds
+
+    def fake_fetch(event_id, markets, use_cache=False):
+        raise fetch_odds.OddsApiError("401 out of credits")
+
+    monkeypatch.setattr(fetch_odds, "fetch_event_odds", fake_fetch)
+    with pytest.raises(fetch_odds.OddsApiError, match="every odds request failed"):
+        fetch_odds.fetch_all_event_odds(["a", "b"], ["m"], pause_seconds=0)

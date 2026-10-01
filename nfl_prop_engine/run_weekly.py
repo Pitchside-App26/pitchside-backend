@@ -17,11 +17,13 @@ import pandas as pd
 from acca_report import LegContext, build_acca_report
 from config import (
     ALL_MARKETS,
+    CREDIT_CAP,
     DEFENSE_MARKETS,
     FORM_WINDOW,
     ODDS_API_TEAM_NAME_TO_ABBR,
     OFFENSE_MARKETS,
     POSITION_GROUP_MAP,
+    REGIONS,
     SHRINKAGE_K,
     get_current_nfl_season,
 )
@@ -73,6 +75,10 @@ def build_odds_dataframe(
     ]
     if not week_events:
         logger.warning("No matching events returned by the odds API for this week's schedule.")
+    credits = len(week_events) * len(ALL_MARKETS) * len(REGIONS.split(","))
+    logger.info("Odds for %d game(s) will cost up to %d credits", len(week_events), credits)
+    if credits > CREDIT_CAP and not use_cache:
+        raise RuntimeError(f"this run would cost up to {credits} odds credits, over CREDIT_CAP ({CREDIT_CAP})")
 
     raw_by_event = fetch_all_event_odds(
         [e["id"] for e in week_events], list(ALL_MARKETS.keys()), use_cache=use_cache
@@ -111,6 +117,22 @@ def players_out_by_team(injury_report: dict[str, str], *stat_frames: pd.DataFram
             if row["player_display_name"] not in names:
                 names.append(row["player_display_name"])
     return result
+
+
+def rows_for_matched_player(
+    source_df: pd.DataFrame, name: str, candidate_teams: set[str], team_col: str
+) -> pd.DataFrame:
+    """Every stat row for the matched player. Matching is by display name,
+    which a few players share (two Byron Youngs, two Jaylon Joneses), so
+    when more than one player has the name, keep the one whose latest row
+    is on a team in this game -- otherwise their games get merged."""
+    rows = source_df[source_df["player_display_name"] == name]
+    if rows["player_id"].nunique() <= 1:
+        return rows
+    latest = rows.sort_values(["season", "week"]).groupby("player_id").tail(1)
+    in_game = latest[latest[team_col].isin(candidate_teams)]
+    chosen = (in_game if not in_game.empty else latest).iloc[-1]["player_id"]
+    return rows[rows["player_id"] == chosen]
 
 
 def prep_position_group(df: pd.DataFrame, position_col: str, constant: str | None = None) -> pd.DataFrame:
@@ -241,7 +263,7 @@ def run(
         source_df = offense_df if is_offense else defense_df
         team_col = "recent_team" if is_offense else "team"
 
-        player_rows = source_df[source_df["player_display_name"] == row["matched_player"]]
+        player_rows = rows_for_matched_player(source_df, row["matched_player"], row["candidate_teams"], team_col)
         current_rows = player_rows[player_rows["season"] == season].sort_values("week")
         prior_rows = player_rows[player_rows["season"] == season - 1].sort_values("week")
 
@@ -314,6 +336,7 @@ def run(
             teammates_out=[n for n in out_by_team.get(player_team, []) if n != row["matched_player"]],
             player_id=player_id,
             window=window_lookup.get(player_team),
+            season_std=proj.season_std,
         ))
 
         ranked_props.append(build_ranked_prop(
