@@ -460,13 +460,26 @@ For each over:
    it; an addition to the spec, so the page never suggests an over the engine
    projects under), Form, Outlier, Matchup, Game script, Injury. Teammates
    ruled out are a flag, not a failure.
-4. **Accumulator builder.** Max 6 legs, max 2 per game, never padded. The
-   page shows fair combined odds; bet365's acca price must beat them to be
-   value.
+4. **Accumulator builder, one per Sunday window** (`ACCA_WINDOWS`):
+   - **Early** is the 1pm ET kickoffs and **late** is the 4:05/4:25pm ET
+     kickoffs. The page shows UK times, converted from the real date, since
+     UK and US clocks change a week apart.
+   - Games outside both windows (London mornings, Thursday, Sunday and
+     Monday nights) are ranked and logged but never used for an acca.
+   - Each window takes up to 6 legs that passed every gate, max 2 per game.
+   - **Fillers (Dan's call, 1 Oct, against the spec's never-pad rule):** if
+     fewer than 6 pass, the acca is topped up with legs that failed exactly
+     one gate, best projection margin first. Fillers are marked on the page
+     with the gate they failed, and logged as `filler` so grading can show
+     whether they drag results down. Legs with no consensus line are never
+     fillers, since there's no bet365 target to give.
+   - `FILL_WITH_NEAR_MISSES = False` restores the never-pad rule.
+   - The page shows fair combined odds; bet365's acca price must beat them
+     to be value.
 5. **Analyst sweep**, up to `ANALYST_SWEEP["max_games"]` games (3, since the
    first live run cost $0.84 for one game), four at a time. It covers the
-   games of the suggested legs first, then other games with legs that
-   survived the gates. Each leg shows who backs the over and who's against.
+   games of the suggested legs first, alternating between the early and late
+   windows, then other games with legs that survived the gates. Each leg shows who backs the over and who's against.
    Any analyst on the under marks the leg contested, and 4+ outlets marks it
    crowded.
 

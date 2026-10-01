@@ -13,12 +13,12 @@ def _book(book, point, over=-110, under=-110, event="e1", market="player_pass_yd
 
 def _ctx(player="Drake Maye", market="player_pass_yds", stat="passing_yards", projection=240.0, event="e1",
          home="NYJ", away="NE", recent=(230, 250, 260, 210, 245, 255), opp=1.1, spread=3.0, total=46.5,
-         injury=None, teammates_out=()):
+         injury=None, teammates_out=(), window="early"):
     return LegContext(
         event_id=event, odds_player_name=player, market=market, player=player, stat_col=stat,
         team=away, opponent=home, home_team=home, away_team=away, kickoff="Sun 1:00 ET", projection=projection,
         opp_factor=opp, team_spread=spread, total_line=total, injury_status=injury,
-        recent_values=list(recent), teammates_out=list(teammates_out),
+        recent_values=list(recent), teammates_out=list(teammates_out), window=window,
     )
 
 
@@ -27,6 +27,11 @@ def gate_mode(monkeypatch):
     import acca_report
 
     monkeypatch.setitem(acca_report.ANALYST_SWEEP, "sources_gate", True)
+    monkeypatch.setattr(acca_report, "FILL_WITH_NEAR_MISSES", False)
+
+
+def _acca(report, window="early"):
+    return next(a for a in report["accumulators"] if a["window"] == window)
 
 
 TWO_BOOKS = [_book("draftkings", 214.5), _book("fanduel", 214.5, over=-120, under=100)]
@@ -150,10 +155,10 @@ def test_full_report_builds_an_accumulator_from_legs_backed_by_analysts(gate_mod
     })
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=sweep, api_key_present=True)
 
-    assert report["mode"] == "accumulator"
-    assert {leg["player"] for leg in report["legs"]} == {"Drake Maye", "Garrett Wilson", "Tony Pollard"}
-    assert report["combined_fair_odds"] == pytest.approx(8.0)  # three legs at 50% fair = 2.0 each
-    assert all(leg["bet_builder"] == (leg["game"] == "NE @ NYJ") for leg in report["legs"])
+    assert _acca(report)["mode"] == "accumulator"
+    assert {leg["player"] for leg in _acca(report)["legs"]} == {"Drake Maye", "Garrett Wilson", "Tony Pollard"}
+    assert _acca(report)["combined_fair_odds"] == pytest.approx(8.0)  # three legs at 50% fair = 2.0 each
+    assert all(leg["bet_builder"] == (leg["game"] == "NE @ NYJ") for leg in _acca(report)["legs"])
     # Cold Streak failed form before the sweep, so DAL @ PHI was swept only for Pollard.
     assert sorted(sweep.calls[0]) == ["Dallas Cowboys at Philadelphia Eagles, NFL Week 4 2026",
                                       "New England Patriots at New York Jets, NFL Week 4 2026"]
@@ -166,7 +171,7 @@ def test_one_analyst_is_not_enough(gate_mode):
     contexts, rows = _slate()
     sweep = FakeSweep({"New England Patriots at New York Jets": [_pick("Drake Maye", "Passing Yards", 214.5)]})
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=sweep, api_key_present=True)
-    assert report["mode"] == "no_bet"
+    assert _acca(report)["mode"] == "no_bet"
     maye = next(m for m in report["near_misses"] if m["player"] == "Drake Maye")
     assert "only 1 independent analyst" in _gate(maye, "sources")["reason"]
 
@@ -176,7 +181,7 @@ def test_an_analyst_on_the_under_marks_the_leg_contested(gate_mode):
     picks = _two_analysts("Drake Maye", "Passing Yards", 214.5) + [_pick("Drake Maye", "Passing Yards", 214.5, side="Under", analyst="C")]
     sweep = FakeSweep({"New England Patriots at New York Jets": picks})
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=sweep, api_key_present=True)
-    maye = next(m for m in report["legs"] + report["near_misses"] if m["player"] == "Drake Maye")
+    maye = next(m for m in _acca(report)["legs"] + report["near_misses"] if m["player"] == "Drake Maye")
     assert any(f.startswith("Contested") for f in maye["flags"])
     assert len(maye["sources"]["under"]) == 1
 
@@ -186,7 +191,7 @@ def test_without_an_api_key_the_sweep_is_skipped_and_says_why(gate_mode):
     sweep = FakeSweep({})
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=sweep, api_key_present=False)
     assert sweep.calls == []
-    assert report["mode"] == "no_bet"
+    assert _acca(report)["mode"] == "no_bet"
     assert "ANTHROPIC_API_KEY" in report["analyst_sweep"]["note"]
     assert "ANTHROPIC_API_KEY" in _gate(report["near_misses"][0], "sources")["reason"]
 
@@ -215,11 +220,11 @@ def test_bet365_in_feed_is_detected():
 def test_report_writes_valid_json(tmp_path):
     contexts, rows = _slate()
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=FakeSweep({}), api_key_present=True)
-    report["combined_probability"] = float("nan")  # must never reach the page as a bare NaN
+    _acca(report)["combined_probability"] = float("nan")  # must never reach the page as a bare NaN
     path = tmp_path / "data.json"
     write_json([], 2026, 4, str(path), accumulator=report)
     data = json.loads(path.read_text())
-    assert data["accumulator"]["combined_probability"] is None
+    assert data["accumulator"]["accumulators"][0]["combined_probability"] is None
 
 
 @pytest.mark.parametrize("url, kept", [
@@ -238,12 +243,12 @@ def test_signal_mode_suggests_legs_without_any_analyst_backing():
     contexts, rows = _slate()
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=FakeSweep({}), api_key_present=True)
     assert report["sources_mode"] == "signal"
-    assert report["mode"] == "accumulator"
-    assert {leg["player"] for leg in report["legs"]} == {"Drake Maye", "Garrett Wilson", "Tony Pollard"}
-    for leg in report["legs"]:
+    assert _acca(report)["mode"] == "accumulator"
+    assert {leg["player"] for leg in _acca(report)["legs"]} == {"Drake Maye", "Garrett Wilson", "Tony Pollard"}
+    for leg in _acca(report)["legs"]:
         assert _gate(leg, "sources") is None
         assert leg["sources_checked"] is True
-        assert leg["sources_note"].startswith("only 0 independent analyst")
+        assert leg["sources_note"] == "0 independent analyst(s) backing the over"
 
 
 def test_signal_mode_still_shows_backers_and_flags_contested():
@@ -251,7 +256,7 @@ def test_signal_mode_still_shows_backers_and_flags_contested():
     picks = _two_analysts("Drake Maye", "Passing Yards", 214.5) + [_pick("Drake Maye", "Passing Yards", 214.5, side="Under", analyst="C")]
     report = build_acca_report(contexts, rows, week=4, season=2026,
                                sweep=FakeSweep({"New England Patriots at New York Jets": picks}), api_key_present=True)
-    maye = next(leg for leg in report["legs"] if leg["player"] == "Drake Maye")
+    maye = next(leg for leg in _acca(report)["legs"] if leg["player"] == "Drake Maye")
     assert len(maye["sources"]["over"]) == 2 and len(maye["sources"]["under"]) == 1
     assert any(f.startswith("Contested") for f in maye["flags"])
 
@@ -264,7 +269,7 @@ def test_signal_mode_sweeps_the_suggested_legs_games_first(monkeypatch):
     sweep = FakeSweep({})
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=sweep, api_key_present=True)
     assert sweep.calls == [["New England Patriots at New York Jets, NFL Week 4 2026"]]  # two suggested legs beats one
-    pollard = next(leg for leg in report["legs"] if leg["player"] == "Tony Pollard")
+    pollard = next(leg for leg in _acca(report)["legs"] if leg["player"] == "Tony Pollard")
     assert pollard["sources_checked"] is False
     assert "capped at 1 games" in pollard["sources_note"]
 
@@ -272,8 +277,8 @@ def test_signal_mode_sweeps_the_suggested_legs_games_first(monkeypatch):
 def test_signal_mode_without_an_api_key_still_suggests_legs():
     contexts, rows = _slate()
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=FakeSweep({}), api_key_present=False)
-    assert report["mode"] == "accumulator"
-    assert all("ANTHROPIC_API_KEY" in leg["sources_note"] for leg in report["legs"])
+    assert _acca(report)["mode"] == "accumulator"
+    assert all("ANTHROPIC_API_KEY" in leg["sources_note"] for leg in _acca(report)["legs"])
 
 
 def test_every_evaluated_leg_is_logged_for_grading():
@@ -290,3 +295,104 @@ def test_every_evaluated_leg_is_logged_for_grading():
     assert maye["player_id"] == "id0" and maye["max_line"] == 216.5
     assert (cold["passed_gates"], cold["selected"], cold["failed_gates"]) == (False, False, "form,outlier")
     assert cold["sources_checked"] is False and cold["n_over_sources"] is None
+
+
+# --- one accumulator per window, topped up to 6 --------------------------------
+
+def _window_slate(specs):
+    """specs: (player, event, away, home, window, opp_factor, projection)."""
+    rows, contexts = [], []
+    for player, event, away, home, window, opp, projection in specs:
+        rows += [_book("draftkings", 50.5, event=event, market="player_rush_yds", player=player),
+                 _book("fanduel", 50.5, event=event, market="player_rush_yds", player=player)]
+        contexts.append(_ctx(player=player, market="player_rush_yds", stat="rushing_yards", projection=projection,
+                             event=event, home=home, away=away, recent=(60, 62, 58, 70, 65, 61), opp=opp, window=window))
+    return contexts, rows
+
+
+def test_a_window_is_topped_up_to_six_with_one_gate_failures_best_first():
+    specs = [
+        ("Pass A", "e1", "NE", "BUF", "early", 1.1, 70), ("Pass B", "e2", "NYJ", "CHI", "early", 1.1, 70),
+        # each fails only Matchup (opp 0.8); projection sets filler order
+        ("Fill 80", "e3", "JAX", "CIN", "early", 0.8, 80), ("Fill 75", "e4", "DAL", "HOU", "early", 0.8, 75),
+        ("Fill 74", "e5", "ARI", "NYG", "early", 0.8, 74), ("Fill 73", "e6", "LA", "PHI", "early", 0.8, 73),
+        ("Fill 60", "e7", "GB", "TB", "early", 0.8, 60),
+    ]
+    contexts, rows = _window_slate(specs)
+    report = build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False,
+                               window_kickoffs={"early": "18:00"})
+    acca = _acca(report)
+    assert acca["mode"] == "accumulator" and acca["kickoff_uk"] == "18:00"
+    assert [leg["player"] for leg in acca["legs"]] == ["Pass A", "Pass B", "Fill 80", "Fill 75", "Fill 74", "Fill 73"]
+    assert (acca["n_passed"], acca["n_fillers"]) == (2, 4)
+    assert [leg["filler"] for leg in acca["legs"]] == [False, False, True, True, True, True]
+    filler = acca["legs"][2]
+    assert [g["gate"] for g in filler["gates"] if not g["passed"]] == ["matchup"]
+    # Used fillers aren't repeated as near misses; the unused one is.
+    assert [m["player"] for m in report["near_misses"]] == ["Fill 60"]
+
+
+def test_fillers_respect_two_legs_per_game():
+    specs = [("Pass A", "e1", "NE", "BUF", "early", 1.1, 70), ("Pass B", "e1", "NE", "BUF", "early", 1.1, 70),
+             ("Fill same game", "e1", "NE", "BUF", "early", 0.8, 90), ("Fill other", "e2", "NYJ", "CHI", "early", 0.8, 80)]
+    contexts, rows = _window_slate(specs)
+    acca = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    assert [leg["player"] for leg in acca["legs"]] == ["Pass A", "Pass B", "Fill other"]
+
+
+def test_a_leg_with_no_target_line_is_never_a_filler():
+    contexts, rows = _window_slate([("Pass A", "e1", "NE", "BUF", "early", 1.1, 70)])
+    thin = _ctx(player="Thin Market", market="player_rush_yds", stat="rushing_yards", projection=90, event="e2",
+                home="CHI", away="NYJ", recent=(60, 62, 58, 70, 65, 61), opp=1.1)
+    rows.append(_book("draftkings", 50.5, event="e2", market="player_rush_yds", player="Thin Market"))  # one book only
+    acca = _acca(build_acca_report(contexts + [thin], rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    assert [leg["player"] for leg in acca["legs"]] == ["Pass A"]
+    assert acca["mode"] == "singles"
+
+
+def test_early_and_late_windows_get_separate_accumulators_and_other_games_are_left_out():
+    specs = [("Early A", "e1", "NE", "BUF", "early", 1.1, 70), ("Late A", "e2", "KC", "LV", "late", 1.1, 70),
+             ("Sunday Night", "e3", "DET", "CAR", None, 1.1, 99), ("SNF filler", "e3", "DET", "CAR", None, 0.8, 99)]
+    contexts, rows = _window_slate(specs)
+    logged = []
+    report = build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False, log_rows=logged.extend)
+    assert [a["window"] for a in report["accumulators"]] == ["early", "late"]
+    assert [leg["player"] for leg in _acca(report, "early")["legs"]] == ["Early A"]
+    assert [leg["player"] for leg in _acca(report, "late")["legs"]] == ["Late A"]
+    assert report["n_outside_windows"] == 2
+    assert all(m["player"] != "SNF filler" for m in report["near_misses"])
+    assert {r["player_name"]: r["window"] for r in logged}["Sunday Night"] is None  # still logged for grading
+
+
+def test_turning_fill_off_restores_no_padding(monkeypatch):
+    import acca_report
+
+    monkeypatch.setattr(acca_report, "FILL_WITH_NEAR_MISSES", False)
+    specs = [("Pass A", "e1", "NE", "BUF", "early", 1.1, 70), ("Fill", "e2", "NYJ", "CHI", "early", 0.8, 90)]
+    contexts, rows = _window_slate(specs)
+    acca = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    assert [leg["player"] for leg in acca["legs"]] == ["Pass A"]
+
+
+def test_fillers_are_logged_as_selected_fillers():
+    specs = [("Pass A", "e1", "NE", "BUF", "early", 1.1, 70), ("Fill", "e2", "NYJ", "CHI", "early", 0.8, 90)]
+    contexts, rows = _window_slate(specs)
+    logged = []
+    build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False, log_rows=logged.extend)
+    by_player = {r["player_name"]: r for r in logged}
+    assert (by_player["Fill"]["selected"], by_player["Fill"]["filler"], by_player["Fill"]["window"]) == (True, True, "early")
+    assert (by_player["Pass A"]["selected"], by_player["Pass A"]["filler"]) == (True, False)
+
+
+def test_the_capped_sweep_is_shared_between_windows(monkeypatch):
+    import acca_report
+
+    monkeypatch.setitem(acca_report.ANALYST_SWEEP, "max_games", 2)
+    specs = [("Early A", "e1", "NE", "BUF", "early", 1.1, 70), ("Early B", "e2", "NYJ", "CHI", "early", 1.1, 70),
+             ("Early C", "e3", "JAX", "CIN", "early", 1.1, 70), ("Late A", "e4", "KC", "LV", "late", 1.1, 70)]
+    contexts, rows = _window_slate(specs)
+    sweep = FakeSweep({})
+    build_acca_report(contexts, rows, 4, 2026, sweep=sweep, api_key_present=True)
+    swept = [g.split(",")[0] for g in sweep.calls[0]]
+    assert len(swept) == 2
+    assert "Kansas City Chiefs at Las Vegas Raiders" in swept  # the late window gets a game

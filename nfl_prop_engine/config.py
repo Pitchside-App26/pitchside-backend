@@ -226,6 +226,19 @@ GAME_SCRIPT_PASSING_MIN_TOTAL = 45.0  # Game-script gate, passing/receiving over
 
 MIN_SOURCES = 2  # Sources gate: independent analysts (from the sweep) backing the over
 MAX_LEGS = 6
+
+# One accumulator per Sunday window (Dan, 1 Oct), by Eastern kickoff time
+# (nflverse's gametime). Games outside both windows (London mornings,
+# Thursday/Sunday/Monday nights) are still ranked but never used for an acca.
+ACCA_WINDOWS = {
+    "early": {"label": "Early games", "start_et": "13:00", "end_et": "14:00"},
+    "late": {"label": "Late games", "start_et": "16:00", "end_et": "17:00"},
+}
+# Dan's call (1 Oct): when fewer than MAX_LEGS legs pass every gate in a
+# window, top the acca up with legs that failed exactly one gate, marked as
+# fillers on the page and in the log. This departs from the spec's
+# "never pad" rule; set False to go back to it.
+FILL_WITH_NEAR_MISSES = True
 MAX_LEGS_PER_GAME = 2  # same-game pairs are tagged as bet-builder legs -- bet365 prices those separately
 STAKE_GBP = 5.0  # flat stake; never rises after a loss
 
