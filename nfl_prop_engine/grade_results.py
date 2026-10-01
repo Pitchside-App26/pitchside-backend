@@ -25,16 +25,18 @@ import pandas as pd
 from config import RESULTS_DB_PATH
 from fetch_schedule import load_schedule_seasons
 from fetch_stats import fetch_all_stats
-from results_log import grade_week
+from results_log import _connect, grade_acca_week, grade_week
 
 logger = logging.getLogger(__name__)
 
 
 def _ungraded_season_weeks(db_path: str = RESULTS_DB_PATH) -> list[tuple[int, int]]:
-    conn = sqlite3.connect(db_path)
+    conn = _connect(db_path)  # creates acca_legs on an older database that predates it
     try:
         cur = conn.execute(
-            "SELECT DISTINCT season, week FROM weekly_output WHERE actual_value IS NULL ORDER BY season, week"
+            """SELECT season, week FROM weekly_output WHERE actual_value IS NULL
+               UNION SELECT season, week FROM acca_legs WHERE actual_value IS NULL
+               ORDER BY season, week"""
         )
         return cur.fetchall()
     finally:
@@ -42,12 +44,14 @@ def _ungraded_season_weeks(db_path: str = RESULTS_DB_PATH) -> list[tuple[int, in
 
 
 def _ungraded_pairs(season: int, week: int, db_path: str = RESULTS_DB_PATH) -> set[tuple[str, str]]:
-    conn = sqlite3.connect(db_path)
+    conn = _connect(db_path)
     try:
         cur = conn.execute(
-            """SELECT DISTINCT player_id, stat_col FROM weekly_output
+            """SELECT player_id, stat_col FROM weekly_output
+               WHERE season=? AND week=? AND actual_value IS NULL AND player_id IS NOT NULL
+               UNION SELECT player_id, stat_col FROM acca_legs
                WHERE season=? AND week=? AND actual_value IS NULL AND player_id IS NOT NULL""",
-            (season, week),
+            (season, week, season, week),
         )
         return {(pid, stat) for pid, stat in cur.fetchall()}
     finally:
@@ -125,11 +129,13 @@ def grade_all_ungraded(db_path: str = RESULTS_DB_PATH) -> int:
             logger.info("Season %s week %s: no completed games yet -- nothing to grade.", season, week)
             continue
         n = grade_week(season, week, actuals, db_path)
+        n_acca = grade_acca_week(season, week, actuals, db_path)
         logger.info(
-            "Season %s week %s: graded %d logged row(s) covering %d distinct player/stat pair(s).",
-            season, week, n, len(actuals),
+            "Season %s week %s: graded %d logged row(s) and %d accumulator leg(s) covering %d distinct "
+            "player/stat pair(s).",
+            season, week, n, n_acca, len(actuals),
         )
-        total_graded += n
+        total_graded += n + n_acca
     return total_graded
 
 
@@ -201,6 +207,44 @@ def print_report(db_path: str = RESULTS_DB_PATH) -> None:
         _summarize(group, str(bucket))
 
 
+def acca_groups(df: pd.DataFrame) -> list[tuple[str, pd.DataFrame]]:
+    """Graded accumulator-report legs, each judged as an over at its max
+    acceptable bet365 line, grouped to answer two questions: do the gates
+    pick better overs, and (among legs that passed) do analyst-backed ones
+    hit more? A leg logged by several runs in one week counts once, from
+    its latest run."""
+    df = df[df["max_line"].notna()].sort_values("logged_at")
+    df = df.drop_duplicates(["season", "week", "player_id", "stat_col"], keep="last").copy()
+    df["outcome"] = [_direction_hit("over", line, actual) for line, actual in zip(df["max_line"], df["actual_value"])]
+    passed = df[df["passed_gates"] == 1]
+    checked = passed[passed["sources_checked"] == 1]
+    return [
+        ("passed every gate", passed),
+        ("failed a gate", df[df["passed_gates"] == 0]),
+        ("selected for the acca", df[df["selected"] == 1]),
+        ("passed, 2+ analysts", checked[checked["n_over_sources"] >= 2]),
+        ("passed, 1 analyst", checked[checked["n_over_sources"] == 1]),
+        ("passed, 0 analysts", checked[checked["n_over_sources"] == 0]),
+        ("passed, analyst against", checked[checked["n_under_sources"] > 0]),
+        ("passed, not checked", passed[passed["sources_checked"] == 0]),
+    ]
+
+
+def print_acca_report(db_path: str = RESULTS_DB_PATH) -> None:
+    conn = _connect(db_path)
+    try:
+        df = pd.read_sql_query("SELECT * FROM acca_legs WHERE actual_value IS NOT NULL", conn)
+    finally:
+        conn.close()
+    print()
+    if df.empty:
+        print("No graded accumulator-report legs yet.")
+        return
+    print("Accumulator report legs (over at the max acceptable bet365 line). Small samples mean little:")
+    for label, rows in acca_groups(df):
+        _summarize(rows, label)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Grade logged props against real results and report hit rate.")
     parser.add_argument("--report", action="store_true", help="skip grading, just report on what's already graded")
@@ -211,6 +255,7 @@ def main():
         n = grade_all_ungraded()
         logger.info("Graded %d prop(s) this run.", n)
     print_report()
+    print_acca_report()
 
 
 if __name__ == "__main__":

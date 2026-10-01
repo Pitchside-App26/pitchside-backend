@@ -68,6 +68,7 @@ class LegContext:
     injury_status: str | None
     recent_values: list[float]
     teammates_out: list[str] = field(default_factory=list)
+    player_id: str = ""
 
     @property
     def game(self) -> str:
@@ -90,6 +91,8 @@ class Leg:
     gates: list[GateResult]
     flags: list[str]
     sources: dict = field(default_factory=lambda: {"over": [], "under": []})
+    sources_checked: bool = False
+    sources_note: str = "not checked: this leg had already failed another gate"
     contested: bool = False
     crowded: bool = False
 
@@ -178,17 +181,29 @@ def _safe_source(pick: dict) -> dict:
     }
 
 
-def apply_sources(legs: list[Leg], picks_by_game: dict[str, list[dict]] | None, skipped_reason: dict[str, str]) -> None:
+def apply_sources(
+    legs: list[Leg], picks_by_game: dict[str, list[dict]] | None, skipped_reason: dict[str, str], as_gate: bool,
+) -> None:
+    """Records each leg's analyst backing. As a gate (the spec's original
+    rule) a leg without MIN_SOURCES backers fails; as a signal (the
+    default since 1 Oct) the backing is shown and logged but never
+    excludes a leg."""
     from analyst_sweep import match_picks_to_candidate, summarize_sources
 
     for leg in legs:
         game = leg.ctx.game_description
         if picks_by_game is None or game not in picks_by_game:
-            leg.gates.append(GateResult("sources", False, skipped_reason.get(game, "analyst sweep didn't run")))
+            leg.sources_note = skipped_reason.get(game, "analyst sweep didn't run")
+            if as_gate:
+                leg.gates.append(GateResult("sources", False, leg.sources_note))
             continue
         matched = match_picks_to_candidate(picks_by_game[game], leg.ctx.player, leg.ctx.market, leg.consensus_line)
         consensus = summarize_sources(matched)
-        leg.gates.append(sources_gate(consensus.n_over_sources))
+        leg.sources_checked = True
+        gate = sources_gate(consensus.n_over_sources)
+        leg.sources_note = gate.reason
+        if as_gate:
+            leg.gates.append(gate)
         leg.sources = {
             "over": [_safe_source(p) for p in consensus.over_sources],
             "under": [_safe_source(p) for p in consensus.under_sources],
@@ -228,7 +243,50 @@ def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None) -> dict:
         "gates": [{"gate": g.gate, "passed": g.passed, "reason": g.reason} for g in leg.gates],
         "flags": leg.flags,
         "sources": leg.sources,
+        "sources_checked": leg.sources_checked,
+        "sources_note": leg.sources_note,
     }
+
+
+def _log_row(leg: Leg, selected: bool) -> dict:
+    return {
+        "player_id": leg.ctx.player_id or None,
+        "player_name": leg.ctx.player,
+        "stat_col": leg.ctx.stat_col,
+        "market": leg.ctx.market,
+        "game": leg.ctx.game,
+        "consensus_line": leg.consensus_line,
+        "max_line": leg.max_line,
+        "projection": leg.ctx.projection,
+        "fair_prob": leg.fair_prob,
+        "passed_gates": not leg.failed,
+        "failed_gates": ",".join(g.gate for g in leg.failed) or None,
+        "selected": selected,
+        "sources_checked": leg.sources_checked,
+        "n_over_sources": len(leg.sources["over"]) if leg.sources_checked else None,
+        "n_under_sources": len(leg.sources["under"]) if leg.sources_checked else None,
+    }
+
+
+def _games_by_count(legs: list[Leg]) -> list[str]:
+    counts: dict[str, int] = {}
+    for leg in legs:
+        counts[leg.ctx.game_description] = counts.get(leg.ctx.game_description, 0) + 1
+    return sorted(counts, key=lambda g: counts[g], reverse=True)
+
+
+def _build(surviving: list[Leg]):
+    candidates, by_candidate = [], {}
+    for leg in surviving:
+        candidate = Candidate(
+            player=leg.ctx.player, game=leg.ctx.game, market=leg.ctx.market, side="over",
+            line=leg.max_line, price_decimal=1 / leg.fair_prob, fair_prob=leg.fair_prob,
+            gates=leg.gates, score=leg.score,
+        )
+        candidates.append(candidate)
+        by_candidate[id(candidate)] = leg
+    result = build_accumulator(candidates)
+    return result, candidates, [by_candidate[id(c)] for c in result.legs]
 
 
 def build_acca_report(
@@ -238,23 +296,32 @@ def build_acca_report(
     season: int,
     sweep=None,
     api_key_present: bool | None = None,
+    log_rows=None,
 ) -> dict:
     """sweep(game_descriptions, week, max_workers) -> ({game: picks}, usage);
     defaults to analyst_sweep.sweep_games. Injected so tests never call the
-    Claude API."""
+    Claude API. log_rows(rows), if given, receives one row per evaluated
+    leg for results_log.log_acca_legs."""
+    as_gate = ANALYST_SWEEP["sources_gate"]
     consensus = consensus_by_prop(per_book_rows)
     bookmakers = sorted({r["bookmaker"] for r in per_book_rows if r.get("bookmaker")})
     legs = [evaluate_leg(ctx, consensus.get((ctx.event_id, ctx.market, ctx.odds_player_name))) for ctx in contexts]
-
-    # The sweep costs money and minutes per game, so it only covers games
-    # where a leg survived every other gate, most surviving legs first.
     surviving = [leg for leg in legs if not leg.failed]
-    per_game: dict[str, int] = {}
-    for leg in surviving:
-        per_game[leg.ctx.game_description] = per_game.get(leg.ctx.game_description, 0) + 1
-    ranked_games = sorted(per_game, key=lambda g: per_game[g], reverse=True)
+
+    # The sweep costs money and minutes per game, so it covers few games.
+    # As a gate it goes where the most legs are still alive. As a signal the
+    # accumulator doesn't depend on it, so it goes to the games of the legs
+    # actually suggested first, then the other games with surviving legs.
+    if as_gate:
+        ranked_games = _games_by_count(surviving)
+    else:
+        result, candidates, chosen = _build(surviving)
+        ranked_games = list(dict.fromkeys(_games_by_count(chosen) + _games_by_count(surviving)))
     to_sweep = ranked_games[: ANALYST_SWEEP["max_games"]]
-    skipped = {g: f"analyst sweep capped at {ANALYST_SWEEP['max_games']} games; this one wasn't swept" for g in ranked_games[len(to_sweep):]}
+    skipped = {
+        g: f"not checked: the analyst sweep is capped at {ANALYST_SWEEP['max_games']} games per run"
+        for g in ranked_games[len(to_sweep):]
+    }
 
     if api_key_present is None:
         api_key_present = bool(os.environ.get("ANTHROPIC_API_KEY"))
@@ -275,21 +342,16 @@ def build_acca_report(
     else:
         sweep_info["note"] = "no leg survived the other gates, so there was nothing to sweep"
     if not sweep_info["ran"]:
-        skipped.update({g: sweep_info["note"] for g in per_game})
-    apply_sources(surviving, picks_by_game, skipped)
+        skipped.update({g: sweep_info["note"] for g in ranked_games})
+    apply_sources(surviving, picks_by_game, skipped, as_gate)
 
-    candidates, by_candidate = [], {}
-    for leg in surviving:
-        candidate = Candidate(
-            player=leg.ctx.player, game=leg.ctx.game, market=leg.ctx.market, side="over",
-            line=leg.max_line, price_decimal=1 / leg.fair_prob, fair_prob=leg.fair_prob,
-            gates=leg.gates, score=leg.score,
-        )
-        candidates.append(candidate)
-        by_candidate[id(candidate)] = leg
-    result = build_accumulator(candidates)
+    if as_gate:
+        result, candidates, chosen = _build(surviving)
     builder_games = set(result.bet_builder_groups)
-    chosen = [by_candidate[id(c)] for c in result.legs]
+
+    if log_rows is not None:
+        chosen_ids = {id(leg) for leg in chosen}
+        log_rows([_log_row(leg, id(leg) in chosen_ids) for leg in legs])
 
     near_misses = sorted((leg for leg in legs if len(leg.failed) == 1), key=lambda leg: leg.score, reverse=True)[:10]
     excluded = [leg for leg in legs if leg.failed]
@@ -300,6 +362,7 @@ def build_acca_report(
 
     return {
         "mode": result.mode,
+        "sources_mode": "gate" if as_gate else "signal",
         "stake_gbp": STAKE_GBP,
         "legs": [_leg_record(leg, builder_games) for leg in chosen],
         "combined_fair_odds": round(result.combined_odds, 2) if result.combined_odds else None,

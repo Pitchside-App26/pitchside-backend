@@ -460,22 +460,38 @@ For each over:
    it; an addition to the spec, so the page never suggests an over the engine
    projects under), Form, Outlier, Matchup, Game script, Injury. Teammates
    ruled out are a flag, not a failure.
-4. **Analyst sweep** on the games where a leg survived all of that, most
-   surviving legs first, up to `ANALYST_SWEEP["max_games"]` (3, since the
-   first live run cost $0.84 for one game), four at a
-   time. Then the **Sources** gate (2+ independent analysts). Any analyst on
-   the under marks the leg contested, and 4+ outlets marks it crowded.
-5. **Accumulator builder.** Max 6 legs, max 2 per game, never padded. The
+4. **Accumulator builder.** Max 6 legs, max 2 per game, never padded. The
    page shows fair combined odds; bet365's acca price must beat them to be
    value.
+5. **Analyst sweep**, up to `ANALYST_SWEEP["max_games"]` games (3, since the
+   first live run cost $0.84 for one game), four at a time. It covers the
+   games of the suggested legs first, then other games with legs that
+   survived the gates. Each leg shows who backs the over and who's against.
+   Any analyst on the under marks the leg contested, and 4+ outlets marks it
+   crowded.
+
+**Analysts are a signal, not a gate (since 1 Oct).** The spec required 2+
+independent analysts per leg. That's now off (`ANALYST_SWEEP["sources_gate"]
+= False`):
+- Searches miss under-covered props, so "found nothing" was being treated as
+  "against".
+- Analysts mostly cover the most efficiently priced lines.
+- Nothing yet shows that analyst-backed legs win more.
+
+Every evaluated leg goes to the `acca_legs` table with its gate result and
+analyst counts. The Tuesday grading run fills in actual stats. The
+accumulator section of `grade_results.py`'s report then compares hit rates
+for passed vs failed legs, and for 2+ / 1 / 0 analysts, judged at the max
+acceptable bet365 line. If backed legs clearly hit more over 4–6 weeks, set
+`sources_gate` back to True.
 
 The page also lists near misses (one failed gate) and every excluded over
 with its reasons. It records the analyst sweep's estimated cost (also in the
 Actions log) and whether bet365 showed up in the odds feed. If the report
 crashes, the page says so and the rankings below still publish.
 
-Expect "no bet" often: every gate has to pass, including 2 analysts on the
-same over. That's the spec's intent after Week 3, not a fault.
+Expect "no bet" or a single some weeks. Every remaining gate still has to
+pass, and on a real one-game test only 1 of 7 overs did.
 
 Fixed while wiring this in:
 - **Analyst picks could never match a leg.** Articles say "Receiving Yards"

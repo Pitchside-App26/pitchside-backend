@@ -32,10 +32,85 @@ CREATE TABLE IF NOT EXISTS weekly_output (
 """
 
 
+# Every over the accumulator report evaluated, whether or not it passed, with
+# its gate result and analyst backing. Graded later, this answers "do
+# analyst-backed legs hit more?" -- the test for turning the Sources check
+# back into a gate -- and "do the gates themselves pick better overs?".
+ACCA_SCHEMA = """
+CREATE TABLE IF NOT EXISTS acca_legs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    logged_at TEXT NOT NULL,
+    season INTEGER NOT NULL,
+    week INTEGER NOT NULL,
+    player_id TEXT,
+    player_name TEXT,
+    stat_col TEXT,
+    market TEXT,
+    game TEXT,
+    consensus_line REAL,
+    max_line REAL,
+    projection REAL,
+    fair_prob REAL,
+    passed_gates INTEGER NOT NULL,
+    failed_gates TEXT,
+    selected INTEGER NOT NULL,
+    sources_checked INTEGER NOT NULL,
+    n_over_sources INTEGER,
+    n_under_sources INTEGER,
+    actual_value REAL,
+    graded_at TEXT
+);
+"""
+
+
 def _connect(db_path: str = RESULTS_DB_PATH) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.execute(SCHEMA)
+    conn.execute(ACCA_SCHEMA)
     return conn
+
+
+def log_acca_legs(rows: list[dict], season: int, week: int, db_path: str = RESULTS_DB_PATH) -> int:
+    logged_at = datetime.now(timezone.utc).isoformat()
+    conn = _connect(db_path)
+    with conn:
+        conn.executemany(
+            """INSERT INTO acca_legs
+               (logged_at, season, week, player_id, player_name, stat_col, market, game, consensus_line,
+                max_line, projection, fair_prob, passed_gates, failed_gates, selected, sources_checked,
+                n_over_sources, n_under_sources)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            [
+                (
+                    logged_at, season, week, r["player_id"], r["player_name"], r["stat_col"], r["market"],
+                    r["game"], r["consensus_line"], r["max_line"], r["projection"], r["fair_prob"],
+                    int(r["passed_gates"]), r["failed_gates"], int(r["selected"]), int(r["sources_checked"]),
+                    r["n_over_sources"], r["n_under_sources"],
+                )
+                for r in rows
+            ],
+        )
+    conn.close()
+    return len(rows)
+
+
+def grade_acca_week(season: int, week: int, actuals: dict[tuple[str, str], float], db_path: str = RESULTS_DB_PATH) -> int:
+    """Same actuals as grade_week, applied to the acca_legs log."""
+    conn = _connect(db_path)
+    graded_at = datetime.now(timezone.utc).isoformat()
+    count = 0
+    with conn:
+        cur = conn.execute(
+            "SELECT id, player_id, stat_col FROM acca_legs WHERE season=? AND week=? AND actual_value IS NULL",
+            (season, week),
+        )
+        for row_id, player_id, stat_col in cur.fetchall():
+            actual = actuals.get((player_id, stat_col))
+            if actual is not None:
+                conn.execute("UPDATE acca_legs SET actual_value=?, graded_at=? WHERE id=?", (actual, graded_at, row_id))
+                count += 1
+    conn.close()
+    return count
 
 
 def log_weekly_output(ranked: list[RankedProp], season: int, week: int, db_path: str = RESULTS_DB_PATH) -> int:

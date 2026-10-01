@@ -702,6 +702,8 @@
         ${pills ? `<div class="pills">${pills}</div>` : ""}
         ${over.length ? `<div class="sources">Backed by: ${sourceLinks(over)}</div>` : ""}
         ${under.length ? `<div class="sources against">Against: ${sourceLinks(under)}</div>` : ""}
+        ${leg.sources_checked === false ? `<div class="sources">Analysts: ${esc(leg.sources_note)}.</div>` : ""}
+        ${leg.sources_checked && !over.length && !under.length ? `<div class="sources">Analysts: none found backing this over.</div>` : ""}
         <details class="gates">
           <summary>${passed} of ${leg.gates.length} gates passed</summary>
           ${gateList(leg.gates)}
@@ -764,9 +766,12 @@
       ? "bet365 is in the odds feed this week, so the line check could be automated."
       : `bet365 isn't in the odds feed (books seen: ${esc((a.bookmakers_seen || []).join(", ") || "none")}).`;
 
+    const modeNote = a.sources_mode === "signal"
+      ? "Analyst picks are shown as a signal, not a gate: a leg doesn't need analysts behind it to be suggested. Each leg's backing is logged so the weekly grading can show whether backed legs actually hit more."
+      : "";
     el.innerHTML = head + summary + legs + nearHtml + exclHtml + `
       <div class="acca-notes">
-        ${sweepNote} ${feedNote}
+        ${esc(modeNote)} ${sweepNote} ${feedNote}
         <div>Not checked automatically:</div>
         <ul>${(a.not_checked || []).map(n => `<li>${esc(n)}</li>`).join("")}</ul>
       </div>`;
