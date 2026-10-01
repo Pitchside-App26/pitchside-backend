@@ -42,7 +42,7 @@ from opponent_stats import add_opponent_column, allowed_rate_table
 from output import print_report, write_json
 from projection_engine import Projection, league_fallback_std, project_rookie, project_veteran
 from rank_props import build_ranked_prop, rank
-from results_log import log_weekly_output
+from results_log import log_acca_legs, log_weekly_output
 
 SITE_DATA_PATH = "site/data.json"
 
@@ -309,6 +309,7 @@ def run(
             # this one is short, oldest first.
             recent_values=pd.concat([prior_rows, current_rows])[stat_col].dropna().tolist()[-FORM_WINDOW:],
             teammates_out=[n for n in out_by_team.get(player_team, []) if n != row["matched_player"]],
+            player_id=player_id,
         ))
 
         ranked_props.append(build_ranked_prop(
@@ -325,7 +326,10 @@ def run(
     # The rankings page must still publish if the newer accumulator stage
     # fails, so a failure here becomes a message on the page, not a crash.
     try:
-        accumulator = build_acca_report(acca_contexts, per_book_rows, week, season)
+        accumulator = build_acca_report(
+            acca_contexts, per_book_rows, week, season,
+            log_rows=lambda rows: log_acca_legs(rows, season, week),
+        )
         logger.info(
             "Accumulator report: %s, %d of %d legs passed every gate; sweep %s",
             accumulator["mode"], accumulator["n_passed"], accumulator["n_candidates"], accumulator["analyst_sweep"],

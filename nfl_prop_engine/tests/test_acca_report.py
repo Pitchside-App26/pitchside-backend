@@ -22,6 +22,13 @@ def _ctx(player="Drake Maye", market="player_pass_yds", stat="passing_yards", pr
     )
 
 
+@pytest.fixture
+def gate_mode(monkeypatch):
+    import acca_report
+
+    monkeypatch.setitem(acca_report.ANALYST_SWEEP, "sources_gate", True)
+
+
 TWO_BOOKS = [_book("draftkings", 214.5), _book("fanduel", 214.5, over=-120, under=100)]
 
 
@@ -134,7 +141,7 @@ def _two_analysts(player, market, line):
     return [_pick(player, market, line, analyst="A", outlet="Covers"), _pick(player, market, line, analyst="B", outlet="SI")]
 
 
-def test_full_report_builds_an_accumulator_from_legs_backed_by_analysts():
+def test_full_report_builds_an_accumulator_from_legs_backed_by_analysts(gate_mode):
     contexts, rows = _slate()
     sweep = FakeSweep({
         "New England Patriots at New York Jets": _two_analysts("Drake Maye", "Passing Yards", 214.5)
@@ -155,7 +162,7 @@ def test_full_report_builds_an_accumulator_from_legs_backed_by_analysts():
     assert report["analyst_sweep"]["usage"]["estimated_cost_usd"] == 0.5
 
 
-def test_one_analyst_is_not_enough():
+def test_one_analyst_is_not_enough(gate_mode):
     contexts, rows = _slate()
     sweep = FakeSweep({"New England Patriots at New York Jets": [_pick("Drake Maye", "Passing Yards", 214.5)]})
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=sweep, api_key_present=True)
@@ -164,7 +171,7 @@ def test_one_analyst_is_not_enough():
     assert "only 1 independent analyst" in _gate(maye, "sources")["reason"]
 
 
-def test_an_analyst_on_the_under_marks_the_leg_contested():
+def test_an_analyst_on_the_under_marks_the_leg_contested(gate_mode):
     contexts, rows = _slate()
     picks = _two_analysts("Drake Maye", "Passing Yards", 214.5) + [_pick("Drake Maye", "Passing Yards", 214.5, side="Under", analyst="C")]
     sweep = FakeSweep({"New England Patriots at New York Jets": picks})
@@ -174,7 +181,7 @@ def test_an_analyst_on_the_under_marks_the_leg_contested():
     assert len(maye["sources"]["under"]) == 1
 
 
-def test_without_an_api_key_the_sweep_is_skipped_and_says_why():
+def test_without_an_api_key_the_sweep_is_skipped_and_says_why(gate_mode):
     contexts, rows = _slate()
     sweep = FakeSweep({})
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=sweep, api_key_present=False)
@@ -184,7 +191,7 @@ def test_without_an_api_key_the_sweep_is_skipped_and_says_why():
     assert "ANTHROPIC_API_KEY" in _gate(report["near_misses"][0], "sources")["reason"]
 
 
-def test_the_sweep_is_capped_and_capped_games_say_so(monkeypatch):
+def test_the_sweep_is_capped_and_capped_games_say_so(gate_mode, monkeypatch):
     import acca_report
 
     monkeypatch.setitem(acca_report.ANALYST_SWEEP, "max_games", 1)
@@ -194,7 +201,7 @@ def test_the_sweep_is_capped_and_capped_games_say_so(monkeypatch):
     assert len(sweep.calls[0]) == 1
     assert sweep.calls[0][0].startswith("New England Patriots at New York Jets")  # two surviving legs beats one
     pollard = next(m for m in report["near_misses"] if m["player"] == "Tony Pollard")
-    assert "capped at 1" in _gate(pollard, "sources")["reason"]
+    assert "capped at 1 games" in _gate(pollard, "sources")["reason"]
 
 
 def test_bet365_in_feed_is_detected():
@@ -223,3 +230,63 @@ def test_report_writes_valid_json(tmp_path):
 ])
 def test_only_web_links_reach_the_page(url, kept):
     assert _safe_source({"outlet": "Covers", "url": url})["url"] == kept
+
+
+# --- analysts as a signal (the default since 1 Oct) ----------------------------
+
+def test_signal_mode_suggests_legs_without_any_analyst_backing():
+    contexts, rows = _slate()
+    report = build_acca_report(contexts, rows, week=4, season=2026, sweep=FakeSweep({}), api_key_present=True)
+    assert report["sources_mode"] == "signal"
+    assert report["mode"] == "accumulator"
+    assert {leg["player"] for leg in report["legs"]} == {"Drake Maye", "Garrett Wilson", "Tony Pollard"}
+    for leg in report["legs"]:
+        assert _gate(leg, "sources") is None
+        assert leg["sources_checked"] is True
+        assert leg["sources_note"].startswith("only 0 independent analyst")
+
+
+def test_signal_mode_still_shows_backers_and_flags_contested():
+    contexts, rows = _slate()
+    picks = _two_analysts("Drake Maye", "Passing Yards", 214.5) + [_pick("Drake Maye", "Passing Yards", 214.5, side="Under", analyst="C")]
+    report = build_acca_report(contexts, rows, week=4, season=2026,
+                               sweep=FakeSweep({"New England Patriots at New York Jets": picks}), api_key_present=True)
+    maye = next(leg for leg in report["legs"] if leg["player"] == "Drake Maye")
+    assert len(maye["sources"]["over"]) == 2 and len(maye["sources"]["under"]) == 1
+    assert any(f.startswith("Contested") for f in maye["flags"])
+
+
+def test_signal_mode_sweeps_the_suggested_legs_games_first(monkeypatch):
+    import acca_report
+
+    monkeypatch.setitem(acca_report.ANALYST_SWEEP, "max_games", 1)
+    contexts, rows = _slate()
+    sweep = FakeSweep({})
+    report = build_acca_report(contexts, rows, week=4, season=2026, sweep=sweep, api_key_present=True)
+    assert sweep.calls == [["New England Patriots at New York Jets, NFL Week 4 2026"]]  # two suggested legs beats one
+    pollard = next(leg for leg in report["legs"] if leg["player"] == "Tony Pollard")
+    assert pollard["sources_checked"] is False
+    assert "capped at 1 games" in pollard["sources_note"]
+
+
+def test_signal_mode_without_an_api_key_still_suggests_legs():
+    contexts, rows = _slate()
+    report = build_acca_report(contexts, rows, week=4, season=2026, sweep=FakeSweep({}), api_key_present=False)
+    assert report["mode"] == "accumulator"
+    assert all("ANTHROPIC_API_KEY" in leg["sources_note"] for leg in report["legs"])
+
+
+def test_every_evaluated_leg_is_logged_for_grading():
+    contexts, rows = _slate()
+    for i, ctx in enumerate(contexts):
+        ctx.player_id = f"id{i}"
+    logged = []
+    build_acca_report(contexts, rows, week=4, season=2026, api_key_present=True, log_rows=logged.extend,
+                      sweep=FakeSweep({"New England Patriots at New York Jets": _two_analysts("Drake Maye", "Passing Yards", 214.5)}))
+    by_player = {r["player_name"]: r for r in logged}
+    assert set(by_player) == {"Drake Maye", "Garrett Wilson", "Tony Pollard", "Cold Streak"}
+    maye, cold = by_player["Drake Maye"], by_player["Cold Streak"]
+    assert (maye["passed_gates"], maye["selected"], maye["sources_checked"], maye["n_over_sources"]) == (True, True, True, 2)
+    assert maye["player_id"] == "id0" and maye["max_line"] == 216.5
+    assert (cold["passed_gates"], cold["selected"], cold["failed_gates"]) == (False, False, "form,outlier")
+    assert cold["sources_checked"] is False and cold["n_over_sources"] is None

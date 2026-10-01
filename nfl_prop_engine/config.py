@@ -249,6 +249,11 @@ def market_kind_for(stat_col: str) -> str:
 
 ANALYST_SWEEP = {
     "enabled": True,
+    # False (since 1 Oct): analyst backing is shown and logged per leg but
+    # doesn't exclude anything. Turn back into a gate (MIN_SOURCES backers
+    # required) if graded results show backed legs hit more -- see the
+    # accumulator section of grade_results.py's report.
+    "sources_gate": False,
     "model": "claude-sonnet-5",  # structured extraction against a schema, not deep reasoning -- Sonnet over Opus on cost
     # Only games that still have a leg after every other gate are swept; this
     # caps how many, keeping the games with the most surviving legs. The
