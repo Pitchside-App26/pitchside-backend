@@ -418,10 +418,10 @@ real-money multi-leg bet has less tolerance for risk than a general
   `pfr_player_id` crosswalk work already deferred (see the injury/usage
   section above). Both currently pass through neutrally.
 - **The CLI** the spec describes (`python -m nfl_prop_engine snapshot|
-  import-bet365|analysts|report|record|settle|review`) hasn't been built
-  yet -- what exists is a tested toolkit (gates, builder, log, sweep), not
-  yet the assembled weekly workflow. `record` is covered by bet-slip issues
-  (see "Logging placed bets" below).
+  import-bet365|analysts|report|record|settle|review`) isn't built as such.
+  `report` and `analysts` run inside the weekly run (see "The accumulator
+  report" below), and `record` is covered by bet-slip issues. `snapshot`,
+  `settle` and `review` are still to do.
 - **The five snapshot times** (opener/midweek/friday/sunday/close) aren't
   wired into a GitHub Actions cron yet. Close is the hard one: it needs to
   fire 30 minutes before EACH game's own kickoff, and NFL games kick off
@@ -442,6 +442,55 @@ real-money multi-leg bet has less tolerance for risk than a general
   Anthropic account/billing** from whatever built this code -- its own
   `ANTHROPIC_API_KEY` repo secret, Sonnet 5, a $15/month spend cap set in
   `config.ANALYST_SWEEP`.
+
+## The accumulator report (top of the results page)
+
+Every weekly run (`run_weekly.py`) now ends with `acca_report.py`. It uses
+data the run has already fetched, so it costs no extra Odds API credits.
+
+For each over:
+1. **US consensus.** The median line across US books, from every book's own
+   line before the ranking collapses them to one. Fair probability is each
+   book's over/under pair de-vigged, then averaged. Fewer than 2 books fails
+   the **Market** gate (a thin market, so no target can be set).
+2. **The target.** No feed carries UK bet365 NFL props, so the line and
+   price gates become instructions on the page: bet only if bet365's line is
+   at or below consensus + 2 (yards) or + 0 (counts), at 4/5 (1.80) or bigger.
+3. **Gates, judged at that worst acceptable line:** Model (projection above
+   it; an addition to the spec, so the page never suggests an over the engine
+   projects under), Form, Outlier, Matchup, Game script, Injury. Teammates
+   ruled out are a flag, not a failure.
+4. **Analyst sweep** on the games where a leg survived all of that, most
+   surviving legs first, up to `ANALYST_SWEEP["max_games"]` (8), four at a
+   time. Then the **Sources** gate (2+ independent analysts). Any analyst on
+   the under marks the leg contested, and 4+ outlets marks it crowded.
+5. **Accumulator builder.** Max 6 legs, max 2 per game, never padded. The
+   page shows fair combined odds; bet365's acca price must beat them to be
+   value.
+
+The page also lists near misses (one failed gate) and every excluded over
+with its reasons. It records the analyst sweep's estimated cost (also in the
+Actions log) and whether bet365 showed up in the odds feed. If the report
+crashes, the page says so and the rankings below still publish.
+
+Expect "no bet" often: every gate has to pass, including 2 analysts on the
+same over. That's the spec's intent after Week 3, not a fault.
+
+Fixed while wiring this in:
+- **Analyst picks could never match a leg.** Articles say "Receiving Yards"
+  and "Over", while legs use `player_reception_yds` and `over`. Both are now
+  normalized (`analyst_sweep.normalize_market` / `normalize_side`).
+- **One syndicated article could count as several sources.** Unnamed-analyst
+  picks now dedupe by outlet, then by URL.
+- **A paused web-search turn (`stop_reason="pause_turn"`) read as "no
+  picks".** It's now resumed.
+- **Matchup failed on rounding noise.** A real NE run defence at 0.9998x
+  failed as "better than average" while showing 1.00x. The gate now decides
+  on the same 2-decimal figure it displays.
+
+Cost: the sweep's real per-game cost is logged on each run (`Analyst sweep:
+... estimated_cost_usd`). The $15/month cap in config is only a note: set the
+actual limit on console.anthropic.com.
 
 ## Logging placed bets (bet-slip issues)
 
@@ -532,6 +581,7 @@ Not built yet:
 | `accumulator.py` | no-padding accumulator builder, overs-only enforcement |
 | `prop_bets_log.py` | separate `prop_bets` log: settlement, void handling, closing line value |
 | `analyst_sweep.py` | Claude API + web search, once per game -- independent analyst picks, deduped and aggregated |
+| `acca_report.py` | the weekly accumulator report: US consensus, bet365 targets, gates, analyst sweep, builder |
 | `bet_slips.py` | reads bet-slip screenshots (Claude API), checks them, renders the draft for confirmation |
 | `bet_slip_bot.py` | GitHub side of bet-slip issues, run by `.github/workflows/bet-slip.yml` |
 

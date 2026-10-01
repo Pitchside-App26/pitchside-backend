@@ -14,9 +14,11 @@ import logging
 
 import pandas as pd
 
+from acca_report import LegContext, build_acca_report
 from config import (
     ALL_MARKETS,
     DEFENSE_MARKETS,
+    FORM_WINDOW,
     ODDS_API_TEAM_NAME_TO_ABBR,
     OFFENSE_MARKETS,
     POSITION_GROUP_MAP,
@@ -49,7 +51,10 @@ logger = logging.getLogger(__name__)
 
 def build_odds_dataframe(
     season: int, week: int, use_cache: bool, teams_filter: set[str] | None = None
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, list[dict]]:
+    """Returns (one row per prop, every book's own row). The accumulator
+    report needs the per-book rows for the US consensus line, which the
+    ranking itself collapses to a single book."""
     events = list_events()
     games = fetch_week_games(season, week)
     if teams_filter:
@@ -74,6 +79,8 @@ def build_odds_dataframe(
     for event_id, raw in raw_by_event.items():
         rows.extend(parse_event_odds(raw))
     rows = pivot_over_under(rows)  # one row per prop, carrying BOTH sides' price -- not just the line
+    per_book_rows = [dict(r) for r in rows]
+    logger.info("Bookmakers in this week's odds: %s", sorted({r["bookmaker"] for r in per_book_rows}))
     rows = consolidate_lines(rows)
     for r in rows:
         # Same translation, applied here too since roster team columns
@@ -84,9 +91,24 @@ def build_odds_dataframe(
 
     df = pd.DataFrame(rows)
     if df.empty:
-        return df
+        return df, per_book_rows
     df["candidate_teams"] = df.apply(lambda r: {r["home_team"], r["away_team"]}, axis=1)
-    return df
+    return df, per_book_rows
+
+
+def players_out_by_team(injury_report: dict[str, str], *stat_frames: pd.DataFrame) -> dict[str, list[str]]:
+    """{team: [names listed Out this week]}, for the accumulator report's
+    teammate flag. A player's team is his most recent row in the stats."""
+    out_ids = {pid for pid, status in injury_report.items() if status == "Out"}
+    result: dict[str, list[str]] = {}
+    for frame in stat_frames:
+        team_col = "recent_team" if "recent_team" in frame.columns else "team"
+        rows = frame[frame["player_id"].isin(out_ids)].sort_values(["season", "week"])
+        for _, row in rows.groupby("player_id").tail(1).iterrows():
+            names = result.setdefault(row[team_col], [])
+            if row["player_display_name"] not in names:
+                names.append(row["player_display_name"])
+    return result
 
 
 def prep_position_group(df: pd.DataFrame, position_col: str, constant: str | None = None) -> pd.DataFrame:
@@ -173,7 +195,7 @@ def run(
 
     allowed_tables = build_allowed_tables(offense_df, defense_df, [season - 1, season])
 
-    odds_df = build_odds_dataframe(season, week, use_cache, teams_filter=teams_filter)
+    odds_df, per_book_rows = build_odds_dataframe(season, week, use_cache, teams_filter=teams_filter)
     if odds_df.empty:
         logger.error("No odds data available -- nothing to rank.")
         return
@@ -205,6 +227,8 @@ def run(
         print(matched[["player_name", "matched_player", "market", "point", "match_score", "match_method"]].to_string(index=False))
         return
 
+    out_by_team = players_out_by_team(injury_report, offense_df, defense_df)
+    acca_contexts: list[LegContext] = []
     ranked_props = []
     for _, row in matched.iterrows():
         market = row["market"]
@@ -237,8 +261,9 @@ def run(
             implied_total = team_implied_total(ctx["total_line"], ctx["spread_line"], ctx["is_home"])
             env_factor = environment_factor(implied_total, league_avg_team_total)
             team_spread_value = team_spread_fn(ctx["spread_line"], ctx["is_home"])
+            total_line = ctx["total_line"]
         else:
-            env_factor, team_spread_value = None, None
+            env_factor, team_spread_value, total_line = None, None, None
 
         cur_allowed, cur_league_avg, n_league_games = allowed_tables[(stat_col, season)]
         pri_allowed, pri_league_avg, _ = allowed_tables[(stat_col, season - 1)]
@@ -274,6 +299,18 @@ def run(
 
         avg_targets = avg_targets_by_player.get(player_id) if stat_col in ("receptions", "receiving_yards") else None
 
+        acca_contexts.append(LegContext(
+            event_id=row["event_id"], odds_player_name=row["player_name"], market=market,
+            player=row["matched_player"], stat_col=stat_col, team=player_team, opponent=opponent_team or "",
+            home_team=row["home_team"], away_team=row["away_team"], kickoff=kickoff_lookup.get(player_team, ""),
+            projection=proj.projection, opp_factor=proj.opp_factor, team_spread=team_spread_value,
+            total_line=total_line, injury_status=injury_status,
+            # Last FORM_WINDOW games, reaching back into last season when
+            # this one is short, oldest first.
+            recent_values=pd.concat([prior_rows, current_rows])[stat_col].dropna().tolist()[-FORM_WINDOW:],
+            teammates_out=[n for n in out_by_team.get(player_team, []) if n != row["matched_player"]],
+        ))
+
         ranked_props.append(build_ranked_prop(
             proj, row["point"], current_rows[stat_col].tolist(),
             team=player_team, opponent=opponent_team or "", kickoff=kickoff_lookup.get(player_team, ""),
@@ -284,7 +321,20 @@ def run(
     ranked = rank(ranked_props)
     print_report(ranked, season, week)
     log_weekly_output(ranked, season, week)
-    write_json(ranked, season, week, SITE_DATA_PATH)
+
+    # The rankings page must still publish if the newer accumulator stage
+    # fails, so a failure here becomes a message on the page, not a crash.
+    try:
+        accumulator = build_acca_report(acca_contexts, per_book_rows, week, season)
+        logger.info(
+            "Accumulator report: %s, %d of %d legs passed every gate; sweep %s",
+            accumulator["mode"], accumulator["n_passed"], accumulator["n_candidates"], accumulator["analyst_sweep"],
+        )
+    except Exception as exc:
+        logger.exception("Accumulator report failed")
+        accumulator = {"error": f"{type(exc).__name__}: {exc}"}
+
+    write_json(ranked, season, week, SITE_DATA_PATH, accumulator=accumulator)
     logger.info("Wrote %d ranked props to %s", len(ranked), SITE_DATA_PATH)
 
 

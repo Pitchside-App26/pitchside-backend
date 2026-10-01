@@ -43,9 +43,17 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run weekly prop ranking
+        # A cap on a runaway run: the analyst sweep is the slow, paid part.
+        timeout-minutes: 45
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-        run: python run_weekly.py --teams "${{ inputs.teams }}"
+          # For the accumulator report's analyst sweep (Claude API + web
+          # search), only on games where a leg survived every other gate.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Via env rather than ${{ }} inside the script, so text typed into
+          # the "teams" box can't run as shell code.
+          TEAMS: ${{ inputs.teams }}
+        run: python run_weekly.py --teams "$TEAMS"
 
       - name: Upload results log as a build artifact
         uses: actions/upload-artifact@v4

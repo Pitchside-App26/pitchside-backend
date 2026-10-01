@@ -115,12 +115,28 @@ def to_json_records(ranked: list[RankedProp]) -> list[dict]:
     return records
 
 
-def write_json(ranked: list[RankedProp], season: int, week: int, path: str) -> None:
+def _clean_tree(value):
+    """_clean applied through nested dicts/lists, for the accumulator
+    section."""
+    if isinstance(value, dict):
+        return {k: _clean_tree(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_clean_tree(v) for v in value]
+    if isinstance(value, float):
+        return _clean(value)
+    return value
+
+
+def write_json(
+    ranked: list[RankedProp], season: int, week: int, path: str, accumulator: dict | None = None
+) -> None:
     payload = {
         "season": season,
         "week": week,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "props": to_json_records(ranked),
     }
+    if accumulator is not None:
+        payload["accumulator"] = _clean_tree(accumulator)
     with open(path, "w") as f:
         json.dump(payload, f, indent=2, allow_nan=False)

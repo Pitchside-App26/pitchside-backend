@@ -146,6 +146,14 @@ def test_matchup_gate_passes_at_or_worse_than_average():
 
 def test_matchup_gate_fails_below_average():
     assert matchup_gate(opp_factor=0.7).passed is False
+    assert matchup_gate(opp_factor=0.99).passed is False
+
+
+def test_matchup_gate_treats_a_rounding_hair_below_average_as_average():
+    # Real Week 4 value for NE's run defence: shown as 1.00x, so it must not fail as "better than average".
+    result = matchup_gate(opp_factor=0.9997868114852506)
+    assert result.passed is True
+    assert "1.00x" in result.reason
 
 
 def test_game_script_gate_rushing_favorite_passes():
