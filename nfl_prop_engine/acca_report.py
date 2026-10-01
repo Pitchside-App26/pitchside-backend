@@ -233,6 +233,7 @@ def _fractional(decimal_odds: float) -> str:
 def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None, filler: bool = False) -> dict:
     ctx = leg.ctx
     return {
+        "key": f"{ctx.player}|{ctx.stat_col}",
         "player": ctx.player,
         "team": ctx.team,
         "opponent": ctx.opponent,
@@ -248,6 +249,7 @@ def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None, filler: boo
         "min_price_fractional": _fractional(MIN_PRICE_DECIMAL),
         "fair_prob": round(leg.fair_prob, 3) if leg.fair_prob is not None else None,
         "projection": round(ctx.projection, 1),
+        "recent": [round(v, 1) for v in ctx.recent_values],
         "bet_builder": bool(bet_builder_games and ctx.game in bet_builder_games),
         "gates": [{"gate": g.gate, "passed": g.passed, "reason": g.reason} for g in leg.gates],
         "flags": leg.flags,
@@ -311,8 +313,11 @@ def _build(surviving: list[Leg]) -> list[Leg]:
     return [by_candidate[id(c)] for c in build_accumulator(candidates).legs]
 
 
-def select_window(window_legs: list[Leg]) -> tuple[list[Leg], list[Leg]]:
-    """(legs that passed every gate, fillers) for one window. Fillers top
+SPARES_PER_WINDOW = 10
+
+
+def select_window(window_legs: list[Leg]) -> tuple[list[Leg], list[Leg], list[Leg]]:
+    """(legs that passed every gate, fillers, spares) for one window. Fillers top
     the acca up to MAX_LEGS from legs that failed exactly one gate, best
     projection margin first, still at most MAX_LEGS_PER_GAME per game. A
     leg that failed the Market gate is never a filler: with no consensus
@@ -332,10 +337,29 @@ def select_window(window_legs: list[Leg]) -> tuple[list[Leg], list[Leg]]:
                 continue
             fillers.append(leg)
             per_game[leg.ctx.game] += 1
-    return chosen, fillers
+    return chosen, fillers, _spares(window_legs, chosen + fillers)
 
 
-def _window_record(key: str, kickoff_uk: str, chosen: list[Leg], fillers: list[Leg], n_window_legs: int) -> dict:
+def _spares(window_legs: list[Leg], used: list[Leg]) -> list[Leg]:
+    """Replacements the page offers when a leg fails the bet365 check:
+    unused legs that passed every gate first, then (when fillers are on)
+    unused one-gate failures, best projection margin first. The page applies
+    the per-game cap itself, since it depends on which legs are still in."""
+    used_ids = {id(leg) for leg in used}
+    rest = [leg for leg in window_legs if id(leg) not in used_ids]
+    passing = sorted((leg for leg in rest if not leg.failed), key=lambda leg: leg.score, reverse=True)
+    near = []
+    if FILL_WITH_NEAR_MISSES:
+        near = sorted(
+            (leg for leg in rest if len(leg.failed) == 1 and leg.failed[0].gate != "market"),
+            key=lambda leg: leg.score, reverse=True,
+        )
+    return (passing + near)[:SPARES_PER_WINDOW]
+
+
+def _window_record(
+    key: str, kickoff_uk: str, chosen: list[Leg], fillers: list[Leg], spares: list[Leg], n_window_legs: int,
+) -> dict:
     legs = chosen + fillers
     per_game = Counter(leg.ctx.game for leg in legs)
     builder_games = {game for game, n in per_game.items() if n > 1}
@@ -347,6 +371,7 @@ def _window_record(key: str, kickoff_uk: str, chosen: list[Leg], fillers: list[L
         "kickoff_uk": kickoff_uk,
         "mode": "accumulator" if is_acca else "singles" if legs else "no_bet",
         "legs": [_leg_record(leg, builder_games, filler=id(leg) in filler_ids) for leg in legs],
+        "spares": [_leg_record(leg, filler=bool(leg.failed)) for leg in spares],
         "n_passed": len(chosen),
         "n_fillers": len(fillers),
         "n_legs_in_window": n_window_legs,
@@ -389,7 +414,7 @@ def build_acca_report(
         ranked_games = _games_across_windows(surviving)
     else:
         selections = {w: select_window(window_legs) for w, window_legs in by_window.items()}
-        suggested = [leg for chosen, fillers in selections.values() for leg in chosen + fillers]
+        suggested = [leg for chosen, fillers, _ in selections.values() for leg in chosen + fillers]
         ranked_games = list(dict.fromkeys(_games_across_windows(suggested) + _games_across_windows(surviving)))
     to_sweep = ranked_games[: ANALYST_SWEEP["max_games"]]
     skipped = {
@@ -417,14 +442,14 @@ def build_acca_report(
         sweep_info["note"] = "no leg in either window survived the other gates, so there was nothing to sweep"
     if not sweep_info["ran"]:
         skipped.update({g: sweep_info["note"] for g in ranked_games})
-    fillers_so_far = [leg for _, fillers in selections.values() for leg in fillers]
-    apply_sources(surviving + fillers_so_far, picks_by_game, skipped, as_gate)
+    extra = [leg for _, fillers, spares in selections.values() for leg in fillers + spares if leg.failed]
+    apply_sources(surviving + extra, picks_by_game, skipped, as_gate)
 
     if as_gate:
         selections = {w: select_window(window_legs) for w, window_legs in by_window.items()}
 
-    selected_ids = {id(leg) for chosen, fillers in selections.values() for leg in chosen + fillers}
-    filler_ids = {id(leg) for _, fillers in selections.values() for leg in fillers}
+    selected_ids = {id(leg) for chosen, fillers, _ in selections.values() for leg in chosen + fillers}
+    filler_ids = {id(leg) for _, fillers, _ in selections.values() for leg in fillers}
     if log_rows is not None:
         log_rows([_log_row(leg, id(leg) in selected_ids, id(leg) in filler_ids) for leg in legs])
 
