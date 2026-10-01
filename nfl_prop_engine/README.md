@@ -498,6 +498,19 @@ for passed vs failed legs, and for 2+ / 1 / 0 analysts, judged at the max
 acceptable bet365 line. If backed legs clearly hit more over 4–6 weeks, set
 `sources_gate` back to True.
 
+**On the page, each window is a bet slip with a bet365 checklist:**
+- Each row shows a leg and its target (`≤ 50.5 at 4/5+`). Tap it and type
+  bet365's line and price ("5/6", "evens" or "1.83") to get "OK to bet" or
+  the reason not to.
+- When a leg fails, the page offers the next-best spare. Spares are the
+  report's unused passing legs first, then one-gate failures, and the page
+  keeps to 2 legs per game. A swap can be undone.
+- Once every leg is checked, the entered prices are compared with fair odds.
+- Entries and swaps are kept in the browser's localStorage, so they stay on
+  that phone and nowhere else.
+- "Why these legs" shows each leg's last-6-games chart against its max line,
+  plus its gates and analysts.
+
 The page also lists near misses (one failed gate) and every excluded over
 with its reasons. It records the analyst sweep's estimated cost (also in the
 Actions log) and whether bet365 showed up in the odds feed. If the report

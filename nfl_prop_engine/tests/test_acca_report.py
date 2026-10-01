@@ -396,3 +396,39 @@ def test_the_capped_sweep_is_shared_between_windows(monkeypatch):
     swept = [g.split(",")[0] for g in sweep.calls[0]]
     assert len(swept) == 2
     assert "Kansas City Chiefs at Las Vegas Raiders" in swept  # the late window gets a game
+
+
+# --- spares: replacements offered when a leg fails the bet365 check ----------
+
+def test_spares_list_unused_passing_legs_before_one_gate_failures():
+    specs = [(f"Pass {i}", f"e{i}", f"A{i}", f"H{i}", "early", 1.1, 70 + i) for i in range(8)]
+    specs += [("Near Big", "e20", "X1", "Y1", "early", 0.8, 99), ("Near Small", "e21", "X2", "Y2", "early", 0.8, 60)]
+    contexts, rows = _window_slate(specs)
+    acca = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    assert [leg["player"] for leg in acca["legs"]] == ["Pass 7", "Pass 6", "Pass 5", "Pass 4", "Pass 3", "Pass 2"]
+    assert [leg["player"] for leg in acca["spares"]] == ["Pass 1", "Pass 0", "Near Big", "Near Small"]
+    assert [leg["filler"] for leg in acca["spares"]] == [False, False, True, True]
+    spare = acca["spares"][0]
+    assert spare["key"] == "Pass 1|rushing_yards"
+    assert spare["recent"] == [60, 62, 58, 70, 65, 61]
+    assert spare["max_line"] == 52.5
+
+
+def test_spares_never_include_a_leg_without_a_target_line():
+    contexts, rows = _window_slate([("Pass A", "e1", "NE", "BUF", "early", 1.1, 70)])
+    thin = _ctx(player="Thin Market", market="player_rush_yds", stat="rushing_yards", projection=90, event="e2",
+                home="CHI", away="NYJ", recent=(60, 62, 58, 70, 65, 61), opp=1.1)
+    rows.append(_book("draftkings", 50.5, event="e2", market="player_rush_yds", player="Thin Market"))
+    acca = _acca(build_acca_report(contexts + [thin], rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    assert acca["spares"] == []
+
+
+def test_with_fill_off_spares_are_only_legs_that_passed(monkeypatch):
+    import acca_report
+
+    monkeypatch.setattr(acca_report, "FILL_WITH_NEAR_MISSES", False)
+    specs = [(f"Pass {i}", f"e{i}", f"A{i}", f"H{i}", "early", 1.1, 70 + i) for i in range(7)]
+    specs += [("Near", "e20", "X1", "Y1", "early", 0.8, 99)]
+    contexts, rows = _window_slate(specs)
+    acca = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    assert [leg["player"] for leg in acca["spares"]] == ["Pass 0"]

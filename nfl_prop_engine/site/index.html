@@ -18,6 +18,9 @@
     --over: #1c6e4a;
     --under: #a6192e;
     --low-conf: #a9740f;
+    --over-soft: #e3f1e9;
+    --under-soft: #f8e4e7;
+    --bar-miss: #b8c0cc;
   }
   /* This project is only ever viewed by one person on one phone -- a
      single committed light theme (not tied to OS light/dark) is
@@ -501,13 +504,108 @@
   }
 
   .window-head {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-size: 1.05rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4px 8px;
+    flex-wrap: wrap;
     margin: 18px 0 0;
     padding-top: 10px;
     border-top: 1px solid var(--rule-strong);
   }
+
+  h3 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  /* ── Bet slip and bet365 checklist ── */
+  .slip { background: var(--panel); border: 1px solid var(--rule-strong); margin-top: 8px; }
+  .slip-row { border-bottom: 1px solid var(--rule); }
+  .slip-btn {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .status {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid var(--rule);
+    display: grid; place-items: center;
+    font-size: 0.75rem; font-weight: 700; color: var(--panel);
+  }
+  .status.ok { background: var(--over); border-color: var(--over); }
+  .status.no { background: var(--under); border-color: var(--under); }
+  .slip-who { min-width: 0; display: flex; flex-direction: column; }
+  .slip-name { font-weight: 600; font-size: 0.92rem; }
+  .slip-market { color: var(--sub); font-size: 0.75rem; overflow-wrap: anywhere; }
+  .filler-tag { color: var(--low-conf); font-weight: 600; }
+  .swap-tag { color: var(--text); font-weight: 600; }
+  .slip-target { text-align: right; font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .slip-target strong { font-family: "Fraunces", Georgia, serif; font-size: 0.98rem; }
+  .chk { padding: 0 12px 12px 42px; }
+  .chk-fields { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chk-field { display: flex; flex-direction: column; gap: 3px; flex: 1 1 110px; min-width: 0; }
+  .chk-field label { font-size: 0.7rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.04em; }
+  .chk-input {
+    width: 100%;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 9px 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .verdict { margin-top: 8px; font-size: 0.8rem; font-weight: 600; padding: 6px 8px; }
+  .verdict.ok { background: var(--over-soft); color: var(--over); }
+  .verdict.no { background: var(--under-soft); color: var(--under); }
+  .swap-offer { padding: 0 12px 12px 42px; font-size: 0.8rem; line-height: 1.5; }
+  .swap-btn {
+    margin-left: 6px;
+    background: var(--text);
+    color: var(--panel);
+    border: none;
+    border-radius: 2px;
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .slip-row.dropped { color: var(--sub); }
+  .dropped-line { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 12px; font-size: 0.8rem; }
+  .slip-foot { border-top: 1px solid var(--rule-strong); padding: 10px 12px; font-size: 0.82rem; line-height: 1.45; font-variant-numeric: tabular-nums; }
+  .slip-foot .big { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1rem; }
+  .slip-actions { margin-top: 6px; }
+  .progress { display: flex; gap: 3px; margin-bottom: 8px; }
+  .progress span { flex: 1; height: 4px; background: var(--rule); }
+  .progress span.ok { background: var(--over); }
+  .progress span.no { background: var(--under); }
+  .text-btn {
+    background: none; border: none; padding: 0;
+    font-family: inherit; font-size: 0.78rem; color: var(--sub);
+    text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+  }
+  .slip-btn:focus-visible, .chk-input:focus-visible, .text-btn:focus-visible, .swap-btn:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: -2px;
+  }
+  .chart { margin-top: 10px; }
+  .chart svg { width: 100%; height: auto; display: block; }
+  .chart-cap { font-size: 0.75rem; color: var(--sub); margin-top: 2px; }
+  .chart-cap strong { color: var(--text); }
 </style>
 </head>
 <body>
@@ -710,6 +808,7 @@
         ${opts.failedOnly || leg.filler ? `<div class="leg-facts">Failed: ${failed.map(g => `<strong>${esc(gateName(g.gate))}</strong>, ${esc(g.reason)}`).join("; ")}</div>` : ""}
         ${opts.failedOnly ? "" : target}
         <div class="leg-facts">US consensus ${esc(fmtLine(leg.consensus_line))} (${esc(leg.n_books)} books) · projection ${esc(fmtLine(leg.projection))} · fair chance ${pct(leg.fair_prob)}</div>
+        ${opts.chart ? chartSvg(leg) : ""}
         ${pills ? `<div class="pills">${pills}</div>` : ""}
         ${over.length ? `<div class="sources">Backed by: ${sourceLinks(over)}</div>` : ""}
         ${under.length ? `<div class="sources against">Against: ${sourceLinks(under)}</div>` : ""}
@@ -722,7 +821,193 @@
       </div>`;
   }
 
-  function renderAcca(a) {
+  // ── bet365 checklist ────────────────────────────────────────────────
+  // Dan types what bet365 shows for each leg; the page checks it against the
+  // leg's target. Entries and swaps live in this browser only.
+  const accaState = { a: null, data: null, open: null };
+
+  function store(key, value) {
+    try {
+      if (value === undefined) return JSON.parse(localStorage.getItem(key) || "null");
+      if (value === null) localStorage.removeItem(key);
+      else localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) { return null; }
+    return null;
+  }
+
+  function weekKey() {
+    return `nfl-acca:${accaState.data.season}-w${accaState.data.week}`;
+  }
+
+  // Odds as bet365 shows them: "5/6", "evens", or decimal "1.83".
+  function toDecimal(raw) {
+    const t = String(raw || "").trim().toLowerCase();
+    if (!t) return null;
+    if (t === "evens" || t === "evs") return 2;
+    const m = t.match(/^(\d+)\s*\/\s*(\d+)$/);
+    if (m) return +m[2] ? +m[1] / +m[2] + 1 : null;
+    const d = parseFloat(t);
+    return Number.isFinite(d) && d > 1 ? d : null;
+  }
+
+  function checkLeg(leg) {
+    const saved = store(`${weekKey()}:chk:${leg.key}`) || {};
+    const line = parseFloat(saved.line);
+    const price = toDecimal(saved.price);
+    const min = leg.min_price_decimal;
+    if (!saved.line && !saved.price) return { state: "todo", saved };
+    if (!Number.isFinite(line) || price === null) return { state: "todo", saved, msg: "Enter both bet365's line and price." };
+    if (line > leg.max_line) return { state: "no", saved, price, msg: `Don't bet: bet365's line ${line} is above your max ${fmtLine(leg.max_line)}.` };
+    if (price < min) return { state: "no", saved, price, msg: `Don't bet: ${saved.price} is shorter than ${leg.min_price_fractional}.` };
+    return { state: "ok", saved, price, msg: `OK to bet: ${line} at ${saved.price} meets the target.` };
+  }
+
+  // Slip rows for a window: the suggested legs, plus any replacements Dan
+  // swapped in for legs that failed the bet365 check.
+  function slipRows(w) {
+    const swaps = store(`${weekKey()}:swap:${w.window}`) || {};
+    const spareByKey = Object.fromEntries((w.spares || []).map(s => [s.key, s]));
+    const rows = [];
+    const add = (leg, replaces, depth) => {
+      const by = swaps[leg.key] && spareByKey[swaps[leg.key]];
+      rows.push({ leg, replaces, replacedBy: by || null });
+      if (by && depth < 10) add(by, leg, depth + 1);
+    };
+    w.legs.forEach(l => add(l, null, 0));
+    return { rows, swaps };
+  }
+
+  function nextSpare(w, rows, failedLeg) {
+    const used = new Set(rows.map(r => r.leg.key));
+    const perGame = {};
+    rows.filter(r => !r.replacedBy && r.leg.key !== failedLeg.key)
+      .forEach(r => { perGame[r.leg.game] = (perGame[r.leg.game] || 0) + 1; });
+    return (w.spares || []).find(s => !used.has(s.key) && (perGame[s.game] || 0) < 2) || null;
+  }
+
+  function chartSvg(leg) {
+    const vals = leg.recent || [];
+    if (!vals.length || leg.max_line === null || leg.max_line === undefined) return "";
+    const W = 300, H = 74, top = 14, base = 58, n = vals.length;
+    const scaleMax = Math.max(...vals, leg.max_line) * 1.12 || 1;
+    const y = v => base - (v / scaleMax) * (base - top);
+    const slot = W / n, bw = slot * 0.56;
+    const bars = vals.map((v, i) => {
+      const x = i * slot + (slot - bw) / 2, over = v > leg.max_line, h = base - y(v);
+      const inside = !over && h >= 14;
+      return `<rect x="${x.toFixed(1)}" y="${y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${over ? "var(--over)" : "var(--bar-miss)"}"></rect>
+        <text x="${(x + bw / 2).toFixed(1)}" y="${(inside ? y(v) + 11 : y(v) - 3).toFixed(1)}" text-anchor="middle" font-size="9" fill="${inside ? "var(--text)" : "var(--sub)"}">${esc(fmtLine(v))}</text>`;
+    }).join("");
+    const ly = y(leg.max_line).toFixed(1);
+    const hits = vals.filter(v => v > leg.max_line).length;
+    return `<div class="chart">
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Last ${n} games: ${hits} over the max line ${esc(fmtLine(leg.max_line))}">
+        ${bars}
+        <line x1="0" x2="${W}" y1="${ly}" y2="${ly}" stroke="var(--text)" stroke-width="1.2" stroke-dasharray="4 3"></line>
+        <line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="var(--rule)" stroke-width="1"></line>
+        <text x="0" y="${H - 3}" font-size="9" fill="var(--sub)">${n} games ago</text>
+        <text x="${W}" y="${H - 3}" text-anchor="end" font-size="9" fill="var(--sub)">latest →</text>
+      </svg>
+      <div class="chart-cap"><strong>${hits} of ${n}</strong> recent games over your max line (${esc(fmtLine(leg.max_line))}, dashed)</div>
+    </div>`;
+  }
+
+  function slipRowHtml(w, row, rows) {
+    const leg = row.leg;
+    const tags = [
+      row.replaces ? `<span class="swap-tag">replacement</span>` : "",
+      leg.filler ? `<span class="filler-tag">filler: failed ${esc(leg.gates.filter(g => !g.passed).map(g => gateName(g.gate)).join(", "))}</span>` : "",
+    ].filter(Boolean).join(" · ");
+    if (row.replacedBy) {
+      const c = checkLeg(leg);
+      return `<div class="slip-row dropped">
+        <div class="dropped-line"><span class="status no">✕</span>
+          <span><strong>${esc(leg.player)}</strong> dropped (${esc((c.msg || "").replace(/^Don't bet: /, "").replace(/\.$/, ""))}). Replaced by ${esc(row.replacedBy.player)}.</span>
+          <button class="text-btn" type="button" data-undo="${esc(leg.key)}" data-window="${esc(w.window)}">Undo</button></div>
+      </div>`;
+    }
+    const c = checkLeg(leg);
+    const open = accaState.open === `${w.window}|${leg.key}`;
+    const id = `${w.window}-${leg.key}`.replace(/[^a-zA-Z0-9-]/g, "_");
+    const spare = c.state === "no" ? nextSpare(w, rows, leg) : null;
+    const swapHtml = c.state === "no"
+      ? (spare
+        ? `<div class="swap-offer">Swap in the next best leg: <strong>${esc(spare.player)}</strong>, ${esc(spare.stat_label)} over ≤ ${esc(fmtLine(spare.max_line))}${spare.filler ? " (filler)" : ""}
+             <button class="swap-btn" type="button" data-swap="${esc(leg.key)}" data-spare="${esc(spare.key)}" data-window="${esc(w.window)}">Swap in</button></div>`
+        : `<div class="swap-offer">No replacement available that keeps to 2 legs per game.</div>`)
+      : "";
+    return `<div class="slip-row">
+      <button class="slip-btn" type="button" data-open="${esc(w.window)}|${esc(leg.key)}" aria-expanded="${open}">
+        <span class="status ${c.state}" aria-label="${c.state === "ok" ? "checked, OK to bet" : c.state === "no" ? "checked, don't bet" : "not checked yet"}">${c.state === "ok" ? "✓" : c.state === "no" ? "✕" : ""}</span>
+        <span class="slip-who">
+          <span class="slip-name">${esc(leg.player)}</span>
+          <span class="slip-market">${esc(leg.stat_label)} over · ${esc(leg.game)}${tags ? ` · ${tags}` : ""}</span>
+        </span>
+        <span class="slip-target"><strong>≤ ${esc(fmtLine(leg.max_line))}</strong><br>at ${esc(leg.min_price_fractional)}+</span>
+      </button>
+      ${open ? `<div class="chk">
+        <div class="chk-fields">
+          <div class="chk-field"><label for="line-${id}">bet365 line</label>
+            <input class="chk-input" id="line-${id}" inputmode="decimal" autocomplete="off" placeholder="${esc(fmtLine(leg.max_line))}" value="${esc(c.saved.line || "")}" data-field="line" data-key="${esc(leg.key)}"></div>
+          <div class="chk-field"><label for="price-${id}">bet365 price</label>
+            <input class="chk-input" id="price-${id}" autocomplete="off" placeholder="e.g. 5/6" value="${esc(c.saved.price || "")}" data-field="price" data-key="${esc(leg.key)}"></div>
+        </div>
+        ${c.msg ? `<div class="verdict ${c.state === "todo" ? "" : c.state}">${esc(c.msg)}</div>` : ""}
+      </div>` : ""}
+      ${swapHtml}
+    </div>`;
+  }
+
+  function slipFootHtml(w, active) {
+    const checks = active.map(r => checkLeg(r.leg));
+    const ok = checks.filter(c => c.state === "ok");
+    const no = checks.filter(c => c.state === "no").length;
+    const done = ok.length + no;
+    const fair = active.reduce((p, r) => p * (r.leg.fair_prob ? 1 / r.leg.fair_prob : NaN), 1);
+    let verdict;
+    if (done < active.length) {
+      verdict = `${done} of ${active.length} checked on bet365${no ? `, ${no} failed` : ""}. Tap a leg to enter bet365's line and price.`;
+    } else if (no) {
+      verdict = `${no} leg${no === 1 ? "" : "s"} failed the check. Swap ${no === 1 ? "it" : "them"} out, or leave ${no === 1 ? "it" : "them"} out of the acca.`;
+    } else {
+      const real = ok.reduce((p, c) => p * c.price, 1);
+      verdict = `All ${active.length} legs OK to bet. Your entered prices multiply to <span class="big">${esc(money(real))}</span> vs fair ${esc(money(fair))}: ${real >= fair ? "above fair odds, so there's value at these prices" : "below fair odds, which is normal (it's bet365's margin), so no value at these prices"}. Same-game legs are priced together as a bet builder, so trust bet365's own slip total for those.`;
+    }
+    return `<div class="slip-foot">
+      <div class="progress">${checks.map(c => `<span class="${c.state}"></span>`).join("")}</div>
+      ${verdict}
+      <div class="slip-actions"><button class="text-btn" type="button" data-clear="${esc(w.window)}">Clear my entries for this window</button></div>
+    </div>`;
+  }
+
+  function windowHtml(w) {
+    const a = accaState.a;
+    const { rows } = slipRows(w);
+    const active = rows.filter(r => !r.replacedBy);
+    const n = active.length;
+    const fillers = active.filter(r => r.leg.filler).length;
+    const fair = active.reduce((p, r) => p * (r.leg.fair_prob ? 1 / r.leg.fair_prob : NaN), 1);
+    const chance = active.reduce((p, r) => p * (r.leg.fair_prob || NaN), 1);
+    const kicker = [w.kickoff_uk ? `${w.kickoff_uk} UK` : "", n ? `${n}-fold` : "", fillers ? `${fillers} filler${fillers === 1 ? "" : "s"}` : ""]
+      .filter(Boolean).join(" · ");
+    const head = `<div class="window-head"><h3>${esc(w.label)}</h3><span class="kicker">${esc(kicker)}</span></div>`;
+    if (!n) {
+      return head + `<div class="acca-empty"><strong>No bet.</strong> None of the ${esc(w.n_legs_in_window)} overs in these games passed, or failed only one gate.</div>`;
+    }
+    const short = a.fill_with_near_misses && n < 6
+      ? ` Only ${n} leg${n === 1 ? "" : "s"} available: not enough legs passed or nearly passed to reach 6.` : "";
+    const summary = n >= 3
+      ? `<p class="acca-summary">£${esc(a.stake_gbp)} flat stake. Fair odds ${esc(money(fair))}; bet365's acca price needs to beat that to be value. Rough chance it lands: ${pct(chance)} (assumes the legs are independent).${short}</p>`
+      : `<p class="acca-summary">Too few legs for an accumulator, so take ${n === 1 ? "it as a single" : "them as singles"} or leave it.${short}</p>`;
+    const details = active.map(r => legCard(r.leg, { chart: true })).join("");
+    return head + summary
+      + `<div class="slip">${rows.map(r => slipRowHtml(w, r, rows)).join("")}${slipFootHtml(w, active)}</div>`
+      + `<details class="more legs-detail"><summary>Why these legs: charts, gates and analysts</summary>${details}</details>`;
+  }
+
+  function renderAcca(a, data) {
+    accaState.a = a;
+    accaState.data = data;
     const el = document.getElementById("acca");
     if (!a) return;  // older data.json without the section
     el.hidden = false;
@@ -734,28 +1019,6 @@
     if (a.error) {
       el.innerHTML = head + `<div class="acca-empty">The accumulator report failed on this run (${esc(a.error)}). The rankings below are unaffected.</div>`;
       return;
-    }
-
-    function windowHtml(w) {
-      const n = w.legs.length;
-      const makeup = w.n_fillers
-        ? `${w.n_passed} passed every gate, ${w.n_fillers} filler${w.n_fillers === 1 ? "" : "s"} that failed one gate (marked)`
-        : `all ${n} passed every gate`;
-      const short = a.fill_with_near_misses && n < 6
-        ? ` Only ${n} leg${n === 1 ? "" : "s"} available: not enough legs passed or nearly passed to reach 6.` : "";
-      let summary;
-      if (w.mode === "accumulator") {
-        summary = `<p class="acca-summary"><strong>${n}-fold</strong>: ${makeup}. £${esc(a.stake_gbp)} flat stake.${short}
-          Fair odds ${esc(money(w.combined_fair_odds))}: bet365's acca price needs to beat that to be value.
-          Rough chance it lands: ${pct(w.combined_probability)} (assumes the legs are independent, which same-game legs aren't).</p>`;
-      } else if (w.mode === "singles") {
-        summary = `<p class="acca-summary">Only <strong>${n}</strong> leg${n === 1 ? "" : "s"} available (${makeup}).
-          Too few for an accumulator, so take ${n === 1 ? "it as a single" : "them as singles"} or leave it.</p>`;
-      } else {
-        summary = `<div class="acca-empty"><strong>No bet.</strong> None of the ${esc(w.n_legs_in_window)} overs in these games passed, or failed only one gate.</div>`;
-      }
-      const when = w.kickoff_uk ? ` · ${esc(w.kickoff_uk)} UK` : "";
-      return `<h3 class="window-head">${esc(w.label)}${when}</h3>` + summary + w.legs.map(l => legCard(l)).join("");
     }
 
     const accas = a.accumulators || [];
@@ -823,7 +1086,7 @@
       meta.innerHTML = `<span>Season ${data.season}, Week ${data.week}</span>` +
         `<span>Updated ${timeAgo(data.generated_at)}</span>` +
         `<span>${state.props.length} props</span>`;
-      renderAcca(data.accumulator);
+      renderAcca(data.accumulator, data);
       render();
     })
     .catch(err => {
@@ -832,6 +1095,59 @@
         `<div class="error">Couldn't load this week's data (${err.message}).<br>` +
         `If this is the first run, data.json hasn't been published yet.</div>`;
     });
+
+  const accaEl = document.getElementById("acca");
+  accaEl.addEventListener("click", e => {
+    const t = e.target;
+    const open = t.closest("[data-open]");
+    if (open) {
+      accaState.open = accaState.open === open.dataset.open ? null : open.dataset.open;
+      renderAcca(accaState.a, accaState.data);
+      const input = accaEl.querySelector(`.chk-input[data-field="line"]`);
+      if (input && accaState.open) input.focus();
+      return;
+    }
+    const swap = t.closest("[data-swap]");
+    if (swap) {
+      const key = `${weekKey()}:swap:${swap.dataset.window}`;
+      const swaps = store(key) || {};
+      swaps[swap.dataset.swap] = swap.dataset.spare;
+      store(key, swaps);
+      accaState.open = `${swap.dataset.window}|${swap.dataset.spare}`;
+      renderAcca(accaState.a, accaState.data);
+      return;
+    }
+    const undo = t.closest("[data-undo]");
+    if (undo) {
+      const key = `${weekKey()}:swap:${undo.dataset.window}`;
+      const swaps = store(key) || {};
+      delete swaps[undo.dataset.undo];
+      store(key, Object.keys(swaps).length ? swaps : null);
+      renderAcca(accaState.a, accaState.data);
+      return;
+    }
+    const clear = t.closest("[data-clear]");
+    if (clear) {
+      const w = (accaState.a.accumulators || []).find(x => x.window === clear.dataset.clear);
+      if (!w) return;
+      [...w.legs, ...(w.spares || [])].forEach(l => store(`${weekKey()}:chk:${l.key}`, null));
+      store(`${weekKey()}:swap:${w.window}`, null);
+      accaState.open = null;
+      renderAcca(accaState.a, accaState.data);
+    }
+  });
+
+  accaEl.addEventListener("change", e => {
+    const input = e.target.closest(".chk-input");
+    if (!input) return;
+    const key = `${weekKey()}:chk:${input.dataset.key}`;
+    const saved = store(key) || {};
+    saved[input.dataset.field] = input.value.trim();
+    store(key, saved);
+    const next = input.dataset.field === "line" ? input.id.replace(/^line-/, "price-") : null;
+    renderAcca(accaState.a, accaState.data);
+    if (next) document.getElementById(next)?.focus();
+  });
 
   document.getElementById("search").addEventListener("input", e => {
     state.search = e.target.value;
