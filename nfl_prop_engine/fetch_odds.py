@@ -89,12 +89,20 @@ def fetch_all_event_odds(
 ) -> dict[str, dict]:
     """Sequential, with a small pause between live calls to be a reasonable
     API citizen -- there's no documented rate limit requiring this, it's
-    just cheap insurance."""
-    results = {}
+    just cheap insurance. One game failing (a timeout, a game pulled from
+    the feed) skips that game instead of losing the whole week's run; only
+    every game failing is an error."""
+    results, errors = {}, []
     for event_id in event_ids:
-        results[event_id] = fetch_event_odds(event_id, markets, use_cache=use_cache)
+        try:
+            results[event_id] = fetch_event_odds(event_id, markets, use_cache=use_cache)
+        except (OddsApiError, requests.RequestException, ValueError) as exc:
+            logger.error("Skipping event %s: odds request failed (%s)", event_id, exc)
+            errors.append(exc)
         if not use_cache:
             time.sleep(pause_seconds)
+    if errors and not results:
+        raise OddsApiError(f"every odds request failed; first error: {errors[0]}")
     return results
 
 

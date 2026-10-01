@@ -107,3 +107,11 @@ def test_build_accumulator_never_includes_an_under_leg():
     result = build_accumulator(candidates)
     assert all(c.side == "over" for c in result.legs)
     assert "UnderB" not in {c.player for c in result.legs}
+
+
+def test_one_leg_per_player():
+    candidates = [_candidate("A", "G1", fair_prob=0.7), _candidate("A", "G1", fair_prob=0.65, market="player_rush_yds"),
+                  _candidate("B", "G2"), _candidate("C", "G3")]
+    result = build_accumulator(candidates)
+    assert [c.player for c in result.legs] == ["A", "B", "C"]
+    assert result.legs[0].market == "player_pass_yds"

@@ -215,6 +215,13 @@ ONE_PLAY_MARKETS = False  # longest rush/reception, anytime TD -- excluded from 
 
 LINE_THRESHOLD = {"yards": 2.0, "counts": 0.0}  # bet365 line must be <= US consensus + this, or the leg fails
 MIN_PRICE_DECIMAL = 1.80  # bet365 over price must clear this (~4/5) or the leg fails regardless of the line
+# Odds gate: the most likely the US books (de-vigged) can rate an over before
+# bet365 has no realistic chance of offering MIN_PRICE_DECIMAL on it. 1.80 is
+# a 55.6% implied price, and bet365 keeps ~4% a side, so the fair chance at
+# bet365's own line has to be about 53% or less. Yardage legs get room for the
+# +2-yard line allowance (a higher bet365 line lengthens the over's price);
+# both keep a little slack, since the bet365 checklist decides close calls.
+MAX_US_FAIR_PROB = {"yards": 0.58, "counts": 0.56}
 LINE_MOVEMENT_FLAG = {"yards": 3.0, "counts": 1.0}  # flag (not fail) if the consensus line moved this much since the opener
 
 FORM_WINDOW = 6  # games of recent form the Form/Outlier gates look at, reaching into the prior season if needed
