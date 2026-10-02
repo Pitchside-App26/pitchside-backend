@@ -1,0 +1,126 @@
+name: Football Goals Report (weekly)
+
+on:
+  schedule:
+    # Friday 6pm UK. GitHub schedules run in UTC, so both are listed and the
+    # "UK time check" step below lets through only the one that is 6pm in
+    # the UK that week (17:00 UTC in summer time, 18:00 UTC in winter).
+    - cron: "0 17 * * 5"
+    - cron: "0 18 * * 5"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Match date as YYYY-MM-DD. Leave blank for next Saturday."
+        required: false
+        default: ""
+
+permissions:
+  contents: write  # commit the report and history file back to the repo
+  pages: write
+  id-token: write
+
+concurrency:
+  group: football-goals
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: UK time check
+        id: gate
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ -z "$SCHEDULE" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          offset=$(TZ=Europe/London date +%z)   # +0100 in summer, +0000 in winter
+          if { [ "$SCHEDULE" = "0 17 * * 5" ] && [ "$offset" = "+0100" ]; } || \
+             { [ "$SCHEDULE" = "0 18 * * 5" ] && [ "$offset" = "+0000" ]; }; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not 6pm UK for this schedule entry; skipping."; echo "go=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.go == 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.go == 'true'
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        if: steps.gate.outputs.go == 'true'
+        run: pip install -r football_goals/requirements.txt
+
+      - name: Build the report
+        if: steps.gate.outputs.go == 'true'
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          # Via env, so text typed into the date box can't run as shell code.
+          REPORT_DATE: ${{ inputs.date }}
+        run: python -m football_goals.run_report --date "$REPORT_DATE"
+
+      - name: Keep raw downloads (30 days)
+        if: steps.gate.outputs.go == 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: football-goals-raw-downloads
+          path: football_goals/cache
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Save report and history to the repo
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add football_goals/site football_goals/data
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: football goals report"
+          for attempt in 1 2 3; do
+            git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
+            sleep $((attempt * 5))
+          done
+          exit 1
+
+      - name: Assemble the published site
+        # GitHub Pages hosts one site per repo, shared with the NFL results
+        # page: NFL stays at the root, this report goes under /goals/.
+        if: steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          mkdir -p _site/goals
+          cp -r nfl_prop_engine/site/. _site/
+          cp -r football_goals/site/. _site/goals/
+          # The NFL page's data.json is written by the NFL run and only lives
+          # on the published site, so carry the live copy over rather than
+          # roll the NFL page back to the repo's older one.
+          curl -fsSL --retry 3 "https://${OWNER,,}.github.io/${REPO}/data.json" -o /tmp/nfl-data.json \
+            && python -c "import json;json.load(open('/tmp/nfl-data.json'))" \
+            && cp /tmp/nfl-data.json _site/data.json \
+            || echo "::warning::Could not copy the live NFL data.json; using the repo copy"
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch
+        with:
+          path: _site
+
+    outputs:
+      publish: ${{ steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch }}
+
+  deploy:
+    needs: report
+    if: ${{ needs.report.outputs.publish == 'true' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}goals/
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

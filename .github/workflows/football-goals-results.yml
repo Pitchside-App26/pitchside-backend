@@ -1,0 +1,106 @@
+name: Football Goals Results (weekly)
+
+on:
+  schedule:
+    # Sunday 7pm UK, plus a Monday 1pm UK retry for any result that wasn't
+    # in yet. Both UTC times are listed; the check below keeps the right one.
+    - cron: "0 18 * * 0"
+    - cron: "0 19 * * 0"
+    - cron: "0 12 * * 1"
+    - cron: "0 13 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: football-goals
+  cancel-in-progress: false
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: UK time check
+        id: gate
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ -z "$SCHEDULE" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          offset=$(TZ=Europe/London date +%z)
+          case "$SCHEDULE|$offset" in
+            "0 18 * * 0|+0100"|"0 19 * * 0|+0000"|"0 12 * * 1|+0100"|"0 13 * * 1|+0000") echo "go=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "Not the UK slot for this schedule entry; skipping."; echo "go=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.go == 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.go == 'true'
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        if: steps.gate.outputs.go == 'true'
+        run: pip install -r football_goals/requirements.txt
+
+      - name: Grade last weekend's fixtures
+        if: steps.gate.outputs.go == 'true'
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: python -m football_goals.grade_results
+
+      - name: Save history to the repo
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add football_goals/site football_goals/data
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: grade football goals results"
+          for attempt in 1 2 3; do
+            git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
+            sleep $((attempt * 5))
+          done
+          exit 1
+
+      - name: Assemble the published site
+        if: steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          mkdir -p _site/goals
+          cp -r nfl_prop_engine/site/. _site/
+          cp -r football_goals/site/. _site/goals/
+          # The NFL page's data.json is written by the NFL run and only lives
+          # on the published site, so carry the live copy over rather than
+          # roll the NFL page back to the repo's older one.
+          curl -fsSL --retry 3 "https://${OWNER,,}.github.io/${REPO}/data.json" -o /tmp/nfl-data.json \
+            && python -c "import json;json.load(open('/tmp/nfl-data.json'))" \
+            && cp /tmp/nfl-data.json _site/data.json \
+            || echo "::warning::Could not copy the live NFL data.json; using the repo copy"
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch
+        with:
+          path: _site
+
+    outputs:
+      publish: ${{ steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch }}
+
+  deploy:
+    needs: grade
+    if: ${{ needs.grade.outputs.publish == 'true' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}goals/results.html
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

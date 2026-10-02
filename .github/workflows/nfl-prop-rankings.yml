@@ -62,14 +62,24 @@ jobs:
           path: nfl_prop_engine/results_log.sqlite3
           if-no-files-found: ignore
 
+      - name: Assemble the published site
+        # GitHub Pages hosts one site per repo. The football goals report
+        # (football_goals/) lives under /goals/ on the same site, so every
+        # deploy must carry both or one would wipe the other.
+        working-directory: .
+        run: |
+          mkdir -p _site/goals
+          cp -r nfl_prop_engine/site/. _site/
+          if [ -d football_goals/site ]; then cp -r football_goals/site/. _site/goals/; fi
+
       - name: Upload results page for Pages
         # run_weekly.py just wrote nfl_prop_engine/site/data.json alongside
-        # the static index.html -- upload the whole directory as this run's
-        # Pages artifact; the deploy job below actually publishes it. Runs
-        # before the commit so a failed push can't stop the page publishing.
+        # the static index.html -- upload the whole assembled site as this
+        # run's Pages artifact; the deploy job below actually publishes it.
+        # Runs before the commit so a failed push can't stop the page publishing.
         uses: actions/upload-pages-artifact@v3
         with:
-          path: nfl_prop_engine/site
+          path: _site
 
       - name: Commit results log
         # A fresh checkout every run means the SQLite file has no durability
