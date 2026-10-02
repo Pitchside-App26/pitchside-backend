@@ -120,6 +120,8 @@ def _acca(report, mk):
         return (f"<li><b>{escape(_fixture(r))}</b> <span class=lg>{escape(r['league_name'])}, {escape(r['kickoff'] or '')}</span>"
                 f" <span class=pill>{pct(r[mk]['combined_pct'], 1)}</span>{price}{tag}</li>")
     out = [f"<h2>{ACCA_TITLE[mk]}</h2><div class=card><p>{escape(a['message'])}</p>"]
+    if a.get("note"):  # e.g. the bookmaker's boost rule: read before placing, so it sits at the top
+        out.append(f"<div class='alert warn' style='margin:.2rem 0 .6rem'>{escape(a['note'])}</div>")
     if a["legs"]:
         out.append(f"<ol class=acca>{''.join(li(r) for r in a['legs'])}</ol>")
         if odds and all(r.get("price") for r in a["legs"]):
@@ -133,8 +135,7 @@ def _acca(report, mk):
         items = "".join(li(r) for r in a["reserves"])
         items += "".join(li(r, f"below {a.get('min_pct', '')}%") for r in below)
         out.append(f"<p><b>{label}</b> <span class=sub>in order: use the top one first</span></p><ol class=acca>{items}</ol>")
-    if a.get("note"):
-        out.append(f"<div class='alert warn' style='margin:.6rem 0 0'>{escape(a['note'])}</div>")
+
     if mk == "gibh" and report["odds"]["enabled"]:
         out.append("<p class=sub>Prices are only fetched for Over 1.5, so this tab has none.</p>")
     out.append("</div>")
