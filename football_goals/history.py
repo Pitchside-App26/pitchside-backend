@@ -13,6 +13,10 @@ COLUMNS = KEY + ["league_name", "kickoff", "o15_combined", "o15_venue", "o15_lea
                  "gibh_combined", "gibh_venue", "gibh_league_rate", "acca", "gibh_acca", "price", "flags",
                  "status", "fthg", "ftag", "hthg", "htag", "o15_hit", "gibh_hit", "graded_at", "result_source"]
 BANDS = [(0, 75, "below 75"), (75, 80, "75-80"), (80, 85, "80-85"), (85, 90, "85-90"), (90, 101, "90+")]
+# GIBH rates run 55-75%, so its picks need their own, lower bands to tell anything apart.
+GIBH_BANDS = [(0, 55, "below 55"), (55, 60, "55-60"), (60, 65, "60-65"), (65, 70, "65-70"), (70, 75, "70-75"),
+              (75, 101, "75+")]
+MARKET_BANDS = {"o15": BANDS, "gibh": GIBH_BANDS}
 
 
 def load() -> pd.DataFrame:
@@ -35,21 +39,27 @@ def save(df: pd.DataFrame) -> None:
     df.sort_values(["report_date", "league", "kickoff", "home"]).to_csv(HISTORY, index=False)
 
 
-def record_report(rows: list[dict], report_date: str) -> None:
-    """Add this report's fixtures; a re-run for the same date replaces its still-pending rows."""
+def record_report(rows: list[dict], report_date: str, leagues=None) -> None:
+    """Add this report's fixtures. A re-run for the same date replaces the
+    still-pending rows of the leagues it loaded (`leagues`; default: the
+    leagues in `rows`), keeps every other row, and never re-adds a fixture
+    that has already been graded."""
     df = load()
-    keep = ~((df["report_date"] == report_date) & (df["status"] == "pending"))
-    graded_keys = set(map(tuple, df.loc[df["report_date"] == report_date, KEY].astype(str).values))
-    new = pd.DataFrame([r for r in rows if tuple(str(r[k]) for k in KEY) not in graded_keys], columns=COLUMNS)
+    leagues = {r["league"] for r in rows} if leagues is None else set(leagues)
+    same_day = df["report_date"] == report_date
+    replace = same_day & (df["status"] == "pending") & df["league"].isin(leagues)
+    done = df.loc[same_day & (df["status"] != "pending"), KEY].astype(str)
+    done_keys = set(map(tuple, done.values))
+    new = pd.DataFrame([r for r in rows if tuple(str(r[k]) for k in KEY) not in done_keys], columns=COLUMNS)
     new["status"] = "pending"
-    save(pd.concat([df[keep], new], ignore_index=True) if len(df) else new)
+    save(pd.concat([df[~replace], new], ignore_index=True) if len(df) else new)
 
 
-def band(pct: float) -> str:
-    for lo, hi, label in BANDS:
+def band(pct: float, bands=BANDS) -> str:
+    for lo, hi, label in bands:
         if lo <= pct < hi:
             return label
-    return BANDS[-1][2]
+    return bands[-1][2]
 
 
 def _summ(g: pd.DataFrame, hit: str, rate: str) -> dict:
@@ -75,17 +85,36 @@ def hit_rates(df: pd.DataFrame | None = None, cfg: dict | None = None) -> dict:
             from .scope import in_scope
             sub = sub[[in_scope(cfg, mk, lg, ko) for lg, ko in zip(sub["league_name"], sub["kickoff"])]]
         sub[hit] = sub[hit].astype(str).str.lower().isin(["true", "1", "1.0"])
-        sub["band"] = sub[comb].astype(float).map(band)
-        acca = None
-        legs = sub[sub[tag] == "leg"]
-        if not legs.empty:
-            per_week = legs.groupby("report_date")[hit].agg(["count", "sum"])
-            acca = {"weeks": len(per_week), "won": int((per_week["count"] == per_week["sum"]).sum()),
-                    "legs": int(per_week["count"].sum()), "legs_won": int(per_week["sum"].sum())}
-        out["markets"][label] = {
+        bands = MARKET_BANDS[mk]
+        sub["band"] = sub[comb].astype(float).map(lambda p: band(p, bands))
+        out["markets"][label] = {"acca": _acca_record(df, mk, tag)}
+        out["markets"][label].update({
             "overall": _summ(sub, hit, rate),
             "by_league": {lg: _summ(x, hit, rate) for lg, x in sub.groupby("league_name")},
-            "by_band": {b: _summ(sub[sub["band"] == b], hit, rate) for _, _, b in BANDS if (sub["band"] == b).any()},
-            "acca": acca,
-        }
+            "by_band": {b: _summ(sub[sub["band"] == b], hit, rate) for _, _, b in bands if (sub["band"] == b).any()},
+        })
     return out
+
+
+def _acca_record(df: pd.DataFrame, mk: str, tag: str):
+    """Accumulator weeks, counting only weeks where every leg has a result.
+    A postponed (void) leg drops out, as bookmakers settle it; a week with a
+    leg still pending or never resolved isn't counted, so it can't show as
+    won on the strength of the legs that happened to be graded."""
+    legs = df[(df[tag] == "leg") & (df["status"] != "void")].copy()
+    if legs.empty:
+        return None
+    hit = f"{mk}_hit"
+    legs[hit] = legs[hit].astype(str).str.lower().isin(["true", "1", "1.0"])
+    weeks = won = n_legs = legs_won = open_weeks = 0
+    for _, wk in legs.groupby("report_date"):
+        if (wk["status"] != "graded").any():
+            open_weeks += 1
+            continue
+        weeks += 1
+        won += bool(wk[hit].all())
+        n_legs += len(wk)
+        legs_won += int(wk[hit].sum())
+    if not weeks and not open_weeks:
+        return None
+    return {"weeks": weeks, "won": won, "legs": n_legs, "legs_won": legs_won, "open_weeks": open_weeks}

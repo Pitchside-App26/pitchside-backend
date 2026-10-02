@@ -229,14 +229,28 @@ def _track(hit_rates, only: str | None = None):
             continue
         o = d["overall"]
         out.append(f"<div class=card><h3>{label}</h3>")
-        if d.get("acca"):
-            a = d["acca"]
-            out.append(f"<p>Accumulators landed in full: <b>{a['won']}/{a['weeks']}</b> · legs won {a['legs_won']}/{a['legs']}</p>")
+        a = d.get("acca")
+        if a and a["weeks"]:
+            wait = f" · {a['open_weeks']} more awaiting results" if a.get("open_weeks") else ""
+            out.append(f"<p>Accumulators landed in full: <b>{a['won']}/{a['weeks']}</b> · legs won "
+                       f"{a['legs_won']}/{a['legs']}{wait}</p>")
+        elif a and a.get("open_weeks"):
+            out.append("<p class=sub>Accumulator: still waiting for every leg's result before it counts.</p>")
         out.append(f"<p>Every fixture covered: <b>{o['hits']}/{o['n']}</b> ({_p0(o['hit_pct'])}) v league average "
                    f"{_p0(o['league_avg_pct'])}</p>")
         out.append("<p class=label>By combined-% band</p>" + _rates_table(d["by_band"], "Band"))
         out.append("<p class=label>By league</p>" + _rates_table(d["by_league"], "League") + "</div>")
     return "".join(out)
+
+
+def _track_marker(mk):
+    return f"<!--TRACK:{mk}-->", f"<!--/TRACK:{mk}-->"
+
+
+def track_line(hit_rates, mk):
+    """The marked track-record line for one market's section."""
+    a, b = _track_marker(mk)
+    return a + _track_line(hit_rates, MARKET_META[mk][2]) + b
 
 
 def _track_line(hit_rates, label):
@@ -401,7 +415,7 @@ def html(report) -> str:
     secs = []
     for mk in ("o15", "gibh"):
         secs.append(f"<section class=sec id=sec-{mk}>{''.join(banners)}<h2>{MARKET_META[mk][0]}</h2>{_acca(report, mk)}"
-                    f"{_track_line(hr, MARKET_META[mk][2])}{_fixture_list(report, mk)}</section>")
+                    f"{track_line(hr, mk)}{_fixture_list(report, mk)}</section>")
     secs.append(f"<section class=sec id=sec-results>{RESULTS_START}{report['results_html']}{RESULTS_END}</section>")
     secs.append(f"<section class=sec id=sec-info>{_info(report)}</section>")
     nav = "<nav class=bnav>" + "".join(
@@ -412,12 +426,23 @@ def html(report) -> str:
             f"<main>{''.join(secs)}</main>{nav}{update_button.script()}{APP_JS}</body></html>")
 
 
-def replace_results(page: str, results_html: str) -> str:
-    """Swap the Results section of an already-published page (used by the grading run)."""
-    a, b = page.find(RESULTS_START), page.find(RESULTS_END)
+def _swap(page: str, start: str, end: str, inner: str) -> str:
+    a, b = page.find(start), page.find(end)
     if a < 0 or b < 0:
-        raise ValueError("page has no Results markers")
-    return page[:a + len(RESULTS_START)] + results_html + page[b:]
+        raise ValueError(f"page has no {start} marker")
+    return page[:a + len(start)] + inner + page[b:]
+
+
+def replace_results(page: str, results_html: str, hit_rates: dict | None = None) -> str:
+    """Refresh an already-published page after grading: the Results section and,
+    given `hit_rates`, the track-record line in each market's section."""
+    page = _swap(page, RESULTS_START, RESULTS_END, results_html)
+    if hit_rates is not None:
+        for mk in ("o15", "gibh"):
+            a, b = _track_marker(mk)
+            if a in page:  # pages published before these markers existed simply keep their line
+                page = _swap(page, a, b, _track_line(hit_rates, MARKET_META[mk][2]))
+    return page
 
 
 # Old links to results.html land on the Results section instead.
