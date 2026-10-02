@@ -98,6 +98,8 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     assert "Leagues not loaded" not in html and "National League North" in html
     assert "panel-o15" in html and "panel-gibh" in html and "Suggested goal-in-both-halves accumulator" in html
     assert set(rep["accas"]) == {"o15", "gibh"}
+    assert "football-goals-report.yml" in html and "upd-go" in html          # the Update now button
+    assert "github_pat_" in html and "localStorage" in html and "ghp_" not in html
     render.csv(rep, tmp_path / "r.csv")
     assert len(pd.read_csv(tmp_path / "r.csv")) == 2 * len(rep["o15"])
     assert (tmp_path / "history.csv").exists()
@@ -119,7 +121,8 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     assert g["gibh_hit"].astype(str).str.lower().eq("true").all()
     hr = history.hit_rates()
     assert hr["markets"]["Over 1.5"]["overall"]["hit_pct"] == 100
-    assert "Track record" in render.results_page(g, hr)
+    page = render.results_page(g, hr)
+    assert "Track record" in page and "football-goals-results.yml" in page
 
 
 def test_acca_sizes():

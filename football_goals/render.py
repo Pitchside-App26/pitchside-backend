@@ -6,6 +6,8 @@ import csv as _csv
 from html import escape
 from zoneinfo import ZoneInfo
 
+from . import update_button
+
 UK = ZoneInfo("Europe/London")
 MARKETS = (("o15", "Over 1.5 goals", "over_1_5_highlight"), ("gibh", "Goal in both halves", "gibh_highlight"))
 
@@ -52,7 +54,7 @@ details summary{cursor:pointer;font-weight:600}
 .tab span{display:block;font-weight:400;font-size:.75rem;color:var(--muted);margin-top:2px}
 .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .tab[aria-selected="true"] span{color:#fff;opacity:.85}
-.js .panel[hidden]{display:none}
+.js .panel[hidden]{display:none}""" + update_button.CSS + """
 ol.acca{padding-left:1.4rem;margin:.3rem 0}ol.acca li{margin:.25rem 0}
 .pill{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 8px;font-size:.78rem;margin-left:4px}
 @media (max-width:640px){
@@ -260,7 +262,9 @@ def html(report) -> str:
             f"<div class=kpi><b>{escape(newest or '–')}</b><span>newest result in data</span></div></div>")
     body = (f"<main><h1>Goals report – {d.strftime('%A %d %B %Y')}</h1>"
             f"<p class=sub>Generated {gen}. League matches only, this season. Figures are calculated from match results, "
-            f"not copied from stats sites.</p>{''.join(alerts)}{kpis}{post_html}{odds_html}"
+            f"not copied from stats sites.</p>"
+            f"{update_button.panel('football-goals-report.yml', 'Update now', with_date=True)}"
+            f"{''.join(alerts)}{kpis}{post_html}{odds_html}"
             f"{_tabs(report)}{_data_section(report)}"
             f"<h2>How the numbers work</h2><div class=card><p class=sub>For each team: Over 1.5 % = league games with 2+ "
             f"goals ÷ games played. Goal-in-both-halves % = games with at least one goal in each half ÷ games played "
@@ -333,7 +337,8 @@ def results_page(df, hit_rates) -> str:
         body = ("<table><thead><tr><th>Fixture</th><th class=n>Score</th><th class=n>O1.5</th><th class=n>GIBH</th></tr></thead>"
                 f"<tbody>{''.join(rows)}</tbody></table>")
     title = f"Results – {last}" if last else "Results"
-    main_ = (f"<main><h1>{title}</h1><p class=sub><a href='index.html'>← Back to the latest report</a></p>{body}"
+    main_ = (f"<main><h1>{title}</h1><p class=sub><a href='index.html'>← Back to the latest report</a></p>"
+             f"{update_button.panel('football-goals-results.yml', 'Check results now', with_date=False)}{body}"
              f"{_track(hit_rates)}</main>")
     return (f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
             f"<title>Goals Results</title><style>{CSS}</style></head><body>{main_}</body></html>")
