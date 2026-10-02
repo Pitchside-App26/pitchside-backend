@@ -38,3 +38,13 @@ def test_repeat_pairings_allowed_in_scotland_only():
     sco, _ = internal_checks(League("SCO9", "Test", 2), res, st, [])
     assert any("more than 1x" in p for p in eng)
     assert not any("more than" in p for p in sco)
+
+
+def test_gp_outlier_message_is_tagged():
+    from football_goals.validate import GP_OUTLIER
+    teams = ["A", "B", "C", "D"]
+    res = [m(h, a, (1, 0), d=f"2026-0{8 + k}-{i + 10}") for k in range(2) for i, (h, a) in
+           enumerate((h, a) for h in teams for a in teams if h != a)]   # 6 games each... x2 = 12
+    res.append(m("A", "E", (1, 0), d="2026-10-01"))                     # E has played once
+    probs, _ = internal_checks(League("SCO9", "Test", 5), res, team_stats(res), [])
+    assert any(p.startswith(GP_OUTLIER) and "E 1" in p for p in probs), probs

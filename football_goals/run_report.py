@@ -20,9 +20,9 @@ from . import history, render
 from .http_cache import FetchError
 from .leagues import LEAGUES
 from .names import best_match
-from .sources import api_football, bbc, espn, football_data
+from .sources import api_football, bbc, espn, football_data, livescore
 from .stats import fixture_markets, league_rates, team_stats
-from .validate import internal_checks, table_check
+from .validate import GP_OUTLIER, internal_checks, table_check
 
 HERE = Path(__file__).parent
 log = logging.getLogger("football_goals")
@@ -67,6 +67,52 @@ def _espn_crosscheck(league, on, fixtures, clubs, notes, problems):
     return list(by_pair.values()), postponed
 
 
+LIVESCORE_MIN_AGREEMENT = 0.97
+_ls_check: dict = {}
+
+
+def livescore_accuracy(on):
+    """LiveScore v football-data.co.uk on the National League (both cover it),
+    worked out once per run. Returns (problems, notes) for the regional leagues."""
+    if on not in _ls_check:
+        try:
+            ref, _ = football_data.load_results("EC", on)
+            agree, n, diffs = livescore.agreement_with(ref, on)
+        except Exception as e:  # noqa: BLE001
+            _ls_check[on] = ([f"could not measure LiveScore's accuracy against football-data.co.uk: {e}"], [])
+        else:
+            rate = agree / n if n else 0
+            msg = (f"LiveScore accuracy check: {agree}/{n} National League results identical to football-data.co.uk "
+                   f"(full-time and half-time)")
+            if n < 20 or rate < LIVESCORE_MIN_AGREEMENT:
+                _ls_check[on] = ([msg + (" - too few to trust" if n < 20 else " - below 97%") +
+                                  (": " + "; ".join(diffs) if diffs else "")], [])
+            else:
+                _ls_check[on] = ([], [msg + (" - differences: " + "; ".join(diffs) if diffs else "")])
+            log.info(msg)
+    return _ls_check[on]
+
+
+def load_regional(league, on, notes, problems):
+    """National League North/South: LiveScore first, API-Football if LiveScore fails."""
+    try:
+        results, meta = livescore.load_results(league.regional, on)
+        fixtures, postponed = livescore.fixtures_on(league.regional, on)
+        p, n = livescore_accuracy(on)
+        problems += p
+        notes += n + ["results, fixtures and postponements from LiveScore (unofficial feed)"]
+        return results, meta, fixtures, postponed
+    except Exception as ls_err:  # noqa: BLE001
+        log.warning("%s: LiveScore failed (%s); trying API-Football", league.name, ls_err)
+        try:
+            results, meta = api_football.load_results(league.regional, on)
+            fixtures, postponed = api_football.fixtures_on(league.regional, on)
+        except Exception as af_err:  # noqa: BLE001
+            raise RuntimeError(f"LiveScore failed ({ls_err}); API-Football backup failed ({af_err})") from af_err
+        notes.append("LiveScore unavailable, so results, fixtures and postponements came from API-Football")
+        return results, meta, fixtures, postponed
+
+
 def analyse_league(league, on, fd_fixtures, cfg):
     """Everything for one league. Raises if the league can't be loaded."""
     t = cfg["thresholds"]
@@ -75,9 +121,7 @@ def analyse_league(league, on, fd_fixtures, cfg):
         results, meta = football_data.load_results(league.fd_code, on)
         fixtures = [dict(f) for f in fd_fixtures.get(league.fd_code, [])]
     else:
-        results, meta = api_football.load_results(league.regional, on)
-        fixtures, postponed = api_football.fixtures_on(league.regional, on)
-        notes.append("fixtures and postponements from API-Football")
+        results, meta, fixtures, postponed = load_regional(league, on, notes, problems)
     if not results:
         raise ValueError("no completed results found for this season")
     stats = team_stats(results)
@@ -108,6 +152,12 @@ def analyse_league(league, on, fd_fixtures, cfg):
             problems += p
             notes += n
             table_ok = not p
+            if table_ok:
+                # The published table shows the same odd games-played count, so it's
+                # real (postponements, a late-admitted club), not a data error.
+                for q in [q for q in problems if q.startswith(GP_OUTLIER)]:
+                    problems.remove(q)
+                    notes.append(q + f" - confirmed by the {source} table, so genuine, not a data error")
     except Exception as e:  # noqa: BLE001 -- a failed check is reported, not fatal
         problems.append(f"published-table check could not run: {e}")
 
@@ -197,7 +247,7 @@ def run(on: date, cfg: dict) -> dict:
             for p in res["problems"]:
                 log.warning("%s: %s", lg.name, p)
         except Exception as e:  # noqa: BLE001 -- one league failing must not sink the report
-            log.error("%s FAILED: %s", lg.name, e, exc_info=not isinstance(e, (FetchError, api_football.ApiFootballError)))
+            log.error("%s FAILED: %s", lg.name, e, exc_info=not isinstance(e, (FetchError, RuntimeError)))
             failed.append({"league": lg, "reason": str(e)})
 
     rows = [r for res in loaded for r in res["rows"]]

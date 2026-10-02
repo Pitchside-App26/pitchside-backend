@@ -1,0 +1,140 @@
+{
+"north": [
+{
+"home": "Brackley Town",
+"away": "South Shields",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 3,
+"ftag": 2,
+"hthg": 2,
+"htag": 1
+}
+],
+"south": [
+{
+"home": "Slough Town",
+"away": "Ebbsfleet United",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 1,
+"hthg": 0,
+"htag": 0
+}
+],
+"national": [
+{
+"home": "Boreham Wood",
+"away": "Kidderminster Harriers",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:00",
+"fthg": 3,
+"ftag": 1,
+"hthg": 2,
+"htag": 0
+},
+{
+"home": "AFC Fylde",
+"away": "Carlisle United",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 0,
+"ftag": 2,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "Barrow",
+"away": "Scunthorpe United",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 3,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "FC Halifax Town",
+"away": "Boston United",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 1,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "Forest Green Rovers",
+"away": "Wealdstone",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 1,
+"hthg": 1,
+"htag": 1
+},
+{
+"home": "Gateshead FC",
+"away": "Altrincham",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 0,
+"ftag": 1,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "Hartlepool United",
+"away": "Harrogate Town",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 0,
+"ftag": 1,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Hornchurch",
+"away": "Aldershot Town",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 1,
+"hthg": 1,
+"htag": 1
+},
+{
+"home": "Woking",
+"away": "Solihull Moors",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 4,
+"hthg": 2,
+"htag": 3
+},
+{
+"home": "Yeovil Town",
+"away": "Worthing",
+"status": "FT",
+"date": "2026-09-29",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 1,
+"hthg": 0,
+"htag": 1
+}
+]
+}
