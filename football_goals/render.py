@@ -45,6 +45,7 @@ tr.hi td{background:var(--hi)}tr.hi td.comb{color:var(--hi-ink);font-weight:700}
 .gp{color:var(--muted);font-size:.75rem}
 .lg{color:var(--muted);font-size:.78rem}
 details summary{cursor:pointer;font-weight:600}
+.mob{display:none}
 ol.acca{padding-left:1.4rem;margin:.3rem 0}ol.acca li{margin:.25rem 0}
 .pill{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 8px;font-size:.78rem;margin-left:4px}
 @media (max-width:640px){
@@ -57,6 +58,7 @@ ol.acca{padding-left:1.4rem;margin:.3rem 0}ol.acca li{margin:.25rem 0}
  table.rt td::before{content:attr(data-l);color:var(--muted);font-size:.8rem;text-align:left}
  table.rt td.fx{display:block;text-align:left;font-weight:600;font-size:1rem}table.rt td.fx::before{content:none}
  table.rt td.fl{display:block;text-align:left}table.rt td.fl::before{content:none}
+ table.rt td.lgcol{display:none}.mob{display:block}
 }
 """
 
@@ -79,11 +81,11 @@ def _market_table(report, mk, title, thr_key):
             price = f"<td class=n data-l='Price'>{p['price']:.2f}<div class=gp>{escape(p['book'])}</div></td>" if p else "<td class=n data-l='Price'>–</td>"
         flags = "".join(f"<span class=flag>{escape(f)}</span>" for f in r["flags"])
         body.append(
-            f"<tr class='{'hi' if hi else ''}'><td data-l='League' class=lg>{escape(r['league_name'])}</td>"
-            f"<td class=fx>{escape(_fixture(r))}<div class='lg' style='font-weight:400'>{escape(r['league_name'])}</div></td>"
+            f"<tr class='{'hi' if hi else ''}'><td data-l='League' class='lg lgcol'>{escape(r['league_name'])}</td>"
+            f"<td class=fx>{escape(_fixture(r))}<div class='lg mob' style='font-weight:400'>{escape(r['league_name'])}</div></td>"
             f"<td data-l='Kick-off'>{escape(r['kickoff'] or '–')}</td>"
-            f"<td class=n data-l='Home %'>{pct(m['home_pct'])} <span class=gp>{m['home_gp']}g</span></td>"
-            f"<td class=n data-l='Away %'>{pct(m['away_pct'])} <span class=gp>{m['away_gp']}g</span></td>"
+            f"<td class=n data-l='Home %'><span>{pct(m['home_pct'])} <span class=gp>{m['home_gp']}g</span></span></td>"
+            f"<td class=n data-l='Away %'><span>{pct(m['away_pct'])} <span class=gp>{m['away_gp']}g</span></span></td>"
             f"<td class='n comb' data-l='Combined %'>{pct(m['combined_pct'], 1)}</td>"
             f"<td class=n data-l='Venue-split %'>{pct(m['venue_pct'], 1)}</td>{price}"
             f"<td class=fl data-l='Flags'>{flags}</td></tr>")
