@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# Football goals report: settings you can edit.
+# Edit this file on GitHub (pencil icon), then "Commit changes". The next run
+# uses the new values. Percentages are written as whole numbers (80 = 80%).
+# ---------------------------------------------------------------------------
+
+thresholds:
+  over_1_5_highlight: 80        # Over 1.5 combined % at or above this is highlighted
+  gibh_highlight: 65            # Goal-in-both-halves combined % at or above this is highlighted
+  min_games: 6                  # teams with fewer league games than this get a flag
+
+accumulator:
+  min_legs: 16                  # suggested fold size, smallest
+  max_legs: 18                  # suggested fold size, largest
+  reserves: 4                   # reserves listed below the fold (3-4)
+  min_combined_pct: 80          # a fixture needs at least this Over 1.5 combined % to be considered
+  require_min_games: true       # leave out fixtures where either team has fewer than min_games
+
+odds:
+  enabled: false                # set to true to add prices (needs the ODDS_API_KEY secret)
+  min_price: 1.0                # only include a leg if its Over 1.5 price is better than this (1.0 = no filter)
+  bookmaker_region: uk
+
+data:
+  max_results_age_days: 9       # warn if a league's newest result is older than this before the report date
+  # If the CSV is behind a cross-checked source by more than this many matches, the league is marked stale.
+  max_missing_results: 0
