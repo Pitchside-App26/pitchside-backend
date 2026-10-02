@@ -6,7 +6,8 @@ import pandas as pd
 import pytest
 
 from football_goals import grade_results, history, render, run_report
-from football_goals.sources import api_football, bbc, espn, football_data
+from football_goals.sources import api_football, bbc, espn, football_data, livescore
+from football_goals import run_report as rr
 
 DAY = date(2026, 10, 3)
 
@@ -62,6 +63,20 @@ def fake(monkeypatch, tmp_path):
     monkeypatch.setattr(espn, "standings", standings)
     monkeypatch.setattr(bbc, "table", lambda slug: {})
     monkeypatch.setenv("API_FOOTBALL_KEY", "")
+    region_key = {"north": "ENG6N", "south": "ENG6S"}
+
+    def ls_results(region, on):
+        rows = [r for r in data[region_key[region]][1] if r["date"] < on.isoformat()]
+        return rows, {"source": "LiveScore", "latest_result": max(r["date"] for r in rows), "last_modified": None}
+
+    def ls_fixtures(region, on):
+        t = data[region_key[region]][0]
+        return [{"home": t[i], "away": t[i + 1], "kickoff": "15:00"} for i in range(2, len(t), 2)], \
+               [{"home": t[0], "away": t[1], "status": "Postp."}]
+    monkeypatch.setattr(livescore, "load_results", ls_results)
+    monkeypatch.setattr(livescore, "fixtures_on", ls_fixtures)
+    monkeypatch.setattr(livescore, "agreement_with", lambda ref, on: (130, 132, ["x"]))
+    rr._ls_check.clear()
     monkeypatch.setattr(history, "HISTORY", tmp_path / "history.csv")
     return data
 
@@ -69,17 +84,18 @@ def fake(monkeypatch, tmp_path):
 def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     cfg = run_report.load_config()
     rep = run_report.run(DAY, cfg)
-    names = {f["league"].name for f in rep["failed"]}
-    assert names == {"National League North", "National League South"}
-    assert all("API_FOOTBALL_KEY" in f["reason"] for f in rep["failed"])
-    assert len(rep["postponed"]) == 7  # one per ESPN-covered league (ENG1-5, SCO1-2)
+    assert rep["failed"] == []
+    assert {r["league"] for r in rep["o15"]} >= {"ENG6N", "ENG6S"}
+    assert len(rep["postponed"]) == 9  # one per ESPN-covered league (ENG1-5, SCO1-2) + North + South
+    north = next(res for res in rep["loaded"] if res["league"].key == "ENG6N")
+    assert any("130/132" in n for n in north["notes"])
     # postponed fixtures are gone from the tables
     assert not any(r["home"].endswith("Club 0") and r["away"].endswith("Club 1") and r["league"] in
                    {"ENG1", "ENG2", "ENG3", "ENG4", "ENG5", "SCO1", "SCO2"} for r in rep["o15"])
     combs = [r["o15"]["combined_pct"] for r in rep["o15"]]
     assert combs == sorted(combs, reverse=True)
     html = render.html(rep)
-    assert "Leagues not loaded" in html and "National League North" in html
+    assert "Leagues not loaded" not in html and "National League North" in html
     render.csv(rep, tmp_path / "r.csv")
     assert len(pd.read_csv(tmp_path / "r.csv")) == 2 * len(rep["o15"])
     assert (tmp_path / "history.csv").exists()
@@ -92,6 +108,7 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
                  "hthg": 1, "htag": 0} for _, r in h.iterrows()]
         return rows, {}
     monkeypatch.setattr(football_data, "load_results", load_results_after)
+    monkeypatch.setattr(livescore, "result_on", lambda region, on, h, a: {"fthg": 1, "ftag": 1, "hthg": 1, "htag": 0})
     counts = grade_results.grade(today=date(2026, 10, 4))
     assert counts["graded"] == len(h)
     g = history.load()

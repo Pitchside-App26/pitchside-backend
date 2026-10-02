@@ -113,7 +113,7 @@ the selection isn't adding anything.
 | Premier League, Championship, League One, League Two, National League | football-data.co.uk | football-data.co.uk, cross-checked with ESPN | ESPN |
 | Scottish Premiership, Championship | football-data.co.uk | football-data.co.uk, cross-checked with ESPN | ESPN |
 | Scottish League One, League Two | football-data.co.uk | football-data.co.uk only (ESPN doesn't cover them) | BBC Sport |
-| National League North, South | API-Football (needs a key) | API-Football | BBC Sport |
+| National League North, South | LiveScore (backup: API-Football, paid) | LiveScore | BBC Sport |
 
 - **football-data.co.uk** is free, has kept the same CSV format for over 20
   years, and includes half-time scores. In October 2026 every row in all 9 of
@@ -123,9 +123,18 @@ the selection isn't adding anything.
   scored and conceded figures match. That match proves no recent result is
   missing.
 - **BBC Sport** (free) supplies the league table for the leagues ESPN doesn't cover.
-- **API-Football** is the only source found that has half-time scores for
-  National League North and South *and* can be reached from GitHub. It needs a
-  key (see below).
+- **LiveScore** is the only free source found that has half-time scores for
+  National League North and South *and* can be reached from GitHub. It is an
+  unofficial feed, so the report checks it every run:
+  - it compares LiveScore's National League results with football-data.co.uk's,
+    full-time and half-time, and shows the match rate in the data checks;
+  - if fewer than 97% match, North/South are flagged and kept out of the accumulator;
+  - North/South are also checked against BBC's table.
+
+  Finished match days are saved in `data/livescore/`, so each day is only downloaded once.
+- **API-Football** is the backup for North/South. It is used only if LiveScore
+  fails, and only with a paid key: its free plan doesn't include the current season.
+- **Sofascore** is not used: it blocks GitHub's servers (403).
 - **SoccerSTATS** and **worldfootball.net** are not used. Both block GitHub's
   servers ("Just a moment…" Cloudflare page, error 403), so they can't be used
   automatically.
@@ -151,23 +160,15 @@ the selection isn't adding anything.
 
 ---
 
-## National League North and South (needs a free key)
+## National League North and South
 
-These two leagues stay off the report until there is an `API_FOOTBALL_KEY` secret.
+These come from LiveScore and need no key.
 
-1. Sign up at https://dashboard.api-football.com/register. It's free and gives 100 requests a day; each run uses about 5.
-2. Copy your API key from the dashboard.
-3. On GitHub, open the repo's **Settings → Secrets and variables → Actions → New repository secret**.
-4. Set the name to `API_FOOTBALL_KEY` and paste the key as the value. Save.
-
-The next run picks it up.
-
-**If the free plan doesn't cover the current season**, the report will say so
-at the top. API-Football's free plan has limited which seasons it serves in
-the past. You would then need the cheapest paid plan, around $19/month. Check
-the price on their pricing page before paying.
-
-Keys only ever live in GitHub secrets, never in the code.
+If LiveScore ever stops working, the report says so at the top and tries
+API-Football instead. API-Football's free plan doesn't cover the current
+season, so that backup only works with a paid plan (around $19/month). The
+`API_FOOTBALL_KEY` secret is already set up; upgrading on the API-Football
+website is all it would take.
 
 ---
 

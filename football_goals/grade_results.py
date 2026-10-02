@@ -20,7 +20,7 @@ from . import history, render
 from .leagues import BY_KEY
 from .names import best_match
 from .run_report import setup_logging
-from .sources import api_football, espn, football_data
+from .sources import api_football, espn, football_data, livescore
 from .stats import is_goal_in_both_halves, is_over_1_5
 
 log = logging.getLogger("football_goals.grade")
@@ -76,13 +76,15 @@ def grade(today: date | None = None) -> dict:
                     found[k], source[k] = v, "ESPN"
         if missing and league.regional:
             for h, a in missing:
-                try:
-                    v = api_football.result_on(league.regional, day, h, a)
-                except Exception as e:  # noqa: BLE001
-                    log.warning("%s: API-Football unavailable (%s)", league.name, e)
-                    break
-                if v is not None:
-                    found[(h, a)], source[(h, a)] = v, "API-Football"
+                for name, src in (("LiveScore", livescore), ("API-Football", api_football)):
+                    try:
+                        v = src.result_on(league.regional, day, h, a)
+                    except Exception as e:  # noqa: BLE001
+                        log.warning("%s: %s unavailable (%s)", league.name, name, e)
+                        continue
+                    if v is not None:
+                        found[(h, a)], source[(h, a)] = v, name
+                        break
         for idx, row in grp.iterrows():
             k = (row["home"], row["away"])
             res = found.get(k)
