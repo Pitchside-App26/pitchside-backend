@@ -113,11 +113,12 @@ def _acca(report, mk):
     a = report["accas"][mk]
     odds = report["odds"]["enabled"] and mk == "o15"  # no bookmaker prices for GIBH
 
-    def li(r):
+    def li(r, mark=""):
         p = r.get("price")
         price = f" <span class=pill>{p['price']:.2f}</span>" if odds and p else ""
+        tag = f" <span class=flag>{escape(mark)}</span>" if mark else ""
         return (f"<li><b>{escape(_fixture(r))}</b> <span class=lg>{escape(r['league_name'])}, {escape(r['kickoff'] or '')}</span>"
-                f" <span class=pill>{pct(r[mk]['combined_pct'], 1)}</span>{price}</li>")
+                f" <span class=pill>{pct(r[mk]['combined_pct'], 1)}</span>{price}{tag}</li>")
     out = [f"<h2>{ACCA_TITLE[mk]}</h2><div class=card><p>{escape(a['message'])}</p>"]
     if a["legs"]:
         out.append(f"<ol class=acca>{''.join(li(r) for r in a['legs'])}</ol>")
@@ -126,9 +127,14 @@ def _acca(report, mk):
             for r in a["legs"]:
                 tot *= r["price"]["price"]
             out.append(f"<p class=sub>Combined price at best quoted prices: {tot:.2f}</p>")
-    if a["reserves"]:
+    below = a.get("below_line") or []
+    if a["reserves"] or below:
         label = "Reserves" if a["legs"] else "Qualifying fixtures"
-        out.append(f"<p><b>{label}</b></p><ol class=acca>{''.join(li(r) for r in a['reserves'])}</ol>")
+        items = "".join(li(r) for r in a["reserves"])
+        items += "".join(li(r, f"below {a.get('min_pct', '')}%") for r in below)
+        out.append(f"<p><b>{label}</b> <span class=sub>in order: use the top one first</span></p><ol class=acca>{items}</ol>")
+    if a.get("note"):
+        out.append(f"<div class='alert warn' style='margin:.6rem 0 0'>{escape(a['note'])}</div>")
     if mk == "gibh" and report["odds"]["enabled"]:
         out.append("<p class=sub>Prices are only fetched for Over 1.5, so this tab has none.</p>")
     out.append("</div>")

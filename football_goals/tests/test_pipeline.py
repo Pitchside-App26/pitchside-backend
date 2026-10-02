@@ -101,6 +101,7 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     html = render.html(rep)
     assert "Leagues not loaded" not in html and "National League North" in html
     assert "panel-o15" in html and "panel-gibh" in html and "Suggested goal-in-both-halves accumulator" in html
+    assert html.count("SpreadEx acca boost") == 1                                # Over 1.5 card only
     assert set(rep["accas"]) == {"o15", "gibh"}
     assert "football-goals-report.yml" in html and "upd-go" in html          # the Update now button
     assert "github_pat_" in html and "localStorage" in html and "ghp_" not in html
@@ -136,11 +137,31 @@ def test_acca_sizes():
         return {"o15": {"combined_pct": p, "venue_pct": p, "home_gp": 8, "away_gp": 8},
                 "data_problem": False, "low_games": False}
     a = run_report.build_acca([row(0.9) for _ in range(25)], cfg, "o15", False)
-    assert (len(a["legs"]), len(a["reserves"])) == (18, 4)
+    assert (len(a["legs"]), len(a["reserves"]), len(a["below_line"])) == (18, 6, 0)
     a = run_report.build_acca([row(0.9) for _ in range(18)], cfg, "o15", False)
     assert (len(a["legs"]), len(a["reserves"])) == (16, 2)
+    assert "SpreadEx" in a["note"]
     a = run_report.build_acca([row(0.9) for _ in range(5)] + [row(0.5)], cfg, "o15", False)
     assert a["legs"] == [] and len(a["reserves"]) == 5 and "Only 5 fixtures qualify" in a["message"]
+
+
+def test_reserves_topped_up_below_the_line():
+    cfg = run_report.load_config()
+
+    def row(p, low=False):
+        return {"o15": {"combined_pct": p, "venue_pct": p, "home_gp": 8, "away_gp": 8},
+                "data_problem": False, "low_games": low}
+    rows = [row(0.9) for _ in range(17)] + [row(0.79), row(0.6, low=True), row(0.78), row(0.5), row(0.77), row(0.76), row(0.4)]
+    a = run_report.build_acca(rows, cfg, "o15", False)
+    assert (len(a["legs"]), len(a["reserves"])) == (16, 1)
+    # 5 more, best first, skipping the team with too few games
+    assert [r["o15"]["combined_pct"] for r in a["below_line"]] == [0.79, 0.78, 0.77, 0.76, 0.5]
+    assert all(r["acca"] == "below_line" for r in a["below_line"])
+    assert "plus 5 below the line (under 80%)" in a["message"]
+    cfg["accumulator"]["fill_reserves_below_line"] = False
+    for r in rows:
+        r.pop("acca", None)
+    assert run_report.build_acca(rows, cfg, "o15", False)["below_line"] == []
 
 
 def test_gibh_acca_uses_its_own_settings():
