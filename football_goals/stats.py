@@ -47,6 +47,8 @@ class TeamStats:
     all: Split = field(default_factory=Split)
     home: Split = field(default_factory=Split)
     away: Split = field(default_factory=Split)
+    gf: int = 0  # goals scored, for checking against published tables
+    ga: int = 0
 
 
 def team_stats(results) -> dict[str, TeamStats]:
@@ -56,6 +58,9 @@ def team_stats(results) -> dict[str, TeamStats]:
             ts = out.setdefault(side, TeamStats(side))
             ts.all.add(m)
             getattr(ts, venue).add(m)
+            scored, conceded = (m["fthg"], m["ftag"]) if venue == "home" else (m["ftag"], m["fthg"])
+            ts.gf += int(scored)
+            ts.ga += int(conceded)
     return out
 
 

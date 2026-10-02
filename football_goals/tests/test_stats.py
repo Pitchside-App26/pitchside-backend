@@ -82,3 +82,11 @@ def test_fixture_with_unknown_team():
     o = fixture_markets(ts["A"], None, "o15", min_games=1)
     assert o["combined_pct"] is None
     assert o["flags"] == ["away team has no games"]
+
+
+def test_goals_for_and_against():
+    ts = team_stats(RESULTS)
+    # A: 0-0 home, 1-1 home, lost 2-0 away -> scored 1, conceded 3
+    assert (ts["A"].gf, ts["A"].ga) == (1, 3)
+    # B: 0-0 away, won 2-0 home, lost 2-0 away -> scored 2, conceded 2
+    assert (ts["B"].gf, ts["B"].ga) == (2, 2)
