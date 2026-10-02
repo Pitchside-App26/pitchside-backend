@@ -59,7 +59,7 @@ def _summ(g: pd.DataFrame, hit: str, rate: str) -> dict:
             "league_avg_pct": float(g[rate].mean()) if n else None}
 
 
-def hit_rates(df: pd.DataFrame | None = None) -> dict:
+def hit_rates(df: pd.DataFrame | None = None, cfg: dict | None = None) -> dict:
     """Running hit rates from graded rows, each set against the league average
     (the season-to-date league rate at the time of each report)."""
     df = load() if df is None else df
@@ -71,6 +71,9 @@ def hit_rates(df: pd.DataFrame | None = None) -> dict:
     for mk, label, tag in (("o15", "Over 1.5", "acca"), ("gibh", "Goal in both halves", "gibh_acca")):
         hit, rate, comb = f"{mk}_hit", f"{mk}_league_rate", f"{mk}_combined"
         sub = g.dropna(subset=[comb]).copy()
+        if cfg is not None:  # only the fixtures this market's tab would have shown
+            from .scope import in_scope
+            sub = sub[[in_scope(cfg, mk, lg, ko) for lg, ko in zip(sub["league_name"], sub["kickoff"])]]
         sub[hit] = sub[hit].astype(str).str.lower().isin(["true", "1", "1.0"])
         sub["band"] = sub[comb].astype(float).map(band)
         acca = None

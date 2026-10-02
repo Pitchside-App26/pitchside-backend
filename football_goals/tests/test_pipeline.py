@@ -45,7 +45,8 @@ def fake(monkeypatch, tmp_path):
         out = {}
         for code, key in fd.items():
             t = data[key][0]
-            out[code] = [{"home": t[i], "away": t[i + 1], "kickoff": "15:00"} for i in range(0, len(t), 2)]
+            out[code] = [{"home": t[i], "away": t[i + 1], "kickoff": "12:30" if (code, i) == ("E3", 2) else "15:00"}
+                         for i in range(0, len(t), 2)]
         return out, {}
 
     def scoreboard(slug, on):
@@ -86,6 +87,9 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     rep = run_report.run(DAY, cfg)
     assert rep["failed"] == []
     assert {r["league"] for r in rep["o15"]} >= {"ENG6N", "ENG6S"}
+    assert not {r["league"] for r in rep["gibh"]} & {"ENG6N", "ENG6S"}        # no GIBH market for these
+    assert all(r["kickoff"] == "15:00" for r in rep["o15"] + rep["gibh"])
+    assert rep["fixtures_total"] == len(rep["o15"]) + 1                          # the 12:30 game is out
     assert len(rep["postponed"]) == 9  # one per ESPN-covered league (ENG1-5, SCO1-2) + North + South
     north = next(res for res in rep["loaded"] if res["league"].key == "ENG6N")
     assert any("130/132" in n for n in north["notes"])
@@ -101,10 +105,10 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     assert "football-goals-report.yml" in html and "upd-go" in html          # the Update now button
     assert "github_pat_" in html and "localStorage" in html and "ghp_" not in html
     render.csv(rep, tmp_path / "r.csv")
-    assert len(pd.read_csv(tmp_path / "r.csv")) == 2 * len(rep["o15"])
+    assert len(pd.read_csv(tmp_path / "r.csv")) == len(rep["o15"]) + len(rep["gibh"])
     assert (tmp_path / "history.csv").exists()
     h = history.load()
-    assert len(h) == len(rep["o15"]) and set(h["status"]) == {"pending"}
+    assert len(h) == rep["fixtures_total"] and set(h["status"]) == {"pending"}   # history keeps everything
 
     # Grade: pretend football-data now has the results for 3 Oct
     def load_results_after(code, on):

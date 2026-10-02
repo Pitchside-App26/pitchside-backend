@@ -6,7 +6,7 @@ import csv as _csv
 from html import escape
 from zoneinfo import ZoneInfo
 
-from . import update_button
+from . import scope, update_button
 
 UK = ZoneInfo("Europe/London")
 MARKETS = (("o15", "Over 1.5 goals", "over_1_5_highlight"), ("gibh", "Goal in both halves", "gibh_highlight"))
@@ -100,7 +100,8 @@ def _market_table(report, mk, title, thr_key):
             f"<td class=fl data-l='Flags'>{flags}</td></tr>")
     n_hi = sum(1 for r in rows if r[mk]["combined_pct"] is not None and r[mk]["combined_pct"] >= thr)
     return (f"<h2>{title} <span class=pill>{n_hi} at {cfg['thresholds'][thr_key]}%+</span></h2>"
-            f"<p class=sub>Sorted by combined %. Highlighted rows are at or above {cfg['thresholds'][thr_key]}%. "
+            f"<p class=sub><b>Covers: {escape(scope.describe(cfg, mk))}.</b> "
+            f"Sorted by combined %. Highlighted rows are at or above {cfg['thresholds'][thr_key]}%. "
             f"Venue-split = home team's home games and away team's away games.</p>"
             f"<table class=rt><thead>{head}</thead><tbody>{''.join(body) or '<tr><td>No fixtures.</td></tr>'}</tbody></table>")
 
@@ -255,7 +256,7 @@ def html(report) -> str:
     if odds["enabled"]:
         odds_html = (f"<p class=sub>Prices (best UK price, Over 1.5) available for: {escape(', '.join(odds['priced_leagues']) or 'none')}. "
                      f"No prices for: {escape(', '.join(odds['unpriced_leagues']) or 'none')}.</p>")
-    n_fx = len(report["o15"])
+    n_fx = report.get("fixtures_total", len(report["o15"]))
     kpis = (f"<div class=kpis><div class=kpi><b>{n_fx}</b><span>fixtures analysed</span></div>"
             f"<div class=kpi><b>{len(report['loaded'])}/{len(report['loaded']) + len(report['failed'])}</b><span>leagues loaded</span></div>"
             f"<div class=kpi><b>{len(post)}</b><span>postponed</span></div>"
@@ -313,7 +314,7 @@ def markdown_summary(report) -> str:
     return "\n".join(lines) + "\n"
 
 
-def results_page(df, hit_rates) -> str:
+def results_page(df, hit_rates, cfg: dict | None = None) -> str:
     """Last graded weekend fixture by fixture, plus the running record."""
     g = df[df["status"].isin(["graded", "void"])]
     if g.empty:
@@ -328,12 +329,15 @@ def results_page(df, hit_rates) -> str:
                 rows.append(f"<tr><td>{escape(r.home)} v {escape(r.away)}<div class=lg>{escape(r.league_name)}</div></td>"
                             f"<td colspan=4>postponed – void</td></tr>")
                 continue
-            tick = lambda x: "✅" if str(x).lower() in ("true", "1", "1.0") else "❌"  # noqa: E731
+            def tick(mk, hit, r=r):  # "–" = that market didn't cover this fixture
+                if cfg is not None and not scope.in_scope(cfg, mk, r.league_name, r.kickoff):
+                    return "–"
+                return "✅" if str(hit).lower() in ("true", "1", "1.0") else "❌"
             rows.append(f"<tr><td>{escape(r.home)} v {escape(r.away)}<div class=lg>{escape(r.league_name)}"
                         f"{' · O1.5 acca ' + escape(str(r.acca)) if isinstance(r.acca, str) and r.acca else ''}"
                         f"{' · GIBH acca ' + escape(str(r.gibh_acca)) if isinstance(r.gibh_acca, str) and r.gibh_acca else ''}</div></td>"
                         f"<td class=n>{r.fthg}-{r.ftag} <span class=gp>HT {r.hthg}-{r.htag}</span></td>"
-                        f"<td class=n>{r.o15_combined:.0f}% {tick(r.o15_hit)}</td><td class=n>{r.gibh_combined:.0f}% {tick(r.gibh_hit)}</td></tr>")
+                        f"<td class=n>{r.o15_combined:.0f}% {tick('o15', r.o15_hit)}</td><td class=n>{r.gibh_combined:.0f}% {tick('gibh', r.gibh_hit)}</td></tr>")
         body = ("<table><thead><tr><th>Fixture</th><th class=n>Score</th><th class=n>O1.5</th><th class=n>GIBH</th></tr></thead>"
                 f"<tbody>{''.join(rows)}</tbody></table>")
     title = f"Results – {last}" if last else "Results"

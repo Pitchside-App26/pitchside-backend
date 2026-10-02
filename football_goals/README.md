@@ -25,6 +25,14 @@ halves**. Tap one to switch. Each tab has:
 - its own ranked table;
 - its own track record.
 
+**Which fixtures each tab covers:**
+- **Both tabs:** only 3pm (15:00 UK) kick-offs.
+- **Goal in both halves:** also leaves out National League North and South, because there's no market for them.
+- **What isn't affected:**
+  - every fixture is still analysed and saved in the history;
+  - each tab's track record counts only the fixtures that tab would have shown;
+  - the summary count of fixtures analysed still includes them all.
+
 The report remembers which tab you used last. To bookmark a tab directly, add
 `#gibh` or `#o15` to the end of the address, e.g.
 https://pitchside-app26.github.io/pitchside-backend/goals/#gibh
@@ -80,6 +88,9 @@ The next run uses the new value. The settings are:
 
 | Setting | What it does | Default |
 |---|---|---|
+| `markets:` `over_1_5:` `kickoffs` | UK kick-off times the Over 1.5 tab covers (`[]` = all) | `["15:00"]` |
+| `markets:` `gibh:` `kickoffs` | UK kick-off times the GIBH tab covers | `["15:00"]` |
+| `markets:` `gibh:` `exclude_leagues` | Leagues left off the GIBH tab | National League North, South |
 | `over_1_5_highlight` | Over 1.5 combined % at or above this is highlighted | 80 |
 | `gibh_highlight` | GIBH combined % at or above this is highlighted | 65 |
 | `min_games` | Teams with fewer league games than this are flagged | 6 |
