@@ -46,7 +46,7 @@ at the top of the report page:
 1. **First time on a phone or browser:** set up one-tap updates (about 2 minutes). Tap the **⚙︎** next to the
    button, follow the five steps shown, paste the token and tap **Save**. The token:
    - is stored only in that browser, never in the code or on the page;
-   - can only start and check runs on this repo. It can't change code or read your other secrets.
+   - can only manage this repo's workflow runs (start, check, cancel). It can't change code or read your secrets.
 2. **After that:**
    - Optionally pick a date (leave it blank for next Saturday), then tap **↻ Update now**.
    - The button shows the run's progress and reloads the page when the new report is up. It takes about a minute.

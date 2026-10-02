@@ -40,7 +40,8 @@ def panel(workflow: str, label: str, with_date: bool) -> str:
  <div class=upd>
   <button id=upd-go>↻ {escape(label)}</button>{date_input}
   <button class=ghost id=upd-setup-btn>⚙︎</button>
-  <div class=st id=upd-st>Takes about a minute. The page reloads itself when it's done.</div>
+  <div class=st id=upd-st>{'Leave the date blank for next Saturday. ' if with_date else ''}Takes about a minute;
+   the page reloads itself when it's done.</div>
  </div>
  <div class=upd-setup id=upd-setup>
   <p><b>One-time setup for one-tap updates</b> (on each phone or browser you use):</p>
@@ -53,8 +54,8 @@ def panel(workflow: str, label: str, with_date: bool) -> str:
   </ol>
   <input type=password id=upd-token placeholder="Paste token (starts github_pat_)" autocomplete=off>
   <div class=upd><button id=upd-save>Save</button><button class=ghost id=upd-forget>Forget saved token</button></div>
-  <p class=sub>The token stays in this browser only and is sent only to GitHub. It can start and check
-  runs of this repo's workflows, nothing else. No setup? <a href="{runs_page}" target=_blank rel=noopener>Open the
+  <p class=sub>The token stays in this browser only and is sent only to GitHub. It can only manage this
+  repo's workflow runs (start, check, cancel): it can't change code or read your secrets. No setup? <a href="{runs_page}" target=_blank rel=noopener>Open the
   Run workflow screen on GitHub</a> instead.</p>
  </div>
 </div>
