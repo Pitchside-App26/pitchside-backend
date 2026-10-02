@@ -100,10 +100,12 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     assert combs == sorted(combs, reverse=True)
     html = render.html(rep)
     assert "Leagues not loaded" not in html and "National League North" in html
-    assert "panel-o15" in html and "panel-gibh" in html and "Suggested goal-in-both-halves accumulator" in html
+    for sec in ("id=sec-o15", "id=sec-gibh", "id=sec-results", "id=sec-info", "class=bnav"):
+        assert sec in html, sec
+    assert "GIBH accumulator" in html and "Over 1.5 accumulator" in html
     assert html.count("SpreadEx acca boost") == 1                                # Over 1.5 card only
     assert set(rep["accas"]) == {"o15", "gibh"}
-    assert "football-goals-report.yml" in html and "upd-go" in html          # the Update now button
+    assert "data-wf='football-goals-report.yml'" in html and "data-wf='football-goals-results.yml'" in html
     assert "github_pat_" in html and "localStorage" in html and "ghp_" not in html
     render.csv(rep, tmp_path / "r.csv")
     assert len(pd.read_csv(tmp_path / "r.csv")) == len(rep["o15"]) + len(rep["gibh"])
@@ -126,8 +128,11 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     assert g["gibh_hit"].astype(str).str.lower().eq("true").all()
     hr = history.hit_rates()
     assert hr["markets"]["Over 1.5"]["overall"]["hit_pct"] == 100
-    page = render.results_page(g, hr)
-    assert "Track record" in page and "football-goals-results.yml" in page
+    # the grading run swaps just the Results section of the published page
+    fresh = render.results_section(g, hr, cfg)
+    page = render.replace_results(html, fresh)
+    assert fresh in page and "Postponed" in page and page.count(render.RESULTS_START) == 1
+    assert "Track record" in fresh and "football-goals-results.yml" in fresh
 
 
 def test_acca_sizes():
@@ -180,3 +185,21 @@ def test_next_saturday():
     assert run_report.next_saturday(date(2026, 10, 2)) == date(2026, 10, 3)
     assert run_report.next_saturday(date(2026, 10, 3)) == date(2026, 10, 3)
     assert run_report.next_saturday(date(2026, 10, 4)) == date(2026, 10, 10)
+
+
+def test_accumulator_markup_is_ready_for_a_checklist():
+    """Each leg/reserve carries a stable fixture key and role, for a future tick-and-swap bet slip."""
+    from datetime import datetime, timezone
+    cfg = run_report.load_config()
+
+    def row(h, p):
+        m = {"combined_pct": p, "venue_pct": p, "home_pct": p, "away_pct": p, "home_gp": 8, "away_gp": 8, "flags": []}
+        return {"home": h, "away": h + " B", "league_name": "League Two", "kickoff": "15:00", "o15": m, "gibh": m,
+                "flags": [], "data_problem": False, "low_games": False}
+    rows = [row(f"T{i}", 0.9 - i / 1000) for i in range(17)]
+    rep = {"date": DAY, "config": cfg, "odds": {"enabled": False}, "o15": rows, "gibh": [],
+           "accas": {"o15": run_report.build_acca(rows, cfg, "o15", False), "gibh": run_report.build_acca([], cfg, "gibh", False)}}
+    out = render._acca(rep, "o15")
+    assert out.count("data-role=leg>") == 16 and out.count("data-role=reserve>") == 1
+    assert "data-key='2026-10-03|T0|T0 B'" in out
+    assert "SpreadEx acca boost" in out

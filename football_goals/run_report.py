@@ -315,11 +315,13 @@ def run(on: date, cfg: dict) -> dict:
             })
     history.record_report(hist_rows, on.isoformat())
 
+    hit_rates = history.hit_rates(cfg=cfg)
     return {
         "date": on, "generated": datetime.now(timezone.utc), "loaded": loaded, "failed": failed,
         "o15": o15, "gibh": gibh, "accas": accas, "odds": odds_info, "fixtures_meta": fx_meta,
         "postponed": [dict(p, league=res["league"].name) for res in loaded for p in res["postponed"]],
-        "hit_rates": history.hit_rates(cfg=cfg), "config": cfg, "fixtures_total": len(rows),
+        "hit_rates": hit_rates, "config": cfg, "fixtures_total": len(rows),
+        "results_html": render.results_section(history.load(), hit_rates, cfg),
     }
 
 
@@ -334,6 +336,7 @@ def main(argv=None) -> int:
     site.mkdir(exist_ok=True)
     (site / "index.html").write_text(render.html(report), encoding="utf-8")
     render.csv(report, site / "report.csv")
+    (site / "results.html").write_text(render.REDIRECT, encoding="utf-8")  # old bookmarks
     md = render.markdown_summary(report)
     print("\n" + md)
     if os.environ.get("GITHUB_STEP_SUMMARY"):

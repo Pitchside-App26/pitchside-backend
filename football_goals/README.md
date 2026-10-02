@@ -19,11 +19,16 @@ Bookmark it or add it to your home screen. It updates by itself every Friday
 at about 6pm UK time. The same site still has the NFL page at its main
 address.
 
-At the top of the report are two tabs, **Over 1.5** and **Goal in both
-halves**. Tap one to switch. Each tab has:
-- its own suggested accumulator;
-- its own ranked table;
-- its own track record.
+The page works like an app. The bar along the bottom has four sections:
+- **Over 1.5** and **GIBH:** that market's suggested accumulator first, then every fixture as a one-line row. Tap a
+  row for its detail, or use the **80%+ only** and **league** filters.
+- **Results:** last weekend fixture by fixture, plus the running track record.
+- **Info:** postponements, data sources and checks, how the numbers work, the CSV, running the report for another
+  date, and the one-tap-update setup.
+
+The page remembers the section and filters you used last. To bookmark a section, add `#o15`, `#gibh`,
+`#results` or `#info` to the end of the address, e.g.
+https://pitchside-app26.github.io/pitchside-backend/goals/#gibh
 
 **Which fixtures each tab covers:**
 - **Both tabs:** only 3pm (15:00 UK) kick-offs.
@@ -33,13 +38,7 @@ halves**. Tap one to switch. Each tab has:
   - each tab's track record counts only the fixtures that tab would have shown;
   - the summary count of fixtures analysed still includes them all.
 
-The report remembers which tab you used last. To bookmark a tab directly, add
-`#gibh` or `#o15` to the end of the address, e.g.
-https://pitchside-app26.github.io/pitchside-backend/goals/#gibh
 
-From the report you can also open:
-- **Download the CSV**: the same tables as a spreadsheet.
-- **Last weekend's results**: whether each fixture landed, plus the running record.
 
 If the page looks out of date, see "Something went wrong" below.
 
@@ -47,31 +46,23 @@ If the page looks out of date, see "Something went wrong" below.
 
 ## Running it yourself
 
-You don't have to: it runs automatically every Friday at 6pm UK time. To run
-it at another time, or for a different date, use the **↻ Update now** button
-at the top of the report page:
+You don't have to: it runs automatically every Friday at 6pm UK time.
 
-1. **First time on a phone or browser:** set up one-tap updates (about 2 minutes). Tap the **⚙︎** next to the
-   button, follow the five steps shown, paste the token and tap **Save**. The token:
-   - is stored only in that browser, never in the code or on the page;
-   - can only manage this repo's workflow runs (start, check, cancel). It can't change code or read your secrets.
-2. **After that:**
-   - Optionally pick a date (leave it blank for next Saturday), then tap **↻ Update now**.
-   - The button shows the run's progress and reloads the page when the new report is up. It takes about a minute.
+- **↻ (top right of the report):** updates the report for next Saturday. It shows progress at the bottom of the
+  screen and reloads the page when the new report is up (about a minute).
+- **Results → Check results now:** grades last weekend straight away instead of waiting for Sunday 7pm.
+- **Info → Run for another date:** pick a date, then tap **Update report**.
 
-The **results page** has the same button, **↻ Check results now**. It grades
-last weekend straight away instead of waiting for Sunday 7pm.
+**First time on a phone or browser:** these buttons need a one-time setup (about 2 minutes). Tapping one takes
+you to **Info → One-tap updates**: follow the five steps, paste the token and tap **Save**. The token:
+- is stored only in that browser, never in the code or on the page;
+- can only manage this repo's workflow runs (start, check, cancel). It can't change code or read your secrets.
 
-**If the button says the token was rejected:** it has expired or was pasted
-wrong. Tap ⚙︎ and paste a new one.
+If a button says the token was rejected, it has expired or was pasted wrong: paste a new one in Info.
 
-**Without the token**, the ⚙︎ panel has a link to GitHub's Run workflow screen:
-1. Tap **Run workflow**.
-2. Optionally type a date.
-3. Tap the green **Run workflow** button.
-
-On a phone, use the browser rather than the GitHub app. If the button is
-missing there, tap "Desktop site" in the browser menu.
+**Without the token**, the setup card links to GitHub's Run workflow screen: tap **Run workflow**, optionally type
+a date, then tap the green **Run workflow**. On a phone, use the browser rather than the GitHub app; tap "Desktop
+site" in the browser menu if the button is missing.
 
 ---
 
@@ -145,7 +136,7 @@ exact, these would land about as often as each other:
 - 8 GIBH legs at 72% each: about 7%;
 - 16 Over 1.5 legs at 85% each: also about 7%.
 
-**The track record**, on the report and the results page, shows hit rates:
+**The track record**, in the Results section, shows hit rates:
 - by market
 - by league
 - by band of combined % (below 75, 75–80, 80–85, 85–90, 90+)
