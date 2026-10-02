@@ -95,7 +95,9 @@ The next run uses the new value. The settings are:
 | `gibh_highlight` | GIBH combined % at or above this is highlighted | 65 |
 | `min_games` | Teams with fewer league games than this are flagged | 6 |
 | `accumulator:` `min_legs` / `max_legs` | Size of the Over 1.5 accumulator | 16 / 18 |
-| `accumulator:` `reserves` | Reserves listed under it | 4 |
+| `accumulator:` `reserves` | Reserves listed under it | 6 |
+| `accumulator:` `fill_reserves_below_line` | If fewer reserves reach 80%, top the list up with the best fixtures just under it (marked "below 80%") | true |
+| `accumulator:` `note` | Reminder shown on the Over 1.5 accumulator card (`""` hides it) | the SpreadEx boost rule |
 | `accumulator:` `min_combined_pct` | Lowest Over 1.5 combined % allowed in it | 80 |
 | `gibh_accumulator:` `min_legs` / `max_legs` | Size of the goal-in-both-halves accumulator | 6 / 8 |
 | `gibh_accumulator:` `reserves` | Reserves listed under it | 2 |
@@ -126,7 +128,12 @@ For each fixture:
 **The accumulators** work the same way for each market:
 - they take the fixtures at or above the minimum combined %, highest first;
 - they leave out flagged teams and any league whose data check failed;
-- with enough fixtures, they build a fold plus reserves; otherwise they say how many qualified and list them.
+- with enough fixtures, they build a fold plus reserves; otherwise they say how many qualified and list them;
+- reserves are in order, so swap in the top one first. If too few reach the minimum, the list is topped up with the best fixtures just under it, each marked "below 80%".
+
+The Over 1.5 card also shows the SpreadEx boost rule: every leg must be
+priced above 1/10. The report can't check SpreadEx's prices, so if a leg is
+1/10 or shorter, swap it for the next reserve.
 
 The two folds are different sizes:
 - **Over 1.5:** 16–18 legs at 80%+.

@@ -217,11 +217,25 @@ def build_acca(rows, cfg, market: str, odds_on: bool):
     else:
         k = 0
     legs, reserves = pool[:k], pool[k:k + nres]
+    below = []
+    if k and len(reserves) < nres and a.get("fill_reserves_below_line", False):
+        # Short of reserves: offer the best fixtures just under the bar, clearly marked,
+        # so a leg the bookmaker won't take (e.g. priced too short for a boost) can still be swapped.
+        under = [r for r in rows
+                 if r[market]["combined_pct"] is not None and r[market]["combined_pct"] < min_pct
+                 and not r["data_problem"] and not (a["require_min_games"] and r["low_games"])]
+        under.sort(key=lambda r: (r[market]["combined_pct"], r[market]["venue_pct"] or 0,
+                                  min(r[market]["home_gp"], r[market]["away_gp"])), reverse=True)
+        below = under[:nres - len(reserves)]
+    pct = a["min_combined_pct"]
     if k == 0:
         msg = (f"Only {n} fixture{'s' if n != 1 else ''} qualif{'y' if n != 1 else 'ies'} "
-               f"({label} combined {a['min_combined_pct']}%+, every team {cfg['thresholds']['min_games']}+ games, "
+               f"({label} combined {pct}%+, every team {cfg['thresholds']['min_games']}+ games, "
                f"data checks passed) - not enough for a {lo}-{hi} fold. They are listed below as candidates.")
         legs, reserves = [], pool
+    elif below:
+        msg = (f"{k}-fold. {len(reserves)} reserve{'s' if len(reserves) != 1 else ''} at {pct}%+, "
+               f"plus {len(below)} below the line (under {pct}%).")
     elif len(reserves) < nres:
         msg = f"{k}-fold. Only {len(reserves)} reserve{'s' if len(reserves) != 1 else ''} available (wanted {nres})."
     else:
@@ -230,7 +244,10 @@ def build_acca(rows, cfg, market: str, odds_on: bool):
         r[tag] = "leg"
     for r in reserves:
         r[tag] = "reserve" if k else "candidate"
-    return {"legs": legs, "reserves": reserves, "message": msg, "pool": n}
+    for r in below:
+        r[tag] = "below_line"
+    return {"legs": legs, "reserves": reserves, "below_line": below, "message": msg, "pool": n,
+            "note": (a.get("note") or "").strip(), "min_pct": pct}
 
 
 def run(on: date, cfg: dict) -> dict:
