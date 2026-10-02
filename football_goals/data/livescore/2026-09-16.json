@@ -1,0 +1,39 @@
+{
+"north": [],
+"south": [],
+"national": [
+{
+"home": "Altrincham",
+"away": "Hartlepool United",
+"status": "FT",
+"date": "2026-09-16",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 1,
+"hthg": 1,
+"htag": 1
+},
+{
+"home": "Kidderminster Harriers",
+"away": "Gateshead FC",
+"status": "FT",
+"date": "2026-09-16",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 0,
+"hthg": 1,
+"htag": 0
+},
+{
+"home": "Scunthorpe United",
+"away": "Boreham Wood",
+"status": "FT",
+"date": "2026-09-16",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 2,
+"hthg": 0,
+"htag": 0
+}
+]
+}

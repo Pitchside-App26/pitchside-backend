@@ -1,0 +1,161 @@
+{
+"north": [
+{
+"home": "Hednesford",
+"away": "Harborough Town FC",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 1,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Morecambe",
+"away": "AFC Telford United",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 1,
+"hthg": 2,
+"htag": 0
+},
+{
+"home": "Oxford City",
+"away": "Buxton",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 3,
+"hthg": 0,
+"htag": 2
+}
+],
+"south": [],
+"national": [
+{
+"home": "AFC Fylde",
+"away": "Forest Green Rovers",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Aldershot Town",
+"away": "Harrogate Town",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 3,
+"ftag": 1,
+"hthg": 3,
+"htag": 0
+},
+{
+"home": "Altrincham",
+"away": "FC Halifax Town",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 1,
+"hthg": 2,
+"htag": 0
+},
+{
+"home": "Barrow",
+"away": "Yeovil Town",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 2,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Gateshead FC",
+"away": "Sutton United",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 0,
+"ftag": 1,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Hartlepool United",
+"away": "Eastleigh",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 0,
+"ftag": 1,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Hornchurch",
+"away": "Woking",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Scunthorpe United",
+"away": "Solihull Moors",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 3,
+"ftag": 1,
+"hthg": 1,
+"htag": 1
+},
+{
+"home": "Southend United",
+"away": "Kidderminster Harriers",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 3,
+"hthg": 1,
+"htag": 0
+},
+{
+"home": "Tamworth",
+"away": "Worthing",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 3,
+"ftag": 2,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "Wealdstone",
+"away": "Carlisle United",
+"status": "FT",
+"date": "2026-08-28",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 1,
+"hthg": 0,
+"htag": 1
+}
+]
+}

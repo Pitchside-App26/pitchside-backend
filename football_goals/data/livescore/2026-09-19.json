@@ -1,0 +1,127 @@
+{
+"north": [],
+"south": [],
+"national": [
+{
+"home": "Hartlepool United",
+"away": "Worthing",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "12:30",
+"fthg": 1,
+"ftag": 3,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "Tamworth",
+"away": "Wealdstone",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "12:30",
+"fthg": 2,
+"ftag": 1,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "AFC Fylde",
+"away": "Altrincham",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 2,
+"hthg": 1,
+"htag": 2
+},
+{
+"home": "Barrow",
+"away": "Aldershot Town",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Boreham Wood",
+"away": "Harrogate Town",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "15:00",
+"fthg": 4,
+"ftag": 1,
+"hthg": 2,
+"htag": 1
+},
+{
+"home": "Eastleigh",
+"away": "Carlisle United",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 0,
+"hthg": 1,
+"htag": 0
+},
+{
+"home": "FC Halifax Town",
+"away": "Sutton United",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 1,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Forest Green Rovers",
+"away": "Boston United",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 3,
+"hthg": 1,
+"htag": 1
+},
+{
+"home": "Gateshead FC",
+"away": "Southend United",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 6,
+"hthg": 0,
+"htag": 6
+},
+{
+"home": "Woking",
+"away": "Kidderminster Harriers",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "15:00",
+"fthg": 0,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Hornchurch",
+"away": "Scunthorpe United",
+"status": "FT",
+"date": "2026-09-19",
+"kickoff": "17:30",
+"fthg": 1,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+}
+]
+}
