@@ -74,7 +74,7 @@ SCRIPT_TEMPLATE = """<script>
   function why(r){return r.status===401?'GitHub rejected the token (expired or mistyped). Paste a new one in Info.'
     :(r.status===403||r.status===404)?'The token lacks permission: it needs Actions: Read and write on this repo.'
     :'GitHub said '+r.status+'. Try again in a minute.'}
-  function toSetup(){location.hash='#info';setTimeout(function(){var s=$('setup');if(s)s.scrollIntoView()},50)}
+  function toSetup(){location.hash='#info';setTimeout(function(){var s=$('setup');if(s)window.scrollTo(0,s.getBoundingClientRect().top+window.scrollY-70)},80)}
   state();
   if($('tok-save'))$('tok-save').onclick=function(){var v=$('tok-in').value.trim();if(!v)return;
     try{localStorage.setItem(KEY,v)}catch(e){say('This browser blocks saving; use the GitHub link instead.');done();return}

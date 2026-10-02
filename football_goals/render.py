@@ -141,8 +141,8 @@ def _acca(report, mk):
         tag = f"<span class=tag>{escape(mark)}</span>" if mark else ""
         hi = m["combined_pct"] is not None and m["combined_pct"] >= thr
         return (f"<li data-key='{escape(_key(report, r))}' data-role={role}><span class=num>{i}</span>"
-                f"<span class=fxn>{escape(_fixture(r))}{tag}<small>{escape(r['league_name'])} · "
-                f"{escape(r['kickoff'] or '–')}{price}</small></span>"
+                f"<span class=fxn>{escape(_fixture(r))}<small>{escape(r['league_name'])} · "
+                f"{escape(r['kickoff'] or '–')}{price}{tag}</small></span>"
                 f"<b class='pc{' hi' if hi else ''}'>{pct(m['combined_pct'], 1)}</b></li>")
     size = f"{len(a['legs'])}-fold" if a["legs"] else "no fold"
     out = [f"<div class=card><div class=acc-head><b>{title}</b><span class=sub>{size}</span></div>"
@@ -348,7 +348,7 @@ APP_JS = """<script>
   var secs=['o15','gibh','results','info'];
   function show(id,save){
     if(secs.indexOf(id)<0)id='o15';
-    secs.forEach(function(s){document.getElementById(s).classList.toggle('on',s===id)});
+    secs.forEach(function(s){document.getElementById('sec-'+s).classList.toggle('on',s===id)});
     [].forEach.call(document.querySelectorAll('.bnav a'),function(a){
       a.setAttribute('aria-current',a.getAttribute('href')==='#'+id?'page':'false')});
     if(save){try{localStorage.setItem('goals-sec',id)}catch(e){}}
@@ -386,7 +386,7 @@ def html(report) -> str:
     hr = report["hit_rates"]
     loaded, failed = report["loaded"], report["failed"]
     n_fx = report.get("fixtures_total", len(report["o15"]))
-    summary = (f"{n_fx} fixtures · {len(loaded)}/{len(loaded) + len(failed)} leagues"
+    summary = (f"{n_fx} fixtures analysed · {len(loaded)}/{len(loaded) + len(failed)} leagues"
                + (f" · {len(report['postponed'])} postponed" if report["postponed"] else ""))
     banners = []
     if failed:
@@ -400,10 +400,10 @@ def html(report) -> str:
            + update_button.button(update_button.REPORT_WF, "↻", cls="icon", title="Update now (next Saturday)") + "</header>")
     secs = []
     for mk in ("o15", "gibh"):
-        secs.append(f"<section class=sec id={mk}>{''.join(banners)}<h2>{MARKET_META[mk][0]}</h2>{_acca(report, mk)}"
+        secs.append(f"<section class=sec id=sec-{mk}>{''.join(banners)}<h2>{MARKET_META[mk][0]}</h2>{_acca(report, mk)}"
                     f"{_track_line(hr, MARKET_META[mk][2])}{_fixture_list(report, mk)}</section>")
-    secs.append(f"<section class=sec id=results>{RESULTS_START}{report['results_html']}{RESULTS_END}</section>")
-    secs.append(f"<section class=sec id=info>{_info(report)}</section>")
+    secs.append(f"<section class=sec id=sec-results>{RESULTS_START}{report['results_html']}{RESULTS_END}</section>")
+    secs.append(f"<section class=sec id=sec-info>{_info(report)}</section>")
     nav = "<nav class=bnav>" + "".join(
         f"<a href='#{k}' aria-current=false>{ICONS[k]}{label}</a>" for k, label in SECTIONS) + "</nav>"
     return (f"<!doctype html><html lang=en><head><meta charset=utf-8>"

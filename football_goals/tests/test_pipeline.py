@@ -100,7 +100,7 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     assert combs == sorted(combs, reverse=True)
     html = render.html(rep)
     assert "Leagues not loaded" not in html and "National League North" in html
-    for sec in ("id=o15", "id=gibh", "id=results", "id=info", "class=bnav"):
+    for sec in ("id=sec-o15", "id=sec-gibh", "id=sec-results", "id=sec-info", "class=bnav"):
         assert sec in html, sec
     assert "GIBH accumulator" in html and "Over 1.5 accumulator" in html
     assert html.count("SpreadEx acca boost") == 1                                # Over 1.5 card only
