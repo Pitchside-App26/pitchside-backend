@@ -16,6 +16,9 @@ from .names import best_match
 log = logging.getLogger(__name__)
 
 
+GP_OUTLIER = "games played out of line with the rest of the league"
+
+
 def internal_checks(league, results, stats, fixtures) -> tuple[list[str], list[str]]:
     """Returns (problems, notes). A problem marks the league's rows with a data flag."""
     problems, notes = [], []
@@ -29,7 +32,7 @@ def internal_checks(league, results, stats, fixtures) -> tuple[list[str], list[s
         med = median(gps.values())
         odd = {t: g for t, g in gps.items() if abs(g - med) > 3}
         if odd:
-            problems.append("games played out of line with the rest of the league: "
+            problems.append(GP_OUTLIER + ": "
                             + ", ".join(f"{t} {g} (league median {med:g})" for t, g in sorted(odd.items())))
         else:
             notes.append(f"games played {min(gps.values())}-{max(gps.values())} per club, consistent")

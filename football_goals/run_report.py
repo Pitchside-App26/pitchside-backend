@@ -22,7 +22,7 @@ from .leagues import LEAGUES
 from .names import best_match
 from .sources import api_football, bbc, espn, football_data, livescore
 from .stats import fixture_markets, league_rates, team_stats
-from .validate import internal_checks, table_check
+from .validate import GP_OUTLIER, internal_checks, table_check
 
 HERE = Path(__file__).parent
 log = logging.getLogger("football_goals")
@@ -152,6 +152,12 @@ def analyse_league(league, on, fd_fixtures, cfg):
             problems += p
             notes += n
             table_ok = not p
+            if table_ok:
+                # The published table shows the same odd games-played count, so it's
+                # real (postponements, a late-admitted club), not a data error.
+                for q in [q for q in problems if q.startswith(GP_OUTLIER)]:
+                    problems.remove(q)
+                    notes.append(q + f" - confirmed by the {source} table, so genuine, not a data error")
     except Exception as e:  # noqa: BLE001 -- a failed check is reported, not fatal
         problems.append(f"published-table check could not run: {e}")
 
