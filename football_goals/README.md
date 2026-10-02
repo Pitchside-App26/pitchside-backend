@@ -39,22 +39,31 @@ If the page looks out of date, see "Something went wrong" below.
 
 ## Running it yourself
 
-You don't have to. It runs automatically every Friday at 6pm (UK time). To run
-it at another time, or for a different date:
+You don't have to: it runs automatically every Friday at 6pm UK time. To run
+it at another time, or for a different date, use the **↻ Update now** button
+at the top of the report page:
 
-1. Go to https://github.com/Pitchside-App26/pitchside-backend/actions. On a
-   phone, use the browser rather than the GitHub app. If the button is
-   missing, tap "Desktop site" in the browser menu.
-2. In the left-hand list, tap **Football Goals Report (weekly)**.
-3. Tap **Run workflow**.
-4. Optionally type a date like `2026-10-10`. Leave it blank for next Saturday.
-5. Tap the green **Run workflow** button.
+1. **First time on a phone or browser:** set up one-tap updates (about 2 minutes). Tap the **⚙︎** next to the
+   button, follow the five steps shown, paste the token and tap **Save**. The token:
+   - is stored only in that browser, never in the code or on the page;
+   - can only start and check runs on this repo. It can't change code or read your other secrets.
+2. **After that:**
+   - Optionally pick a date (leave it blank for next Saturday), then tap **↻ Update now**.
+   - The button shows the run's progress and reloads the page when the new report is up. It takes about a minute.
 
-It takes about a minute. When the run shows a green tick, refresh the report page.
+The **results page** has the same button, **↻ Check results now**. It grades
+last weekend straight away instead of waiting for Sunday 7pm.
 
-The **Football Goals Results (weekly)** workflow runs by itself on Sunday at
-7pm. It runs again on Monday at 1pm to catch any late results. It has the
-same Run workflow button if you ever want to run it by hand.
+**If the button says the token was rejected:** it has expired or was pasted
+wrong. Tap ⚙︎ and paste a new one.
+
+**Without the token**, the ⚙︎ panel has a link to GitHub's Run workflow screen:
+1. Tap **Run workflow**.
+2. Optionally type a date.
+3. Tap the green **Run workflow** button.
+
+On a phone, use the browser rather than the GitHub app. If the button is
+missing there, tap "Desktop site" in the browser menu.
 
 ---
 
