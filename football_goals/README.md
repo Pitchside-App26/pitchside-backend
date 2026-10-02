@@ -19,6 +19,16 @@ Bookmark it or add it to your home screen. It updates by itself every Friday
 at about 6pm UK time. The same site still has the NFL page at its main
 address.
 
+At the top of the report are two tabs, **Over 1.5** and **Goal in both
+halves**. Tap one to switch. Each tab has:
+- its own suggested accumulator;
+- its own ranked table;
+- its own track record.
+
+The report remembers which tab you used last. To bookmark a tab directly, add
+`#gibh` or `#o15` to the end of the address, e.g.
+https://pitchside-app26.github.io/pitchside-backend/goals/#gibh
+
 From the report you can also open:
 - **Download the CSV**: the same tables as a spreadsheet.
 - **Last weekend's results**: whether each fixture landed, plus the running record.
@@ -64,10 +74,13 @@ The next run uses the new value. The settings are:
 | `over_1_5_highlight` | Over 1.5 combined % at or above this is highlighted | 80 |
 | `gibh_highlight` | GIBH combined % at or above this is highlighted | 65 |
 | `min_games` | Teams with fewer league games than this are flagged | 6 |
-| `min_legs` / `max_legs` | Size of the suggested accumulator | 16 / 18 |
-| `reserves` | Reserves listed under the accumulator | 4 |
-| `min_combined_pct` | Lowest Over 1.5 combined % allowed in the accumulator | 80 |
-| `require_min_games` | `true` keeps flagged (low-game) teams out of the accumulator | true |
+| `accumulator:` `min_legs` / `max_legs` | Size of the Over 1.5 accumulator | 16 / 18 |
+| `accumulator:` `reserves` | Reserves listed under it | 4 |
+| `accumulator:` `min_combined_pct` | Lowest Over 1.5 combined % allowed in it | 80 |
+| `gibh_accumulator:` `min_legs` / `max_legs` | Size of the goal-in-both-halves accumulator | 6 / 8 |
+| `gibh_accumulator:` `reserves` | Reserves listed under it | 2 |
+| `gibh_accumulator:` `min_combined_pct` | Lowest GIBH combined % allowed in it | 65 |
+| `require_min_games` (in each) | `true` keeps flagged (low-game) teams out of that accumulator | true |
 | `odds: enabled` | `true` adds an Over 1.5 price column (see Odds below) | false |
 | `odds: min_price` | Only put a leg in the accumulator if its price is better than this | 1.0 (off) |
 | `max_results_age_days` | Warn if a league's newest result is older than this and can't be confirmed | 9 |
@@ -90,10 +103,20 @@ For each fixture:
 - **Venue-split %** = the average of the home team's **home** games and the away team's **away** games.
 - **Flags**: a team with fewer than 6 games, or a league whose data checks failed.
 
-**The accumulator** takes Over 1.5 fixtures with a combined % of 80 or more,
-highest first. It leaves out flagged teams and any league whose data check
-failed. With enough fixtures it builds a 16–18 fold plus 3–4 reserves.
-Otherwise it tells you how many qualified and lists them.
+**The accumulators** work the same way for each market:
+- they take the fixtures at or above the minimum combined %, highest first;
+- they leave out flagged teams and any league whose data check failed;
+- with enough fixtures, they build a fold plus reserves; otherwise they say how many qualified and list them.
+
+The two folds are different sizes:
+- **Over 1.5:** 16–18 legs at 80%+.
+- **Goal in both halves:** 6–8 legs at 65%+.
+
+The GIBH fold is smaller on purpose. GIBH rates run around 60–75%, so each
+extra leg costs far more than an Over 1.5 leg does. If the percentages were
+exact, these would land about as often as each other:
+- 8 GIBH legs at 72% each: about 7%;
+- 16 Over 1.5 legs at 85% each: also about 7%.
 
 **The track record**, on the report and the results page, shows hit rates:
 - by market
@@ -128,7 +151,7 @@ the selection isn't adding anything.
   unofficial feed, so the report checks it every run:
   - it compares LiveScore's National League results with football-data.co.uk's,
     full-time and half-time, and shows the match rate in the data checks;
-  - if fewer than 97% match, North/South are flagged and kept out of the accumulator;
+  - if fewer than 97% match, North/South are flagged and kept out of both accumulators;
   - North/South are also checked against BBC's table.
 
   Finished match days are saved in `data/livescore/`, so each day is only downloaded once.
@@ -153,7 +176,7 @@ the selection isn't adding anything.
   - the table check above confirms it;
   - the report also shows each league's newest result date and when the source file was last updated.
 - **If a league fails** to load or fails a check, a box at the **top** of the
-  report says so. Its fixtures are flagged and kept out of the accumulator.
+  report says so. Its fixtures are flagged and kept out of both accumulators.
   Everything else still appears.
 - **Raw downloads** from every run are kept for 30 days. They are under "Artifacts" on the run's page in the Actions tab.
 - **Network failures:** each download is retried 4 times, waiting 2s, 4s, 8s and 16s.
@@ -178,13 +201,14 @@ Prices use **The Odds API**, with the same `ODDS_API_KEY` secret as the NFL engi
 
 - **Priced:** Premier League, Championship, League One, League Two, Scottish Premiership.
 - **Not priced:** National League, National League North/South, and Scottish Championship, League One and League Two. The report lists these as unpriced.
+- Prices are only for **Over 1.5**. The goal-in-both-halves tab never shows prices.
 - The 1.5 line only comes from the "alternate totals" market, which is charged
   per match. That's about 1 credit per priced fixture, so 10–40 credits a week.
 - **The credits are shared with the NFL engine.** It had about 490 left this month.
 - Only real quoted prices are shown (the best UK price across bookmakers). Nothing is estimated.
 
 To turn odds on, set `odds: enabled: true` in `config.yaml`. To keep weaker
-prices out of the accumulator, set `min_price`; for example `1.20` only
+prices out of the Over 1.5 accumulator, set `min_price`; for example `1.20` only
 accepts legs priced above 1.20.
 
 ---

@@ -192,16 +192,23 @@ def analyse_league(league, on, fd_fixtures, cfg):
     }
 
 
-def build_acca(o15_rows, cfg, odds_on: bool):
-    a = cfg["accumulator"]
+ACCA = {  # market -> (config section, row/history tag, label)
+    "o15": ("accumulator", "acca", "Over 1.5"),
+    "gibh": ("gibh_accumulator", "gibh_acca", "goal in both halves"),
+}
+
+
+def build_acca(rows, cfg, market: str, odds_on: bool):
+    section, tag, label = ACCA[market]
+    a = cfg[section]
     min_pct = a["min_combined_pct"] / 100
-    pool = [r for r in o15_rows
-            if r["o15"]["combined_pct"] is not None and r["o15"]["combined_pct"] >= min_pct
+    pool = [r for r in rows
+            if r[market]["combined_pct"] is not None and r[market]["combined_pct"] >= min_pct
             and not r["data_problem"] and not (a["require_min_games"] and r["low_games"])]
-    if odds_on and cfg["odds"]["min_price"] > 1.0:
+    if market == "o15" and odds_on and cfg["odds"]["min_price"] > 1.0:  # prices exist for Over 1.5 only
         pool = [r for r in pool if r.get("price") and r["price"]["price"] > cfg["odds"]["min_price"]]
-    pool.sort(key=lambda r: (r["o15"]["combined_pct"], r["o15"]["venue_pct"] or 0,
-                             min(r["o15"]["home_gp"], r["o15"]["away_gp"])), reverse=True)
+    pool.sort(key=lambda r: (r[market]["combined_pct"], r[market]["venue_pct"] or 0,
+                             min(r[market]["home_gp"], r[market]["away_gp"])), reverse=True)
     n, lo, hi, nres = len(pool), a["min_legs"], a["max_legs"], a["reserves"]
     if n >= lo + nres:
         k = min(hi, n - nres)
@@ -212,7 +219,7 @@ def build_acca(o15_rows, cfg, odds_on: bool):
     legs, reserves = pool[:k], pool[k:k + nres]
     if k == 0:
         msg = (f"Only {n} fixture{'s' if n != 1 else ''} qualif{'y' if n != 1 else 'ies'} "
-               f"(Over 1.5 combined {a['min_combined_pct']}%+, every team {cfg['thresholds']['min_games']}+ games, "
+               f"({label} combined {a['min_combined_pct']}%+, every team {cfg['thresholds']['min_games']}+ games, "
                f"data checks passed) - not enough for a {lo}-{hi} fold. They are listed below as candidates.")
         legs, reserves = [], pool
     elif len(reserves) < nres:
@@ -220,9 +227,9 @@ def build_acca(o15_rows, cfg, odds_on: bool):
     else:
         msg = f"{k}-fold with {len(reserves)} reserves."
     for r in legs:
-        r["acca"] = "leg"
+        r[tag] = "leg"
     for r in reserves:
-        r["acca"] = "reserve" if k else "candidate"
+        r[tag] = "reserve" if k else "candidate"
     return {"legs": legs, "reserves": reserves, "message": msg, "pool": n}
 
 
@@ -269,7 +276,8 @@ def run(on: date, cfg: dict) -> dict:
 
     o15 = sorted(rows, key=lambda r: (r["o15"]["combined_pct"] is not None, r["o15"]["combined_pct"] or 0), reverse=True)
     gibh = sorted(rows, key=lambda r: (r["gibh"]["combined_pct"] is not None, r["gibh"]["combined_pct"] or 0), reverse=True)
-    acca = build_acca(o15, cfg, odds_info["enabled"])
+    accas = {"o15": build_acca(o15, cfg, "o15", odds_info["enabled"]),
+             "gibh": build_acca(gibh, cfg, "gibh", odds_info["enabled"])}
 
     hist_rows = []
     for res in loaded:
@@ -282,14 +290,14 @@ def run(on: date, cfg: dict) -> dict:
                 "o15_league_rate": round(100 * res["rates"]["o15"], 1),
                 "gibh_combined": pct("gibh", "combined_pct"), "gibh_venue": pct("gibh", "venue_pct"),
                 "gibh_league_rate": round(100 * res["rates"]["gibh"], 1),
-                "acca": r.get("acca", ""), "price": (r.get("price") or {}).get("price"),
+                "acca": r.get("acca", ""), "gibh_acca": r.get("gibh_acca", ""), "price": (r.get("price") or {}).get("price"),
                 "flags": "; ".join(r["flags"]),
             })
     history.record_report(hist_rows, on.isoformat())
 
     return {
         "date": on, "generated": datetime.now(timezone.utc), "loaded": loaded, "failed": failed,
-        "o15": o15, "gibh": gibh, "acca": acca, "odds": odds_info, "fixtures_meta": fx_meta,
+        "o15": o15, "gibh": gibh, "accas": accas, "odds": odds_info, "fixtures_meta": fx_meta,
         "postponed": [dict(p, league=res["league"].name) for res in loaded for p in res["postponed"]],
         "hit_rates": history.hit_rates(), "config": cfg,
     }

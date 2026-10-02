@@ -1,0 +1,8 @@
+# The Rundown site on Netlify is retired. This file only stops Netlify from
+# building when this repo changes (every push used to spend Netlify credits).
+# The site and its dashboard settings are untouched.
+#
+# The ignore command decides whether to build: exit 0 means "skip". This
+# always skips. To build again, delete this file.
+[build]
+  ignore = "exit 0"

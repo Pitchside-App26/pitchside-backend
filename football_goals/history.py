@@ -10,7 +10,7 @@ import pandas as pd
 HISTORY = Path(__file__).parent / "data" / "history.csv"
 KEY = ["report_date", "league", "home", "away"]
 COLUMNS = KEY + ["league_name", "kickoff", "o15_combined", "o15_venue", "o15_league_rate",
-                 "gibh_combined", "gibh_venue", "gibh_league_rate", "acca", "price", "flags",
+                 "gibh_combined", "gibh_venue", "gibh_league_rate", "acca", "gibh_acca", "price", "flags",
                  "status", "fthg", "ftag", "hthg", "htag", "o15_hit", "gibh_hit", "graded_at", "result_source"]
 BANDS = [(0, 75, "below 75"), (75, 80, "75-80"), (80, 85, "80-85"), (85, 90, "85-90"), (90, 101, "90+")]
 
@@ -25,7 +25,7 @@ def load() -> pd.DataFrame:
     else:
         df = pd.DataFrame(columns=COLUMNS)
     # free-text / yes-no columns stay as plain objects so grading can write into them
-    for c in ("o15_hit", "gibh_hit", "status", "graded_at", "result_source", "acca", "flags", "kickoff"):
+    for c in ("o15_hit", "gibh_hit", "status", "graded_at", "result_source", "acca", "gibh_acca", "flags", "kickoff"):
         df[c] = df[c].astype(object)
     return df
 
@@ -64,23 +64,25 @@ def hit_rates(df: pd.DataFrame | None = None) -> dict:
     (the season-to-date league rate at the time of each report)."""
     df = load() if df is None else df
     g = df[df["status"] == "graded"].copy()
-    out = {"graded": len(g), "markets": {}, "acca": None}
+    out = {"graded": len(g), "markets": {}}
     if g.empty:
         return out
-    for mk, label in (("o15", "Over 1.5"), ("gibh", "Goal in both halves")):
+    # "acca" holds the Over 1.5 accumulator tag (its original name); "gibh_acca" the GIBH one.
+    for mk, label, tag in (("o15", "Over 1.5", "acca"), ("gibh", "Goal in both halves", "gibh_acca")):
         hit, rate, comb = f"{mk}_hit", f"{mk}_league_rate", f"{mk}_combined"
         sub = g.dropna(subset=[comb]).copy()
         sub[hit] = sub[hit].astype(str).str.lower().isin(["true", "1", "1.0"])
         sub["band"] = sub[comb].astype(float).map(band)
+        acca = None
+        legs = sub[sub[tag] == "leg"]
+        if not legs.empty:
+            per_week = legs.groupby("report_date")[hit].agg(["count", "sum"])
+            acca = {"weeks": len(per_week), "won": int((per_week["count"] == per_week["sum"]).sum()),
+                    "legs": int(per_week["count"].sum()), "legs_won": int(per_week["sum"].sum())}
         out["markets"][label] = {
             "overall": _summ(sub, hit, rate),
             "by_league": {lg: _summ(x, hit, rate) for lg, x in sub.groupby("league_name")},
             "by_band": {b: _summ(sub[sub["band"] == b], hit, rate) for _, _, b in BANDS if (sub["band"] == b).any()},
+            "acca": acca,
         }
-    legs = g[g["acca"] == "leg"].copy()
-    if not legs.empty:
-        legs["o15_hit"] = legs["o15_hit"].astype(str).str.lower().isin(["true", "1", "1.0"])
-        per_week = legs.groupby("report_date")["o15_hit"].agg(["count", "sum"])
-        out["acca"] = {"weeks": len(per_week), "won": int((per_week["count"] == per_week["sum"]).sum()),
-                       "legs": int(per_week["count"].sum()), "legs_won": int(per_week["sum"].sum())}
     return out
