@@ -20,7 +20,7 @@ from . import history, render
 from .http_cache import FetchError
 from .leagues import LEAGUES
 from .names import best_match
-from .sources import api_football, espn, football_data
+from .sources import api_football, bbc, espn, football_data
 from .stats import fixture_markets, league_rates, team_stats
 from .validate import internal_checks, table_check
 
@@ -93,15 +93,21 @@ def analyse_league(league, on, fd_fixtures, cfg):
     p, n = internal_checks(league, results, stats, fixtures)
     problems += p
     notes += n
+    table_ok = False
     try:
+        table, source = None, None
+        # An independent publisher's table, never the results source's own.
         if league.espn_slug:
-            p, n = table_check(stats, espn.standings(league.espn_slug), "ESPN")
-        elif league.regional:
-            p, n = table_check(stats, api_football.standings(league.regional, on), "API-Football")
+            table, source = espn.standings(league.espn_slug), "ESPN"
+        elif league.bbc_slug:
+            table, source = bbc.table(league.bbc_slug), "BBC Sport"
+        if table is None:
+            notes.append("no published table available for an independent check")
         else:
-            p, n = [], ["no published table available for an independent check"]
-        problems += p
-        notes += n
+            p, n = table_check(stats, table, source)
+            problems += p
+            notes += n
+            table_ok = not p
     except Exception as e:  # noqa: BLE001 -- a failed check is reported, not fatal
         problems.append(f"published-table check could not run: {e}")
 
@@ -109,7 +115,11 @@ def analyse_league(league, on, fd_fixtures, cfg):
     if latest:
         age = (on - date.fromisoformat(latest)).days
         if age > cfg["data"]["max_results_age_days"]:
-            problems.append(f"newest result is {age} days old ({latest}) - check the source has been updated")
+            msg = f"newest result is {age} days old ({latest})"
+            if table_ok:
+                notes.append(msg + " - fine: the published table agrees nothing has been missed (e.g. international break)")
+            else:
+                problems.append(msg + " and no published table could confirm it is up to date")
 
     lr = league_rates(results)
     rows = []

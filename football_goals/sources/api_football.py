@@ -117,13 +117,3 @@ def result_on(region: str, on: date, home: str, away: str):
                         "hthg": f["score"]["halftime"]["home"], "htag": f["score"]["halftime"]["away"]}
             return None
     return None
-
-
-def standings(region: str, on: date) -> dict[str, dict]:
-    out = {}
-    for blk in _get("standings", league=league_id(region, on), season=season_year(on)):
-        for table in blk["league"]["standings"]:
-            for t in table:
-                a = t["all"]
-                out[t["team"]["name"]] = {"gp": a["played"], "gf": a["goals"]["for"], "ga": a["goals"]["against"]}
-    return out

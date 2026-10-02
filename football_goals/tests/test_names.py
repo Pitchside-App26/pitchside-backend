@@ -30,3 +30,10 @@ def test_similar_clubs_kept_apart():
 
 def test_unknown_club_is_none():
     assert best_match("Real Madrid", E2) is None
+
+
+def test_scottish_names():
+    spl = ["Hearts", "Hibernian", "St Mirren", "St Johnstone", "Dundee United", "Celtic"]
+    assert best_match("Heart of Midlothian", spl) == "Hearts"
+    assert best_match("St. Mirren", spl) == "St Mirren"
+    assert best_match("St. Johnstone", spl) == "St Johnstone"

@@ -23,7 +23,7 @@ def season_code(d: date) -> str:
 def _read_csv(content: bytes) -> pd.DataFrame:
     text = content.decode("latin-1").lstrip("﻿").lstrip("ï»¿")
     df = pd.read_csv(io.StringIO(text))
-    return df.dropna(how="all")
+    return df.dropna(how="all").copy()
 
 
 def _parse_dates(s: pd.Series) -> pd.Series:

@@ -11,6 +11,7 @@ class League:
     espn_slug: str | None = None   # ESPN league slug (fixture status + published table)
     odds_key: str | None = None    # The Odds API sport key, if it prices this league
     regional: str | None = None    # "north"/"south" for the National League regional divisions
+    bbc_slug: str | None = None    # BBC Sport league page, used only for its published table
 
     @property
     def max_meetings(self) -> int:
@@ -25,12 +26,12 @@ LEAGUES = [
     League("ENG3", "League One", 24, "E2", "eng.3", "soccer_england_league1"),
     League("ENG4", "League Two", 24, "E3", "eng.4", "soccer_england_league2"),
     League("ENG5", "National League", 24, "EC", "eng.5"),
-    League("ENG6N", "National League North", 24, regional="north"),
-    League("ENG6S", "National League South", 24, regional="south"),
+    League("ENG6N", "National League North", 24, regional="north", bbc_slug="national-league-north"),
+    League("ENG6S", "National League South", 24, regional="south", bbc_slug="national-league-south"),
     League("SCO1", "Scottish Premiership", 12, "SC0", "sco.1", "soccer_spl"),
     League("SCO2", "Scottish Championship", 10, "SC1", "sco.2"),
-    League("SCO3", "Scottish League One", 10, "SC2"),
-    League("SCO4", "Scottish League Two", 10, "SC3"),
+    League("SCO3", "Scottish League One", 10, "SC2", bbc_slug="scottish-league-one"),
+    League("SCO4", "Scottish League Two", 10, "SC3", bbc_slug="scottish-league-two"),
 ]
 
 BY_KEY = {lg.key: lg for lg in LEAGUES}

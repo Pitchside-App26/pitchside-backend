@@ -90,9 +90,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # site/data.json too, so the football goals workflow (which also
-          # publishes the shared Pages site) re-publishes this week's NFL page.
-          git add results_log.sqlite3 site/data.json
+          git add results_log.sqlite3
           git diff --cached --quiet && exit 0
           git commit -m "chore: log week's prop rankings"
           for attempt in 1 2 3; do

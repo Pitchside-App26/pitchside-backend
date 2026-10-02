@@ -13,7 +13,8 @@ _ALIASES = {
     "peterboro": "peterborough", "inverness c": "inverness caledonian thistle",
     "queen of sth": "queen of the south", "airdrie": "airdrieonians", "mk dons": "milton keynes dons",
     "wolves": "wolverhampton", "spurs": "tottenham", "qpr": "queens park rangers",
-    "west brom": "west bromwich", "bristol rvs": "bristol rovers",
+    "west brom": "west bromwich", "bristol rvs": "bristol rovers", "hearts": "heart of midlothian",
+    "st johnstone": "saint johnstone", "st mirren": "saint mirren", "raith rvs": "raith rovers",
 }
 
 

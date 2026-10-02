@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from football_goals import grade_results, history, render, run_report
-from football_goals.sources import api_football, espn, football_data
+from football_goals.sources import api_football, bbc, espn, football_data
 
 DAY = date(2026, 10, 3)
 
@@ -60,6 +60,7 @@ def fake(monkeypatch, tmp_path):
     monkeypatch.setattr(football_data, "load_fixtures", load_fixtures)
     monkeypatch.setattr(espn, "scoreboard", scoreboard)
     monkeypatch.setattr(espn, "standings", standings)
+    monkeypatch.setattr(bbc, "table", lambda slug: {})
     monkeypatch.setenv("API_FOOTBALL_KEY", "")
     monkeypatch.setattr(history, "HISTORY", tmp_path / "history.csv")
     return data

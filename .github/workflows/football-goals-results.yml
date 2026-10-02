@@ -70,10 +70,20 @@ jobs:
 
       - name: Assemble the published site
         if: steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
         run: |
           mkdir -p _site/goals
           cp -r nfl_prop_engine/site/. _site/
           cp -r football_goals/site/. _site/goals/
+          # The NFL page's data.json is written by the NFL run and only lives
+          # on the published site, so carry the live copy over rather than
+          # roll the NFL page back to the repo's older one.
+          curl -fsSL --retry 3 "https://${OWNER,,}.github.io/${REPO}/data.json" -o /tmp/nfl-data.json \
+            && python -c "import json;json.load(open('/tmp/nfl-data.json'))" \
+            && cp /tmp/nfl-data.json _site/data.json \
+            || echo "::warning::Could not copy the live NFL data.json; using the repo copy"
 
       - uses: actions/upload-pages-artifact@v3
         if: steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch
