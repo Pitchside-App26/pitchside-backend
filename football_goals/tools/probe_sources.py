@@ -21,14 +21,15 @@ def get(url, **kw):
         return None
 
 
+SKIP_RESULTS = True
 print("=== football-data.co.uk results, season 2627 ===")
-for code in ["E0", "E1", "E2", "E3", "EC", "SC0", "SC1", "SC2", "SC3"]:
+for code in ([] if SKIP_RESULTS else ["E0", "E1", "E2", "E3", "EC", "SC0", "SC1", "SC2", "SC3"]):
     url = f"https://www.football-data.co.uk/mmz4281/2627/{code}.csv"
     r = get(url)
     if r is None or r.status_code != 200:
         print(code, "HTTP", r and r.status_code)
         continue
-    df = pd.read_csv(io.StringIO(r.content.decode("latin-1")))
+    df = pd.read_csv(io.StringIO(r.content.decode("latin-1").lstrip("\xef\xbb\xbf").lstrip("\ufeff")))
     df = df.dropna(how="all")
     teams = sorted(set(df.HomeTeam.dropna()) | set(df.AwayTeam.dropna()))
     ht_ok = {"HTHG", "HTAG"} <= set(df.columns)
@@ -41,10 +42,11 @@ for code in ["E0", "E1", "E2", "E3", "EC", "SC0", "SC1", "SC2", "SC3"]:
 print("\n=== football-data.co.uk fixtures.csv ===")
 r = get("https://www.football-data.co.uk/fixtures.csv")
 if r is not None and r.status_code == 200:
-    fx = pd.read_csv(io.StringIO(r.content.decode("latin-1")))
+    fx = pd.read_csv(io.StringIO(r.content.decode("latin-1").lstrip("\xef\xbb\xbf").lstrip("\ufeff")))
     print("cols:", ",".join(list(fx.columns)[:10]), "last-modified:", r.headers.get("Last-Modified"))
     print("divs:", fx.Div.value_counts().to_dict())
     print("dates:", fx.Date.value_counts().to_dict())
+    print(fx[fx.Div.isin(["E0","E1","E2","E3","EC","SC0","SC1","SC2","SC3"])][["Div","Date","Time","HomeTeam","AwayTeam"]].to_string())
 else:
     print("fixtures HTTP", r and r.status_code)
 
@@ -73,6 +75,21 @@ if r is not None and r.status_code == 200 and r.json().get("events"):
     comp = e["competitions"][0]
     print("eng.5 sample:", e["name"], [c.get("score") for c in comp["competitors"]],
           "linescores:", [c.get("linescores") for c in comp["competitors"]])
+
+for slug, d2 in [("eng.1", "20260927"), ("eng.5", "20260929"), ("sco.1", "20260927")]:
+    r = get(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/scoreboard?dates={d2}")
+    if r is not None and r.status_code == 200:
+        evs = r.json().get("events", [])
+        print(slug, d2, "completed events:", len(evs), [e["name"] + " " + "-".join(c.get("score","?") for c in e["competitions"][0]["competitors"]) for e in evs[:3]])
+        if evs:
+            eid = evs[0]["id"]
+            r2 = get(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/summary?event={eid}")
+            if r2 is not None and r2.status_code == 200:
+                j2 = r2.json()
+                comp = j2.get("header", {}).get("competitions", [{}])[0]
+                print("   summary linescores:", [(c.get("homeAway"), c.get("score"), c.get("linescores")) for c in comp.get("competitors", [])])
+                ke = j2.get("keyEvents") or []
+                print("   keyEvents goals:", [(k.get("type",{}).get("text"), k.get("clock",{}).get("displayValue"), k.get("period",{}).get("number")) for k in ke if k.get("scoringPlay")][:6])
 
 print("\n=== API-Football ===")
 key = os.environ.get("API_FOOTBALL_KEY")
