@@ -1,9 +1,8 @@
-# Only this one setting lives here; everything else about the site stays in
-# Netlify's own dashboard.
+# The Rundown site on Netlify is retired. This file only stops Netlify from
+# building when this repo changes (every push used to spend Netlify credits).
+# The site and its dashboard settings are untouched.
 #
-# Skip the Netlify build when a push changes nothing the site uses. The
-# football goals report, the NFL prop engine and the GitHub workflows commit
-# to this repo several times a week, and each build costs Netlify credits.
-# The command exits 0 (= skip) when the only changes are in those folders.
+# The ignore command decides whether to build: exit 0 means "skip". This
+# always skips. To build again, delete this file.
 [build]
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)football_goals' ':(exclude)nfl_prop_engine' ':(exclude).github'"
+  ignore = "exit 0"
