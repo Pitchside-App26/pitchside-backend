@@ -9,6 +9,14 @@ thresholds:
   gibh_highlight: 65            # Goal-in-both-halves combined % at or above this is highlighted
   min_games: 6                  # teams with fewer league games than this get a flag
 
+markets:                        # which fixtures each tab (table, accumulator, track record) covers
+  over_1_5:
+    kickoffs: ["15:00"]         # UK kick-off times to include; [] = every kick-off time
+    exclude_leagues: []         # league names to leave out
+  gibh:
+    kickoffs: ["15:00"]
+    exclude_leagues: ["National League North", "National League South"]   # no GIBH market for these
+
 accumulator:                    # the Over 1.5 accumulator
   min_legs: 16                  # suggested fold size, smallest
   max_legs: 18                  # suggested fold size, largest

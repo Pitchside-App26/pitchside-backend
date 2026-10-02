@@ -16,7 +16,7 @@ from pathlib import Path
 
 import yaml
 
-from . import history, render
+from . import history, render, scope
 from .http_cache import FetchError
 from .leagues import LEAGUES
 from .names import best_match
@@ -274,8 +274,11 @@ def run(on: date, cfg: dict) -> dict:
                 r["price"] = prices.get((r["home"], r["away"]))
             (odds_info["priced_leagues"] if prices else odds_info["unpriced_leagues"]).append(lg.name)
 
-    o15 = sorted(rows, key=lambda r: (r["o15"]["combined_pct"] is not None, r["o15"]["combined_pct"] or 0), reverse=True)
-    gibh = sorted(rows, key=lambda r: (r["gibh"]["combined_pct"] is not None, r["gibh"]["combined_pct"] or 0), reverse=True)
+    def market_rows(mk):
+        keep = [r for r in rows if scope.in_scope(cfg, mk, r["league_name"], r["kickoff"])]
+        log.info("%s: %d of %d fixtures in scope (%s)", mk, len(keep), len(rows), scope.describe(cfg, mk))
+        return sorted(keep, key=lambda r: (r[mk]["combined_pct"] is not None, r[mk]["combined_pct"] or 0), reverse=True)
+    o15, gibh = market_rows("o15"), market_rows("gibh")
     accas = {"o15": build_acca(o15, cfg, "o15", odds_info["enabled"]),
              "gibh": build_acca(gibh, cfg, "gibh", odds_info["enabled"])}
 
@@ -299,7 +302,7 @@ def run(on: date, cfg: dict) -> dict:
         "date": on, "generated": datetime.now(timezone.utc), "loaded": loaded, "failed": failed,
         "o15": o15, "gibh": gibh, "accas": accas, "odds": odds_info, "fixtures_meta": fx_meta,
         "postponed": [dict(p, league=res["league"].name) for res in loaded for p in res["postponed"]],
-        "hit_rates": history.hit_rates(), "config": cfg,
+        "hit_rates": history.hit_rates(cfg=cfg), "config": cfg, "fixtures_total": len(rows),
     }
 
 

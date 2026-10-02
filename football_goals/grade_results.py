@@ -118,10 +118,12 @@ def _now():
 def main() -> int:
     setup_logging()
     counts = grade()
-    hr = history.hit_rates()
+    from .run_report import load_config
+    cfg = load_config()
+    hr = history.hit_rates(cfg=cfg)
     site = Path(__file__).parent / "site"
     site.mkdir(exist_ok=True)
-    (site / "results.html").write_text(render.results_page(history.load(), hr), encoding="utf-8")
+    (site / "results.html").write_text(render.results_page(history.load(), hr, cfg), encoding="utf-8")
     for label, d in hr["markets"].items():
         o = d["overall"]
         log.info("%s running: %d/%d (%.0f%%) v league avg %.0f%%", label, o["hits"], o["n"], o["hit_pct"], o["league_avg_pct"])
