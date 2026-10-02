@@ -7,6 +7,9 @@ on:
     # the UK that week (17:00 UTC in summer time, 18:00 UTC in winter).
     - cron: "0 17 * * 5"
     - cron: "0 18 * * 5"
+  push:  # TEMPORARY: lets the first run happen from this branch; removed before merge
+    branches: [ccr-c752a3e8-uikena]
+    paths: [football_goals/.run-trigger]
   workflow_dispatch:
     inputs:
       date:
