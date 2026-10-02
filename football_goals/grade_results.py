@@ -123,7 +123,15 @@ def main() -> int:
     hr = history.hit_rates(cfg=cfg)
     site = Path(__file__).parent / "site"
     site.mkdir(exist_ok=True)
-    (site / "results.html").write_text(render.results_page(history.load(), hr, cfg), encoding="utf-8")
+    # Refresh just the Results section of the published report page.
+    page = site / "index.html"
+    if page.exists():
+        try:
+            page.write_text(render.replace_results(page.read_text(encoding="utf-8"),
+                                                   render.results_section(history.load(), hr, cfg)), encoding="utf-8")
+        except ValueError as e:
+            log.warning("could not update the report page's Results section: %s", e)
+    (site / "results.html").write_text(render.REDIRECT, encoding="utf-8")
     for label, d in hr["markets"].items():
         o = d["overall"]
         log.info("%s running: %d/%d (%.0f%%) v league avg %.0f%%", label, o["hits"], o["n"], o["hit_pct"], o["league_avg_pct"])
