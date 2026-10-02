@@ -96,6 +96,8 @@ def test_full_run_and_grade(fake, monkeypatch, tmp_path):
     assert combs == sorted(combs, reverse=True)
     html = render.html(rep)
     assert "Leagues not loaded" not in html and "National League North" in html
+    assert "panel-o15" in html and "panel-gibh" in html and "Suggested goal-in-both-halves accumulator" in html
+    assert set(rep["accas"]) == {"o15", "gibh"}
     render.csv(rep, tmp_path / "r.csv")
     assert len(pd.read_csv(tmp_path / "r.csv")) == 2 * len(rep["o15"])
     assert (tmp_path / "history.csv").exists()
@@ -126,12 +128,24 @@ def test_acca_sizes():
     def row(p):
         return {"o15": {"combined_pct": p, "venue_pct": p, "home_gp": 8, "away_gp": 8},
                 "data_problem": False, "low_games": False}
-    a = run_report.build_acca([row(0.9) for _ in range(25)], cfg, False)
+    a = run_report.build_acca([row(0.9) for _ in range(25)], cfg, "o15", False)
     assert (len(a["legs"]), len(a["reserves"])) == (18, 4)
-    a = run_report.build_acca([row(0.9) for _ in range(18)], cfg, False)
+    a = run_report.build_acca([row(0.9) for _ in range(18)], cfg, "o15", False)
     assert (len(a["legs"]), len(a["reserves"])) == (16, 2)
-    a = run_report.build_acca([row(0.9) for _ in range(5)] + [row(0.5)], cfg, False)
+    a = run_report.build_acca([row(0.9) for _ in range(5)] + [row(0.5)], cfg, "o15", False)
     assert a["legs"] == [] and len(a["reserves"]) == 5 and "Only 5 fixtures qualify" in a["message"]
+
+
+def test_gibh_acca_uses_its_own_settings():
+    cfg = run_report.load_config()
+
+    def row(p):
+        m = {"combined_pct": p, "venue_pct": p, "home_gp": 8, "away_gp": 8}
+        return {"o15": dict(m, combined_pct=0.5), "gibh": m, "data_problem": False, "low_games": False}
+    rows = [row(0.72) for _ in range(12)] + [row(0.60) for _ in range(5)]   # 60% is under the 65% cut
+    a = run_report.build_acca(rows, cfg, "gibh", False)
+    assert (len(a["legs"]), len(a["reserves"])) == (8, 2)
+    assert all(r.get("gibh_acca") == "leg" for r in a["legs"]) and not any("acca" in r for r in rows)
 
 
 def test_next_saturday():

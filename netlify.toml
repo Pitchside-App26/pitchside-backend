@@ -1,0 +1,9 @@
+# Only this one setting lives here; everything else about the site stays in
+# Netlify's own dashboard.
+#
+# Skip the Netlify build when a push changes nothing the site uses. The
+# football goals report, the NFL prop engine and the GitHub workflows commit
+# to this repo several times a week, and each build costs Netlify credits.
+# The command exits 0 (= skip) when the only changes are in those folders.
+[build]
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)football_goals' ':(exclude)nfl_prop_engine' ':(exclude).github'"

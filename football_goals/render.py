@@ -46,6 +46,13 @@ tr.hi td{background:var(--hi)}tr.hi td.comb{color:var(--hi-ink);font-weight:700}
 .lg{color:var(--muted);font-size:.78rem}
 details summary{cursor:pointer;font-weight:600}
 .mob{display:none}
+.tabs{position:sticky;top:0;z-index:5;display:flex;gap:4px;background:var(--bg);padding:10px 0 8px;margin-top:1.2rem}
+.tab{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 6px;
+ font:600 .95rem/1.2 inherit;cursor:pointer;text-align:center}
+.tab span{display:block;font-weight:400;font-size:.75rem;color:var(--muted);margin-top:2px}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab[aria-selected="true"] span{color:#fff;opacity:.85}
+.js .panel[hidden]{display:none}
 ol.acca{padding-left:1.4rem;margin:.3rem 0}ol.acca li{margin:.25rem 0}
 .pill{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 8px;font-size:.78rem;margin-left:4px}
 @media (max-width:640px){
@@ -96,16 +103,19 @@ def _market_table(report, mk, title, thr_key):
             f"<table class=rt><thead>{head}</thead><tbody>{''.join(body) or '<tr><td>No fixtures.</td></tr>'}</tbody></table>")
 
 
-def _acca(report):
-    a = report["acca"]
-    odds = report["odds"]["enabled"]
+ACCA_TITLE = {"o15": "Suggested Over 1.5 accumulator", "gibh": "Suggested goal-in-both-halves accumulator"}
+
+
+def _acca(report, mk):
+    a = report["accas"][mk]
+    odds = report["odds"]["enabled"] and mk == "o15"  # no bookmaker prices for GIBH
 
     def li(r):
         p = r.get("price")
         price = f" <span class=pill>{p['price']:.2f}</span>" if odds and p else ""
         return (f"<li><b>{escape(_fixture(r))}</b> <span class=lg>{escape(r['league_name'])}, {escape(r['kickoff'] or '')}</span>"
-                f" <span class=pill>{pct(r['o15']['combined_pct'], 1)}</span>{price}</li>")
-    out = [f"<h2>Suggested Over 1.5 accumulator</h2><div class=card><p>{escape(a['message'])}</p>"]
+                f" <span class=pill>{pct(r[mk]['combined_pct'], 1)}</span>{price}</li>")
+    out = [f"<h2>{ACCA_TITLE[mk]}</h2><div class=card><p>{escape(a['message'])}</p>"]
     if a["legs"]:
         out.append(f"<ol class=acca>{''.join(li(r) for r in a['legs'])}</ol>")
         if odds and all(r.get("price") for r in a["legs"]):
@@ -116,6 +126,8 @@ def _acca(report):
     if a["reserves"]:
         label = "Reserves" if a["legs"] else "Qualifying fixtures"
         out.append(f"<p><b>{label}</b></p><ol class=acca>{''.join(li(r) for r in a['reserves'])}</ol>")
+    if mk == "gibh" and report["odds"]["enabled"]:
+        out.append("<p class=sub>Prices are only fetched for Over 1.5, so this tab has none.</p>")
     out.append("</div>")
     return "".join(out)
 
@@ -134,18 +146,21 @@ def _rates_table(stats_by, first_col):
             f"<th class=n>League avg</th><th class=n>+/-</th></tr></thead><tbody>{''.join(rows)}</tbody></table>")
 
 
-def _track(report):
-    hr = report["hit_rates"]
+def _track(hit_rates, only: str | None = None):
+    hr = hit_rates
     if not hr["graded"]:
         return ("<h2>Track record</h2><div class=card><p class=sub>No graded fixtures yet. After this weekend the Sunday "
                 "results run will record whether each market landed, and running hit rates will appear here.</p></div>")
     out = [f"<h2>Track record</h2><p class=sub>{hr['graded']} graded fixtures so far. 'League avg' is the season-to-date "
            "rate of the same leagues at the time of each report: beating it means the selection adds something.</p>"]
-    if hr["acca"]:
-        a = hr["acca"]
-        out.append(f"<div class=card>Accumulators: <b>{a['won']}/{a['weeks']}</b> landed in full; legs {a['legs_won']}/{a['legs']} won.</div>")
     for label, d in hr["markets"].items():
-        out.append(f"<details class=card open><summary>{label}: {d['overall']['hits']}/{d['overall']['n']}"
+        if only and label != only:
+            continue
+        if d.get("acca"):
+            a = d["acca"]
+            out.append(f"<div class=card>{label} accumulators: <b>{a['won']}/{a['weeks']}</b> landed in full; "
+                       f"legs {a['legs_won']}/{a['legs']} won.</div>")
+        out.append(f"<details class=card open><summary>{label}, every fixture: {d['overall']['hits']}/{d['overall']['n']}"
                    f" ({d['overall']['hit_pct']:.0f}% v league avg {d['overall']['league_avg_pct']:.0f}%)</summary>")
         out.append("<p class=sub>By combined-% band</p>" + _rates_table(d["by_band"], "Band"))
         out.append("<p class=sub>By league</p>" + _rates_table(d["by_league"], "League") + "</details>")
@@ -175,6 +190,44 @@ def _data_section(report):
     return "".join(out)
 
 
+TABS = (("o15", "Over 1.5", "Over 1.5 goals", "over_1_5_highlight", "Over 1.5"),
+        ("gibh", "Goal in both halves", "Goal in both halves", "gibh_highlight", "Goal in both halves"))
+
+# Shows one market at a time. Without JavaScript both panels simply show one after the other.
+# The chosen tab is kept in the address (#gibh) so it can be bookmarked, and remembered on this phone.
+TAB_JS = """<script>
+(function(){
+  document.documentElement.classList.add('js');
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+  function show(id,save){
+    tabs.forEach(function(t){var on=t.dataset.tab===id;t.setAttribute('aria-selected',on);
+      document.getElementById('panel-'+t.dataset.tab).hidden=!on;});
+    if(save){try{localStorage.setItem('goals-tab',id)}catch(e){}
+      history.replaceState(null,'','#'+id);}
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.tab,true)})});
+  var start=(location.hash||'').slice(1);
+  if(!document.getElementById('panel-'+start)){try{start=localStorage.getItem('goals-tab')}catch(e){start=null}}
+  show(document.getElementById('panel-'+start)?start:'o15',false);
+})();
+</script>"""
+
+
+def _tabs(report):
+    cfg = report["config"]
+    buttons, panels = [], []
+    for mk, short, title, thr_key, track_label in TABS:
+        a = report["accas"][mk]
+        size = f"{len(a['legs'])}-fold" if a["legs"] else f"{len(a['reserves'])} qualify"
+        thr = cfg["thresholds"][thr_key] / 100
+        n_hi = sum(1 for r in report[mk] if r[mk]["combined_pct"] is not None and r[mk]["combined_pct"] >= thr)
+        buttons.append(f"<button class=tab role=tab data-tab={mk} aria-selected=false aria-controls=panel-{mk}>"
+                       f"{short}<span>{size} · {n_hi} at {cfg['thresholds'][thr_key]}%+</span></button>")
+        panels.append(f"<section class=panel id=panel-{mk} role=tabpanel>{_acca(report, mk)}"
+                      f"{_market_table(report, mk, title, thr_key)}{_track(report['hit_rates'], track_label)}</section>")
+    return f"<nav class=tabs role=tablist>{''.join(buttons)}</nav>{''.join(panels)}"
+
+
 def html(report) -> str:
     d = report["date"]
     gen = report["generated"].astimezone(UK).strftime("%a %d %b %Y, %H:%M UK")
@@ -187,7 +240,7 @@ def html(report) -> str:
     flagged = [res for res in report["loaded"] if res["problems"]]
     if flagged:
         alerts.append("<div class='alert warn'><b>Data checks need a look</b> – these leagues' fixtures are flagged and "
-                      "kept out of the accumulator:<ul>" + "".join(
+                      "kept out of both accumulators:<ul>" + "".join(
                           f"<li><b>{escape(res['league'].name)}</b>: {escape('; '.join(res['problems']))}</li>" for res in flagged)
                       + "</ul></div>")
     newest = max((res["meta"].get("latest_result") or "" for res in report["loaded"]), default="")
@@ -208,17 +261,14 @@ def html(report) -> str:
     body = (f"<main><h1>Goals report – {d.strftime('%A %d %B %Y')}</h1>"
             f"<p class=sub>Generated {gen}. League matches only, this season. Figures are calculated from match results, "
             f"not copied from stats sites.</p>{''.join(alerts)}{kpis}{post_html}{odds_html}"
-            f"{_acca(report)}"
-            f"{_market_table(report, 'o15', 'Over 1.5 goals', 'over_1_5_highlight')}"
-            f"{_market_table(report, 'gibh', 'Goal in both halves', 'gibh_highlight')}"
-            f"{_track(report)}{_data_section(report)}"
+            f"{_tabs(report)}{_data_section(report)}"
             f"<h2>How the numbers work</h2><div class=card><p class=sub>For each team: Over 1.5 % = league games with 2+ "
             f"goals ÷ games played. Goal-in-both-halves % = games with at least one goal in each half ÷ games played "
             f"(second-half goals = full-time total minus half-time total). Combined % = average of the two teams. "
             f"Teams with fewer than {cfg['thresholds']['min_games']} games are flagged. "
             f"<a href='report.csv'>Download the CSV</a> · <a href='results.html'>Last weekend's results</a>.</p></div></main>")
     return (f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
-            f"<title>Goals Report {d.isoformat()}</title><style>{CSS}</style></head><body>{body}</body></html>")
+            f"<title>Goals Report {d.isoformat()}</title><style>{CSS}</style></head><body>{body}{TAB_JS}</body></html>")
 
 
 def csv(report, path) -> None:
@@ -232,7 +282,8 @@ def csv(report, path) -> None:
                 f = lambda x: "" if x is None else round(100 * x, 1)  # noqa: E731
                 w.writerow([label, r["league_name"], _fixture(r), r["kickoff"], f(m["home_pct"]), f(m["away_pct"]),
                             f(m["combined_pct"]), f(m["venue_pct"]), m["home_gp"], m["away_gp"], "; ".join(r["flags"]),
-                            r.get("acca", "") if mk == "o15" else "", (r.get("price") or {}).get("price", "")])
+                            r.get("acca" if mk == "o15" else "gibh_acca", ""),
+                            (r.get("price") or {}).get("price", "") if mk == "o15" else ""])
 
 
 def markdown_summary(report) -> str:
@@ -243,7 +294,8 @@ def markdown_summary(report) -> str:
     lines.append("**Loaded:** " + ", ".join(
         f"{r['league'].name}{' ⚠️' if r['problems'] else ''}" for r in report["loaded"]))
     lines.append(f"**Postponed:** {len(report['postponed'])}  ·  **Fixtures analysed:** {len(report['o15'])}")
-    lines += ["", f"**Accumulator:** {report['acca']['message']}", ""]
+    lines += ["", f"**Over 1.5 accumulator:** {report['accas']['o15']['message']}",
+              f"**Goal-in-both-halves accumulator:** {report['accas']['gibh']['message']}", ""]
     for mk, title, key in MARKETS:
         thr = cfg["thresholds"][key]
         lines += [f"### {title} (highlight {thr}%+)", "", "| League | Fixture | KO | Home % | Away % | Combined | Venue-split | Flags |",
@@ -274,13 +326,14 @@ def results_page(df, hit_rates) -> str:
                 continue
             tick = lambda x: "✅" if str(x).lower() in ("true", "1", "1.0") else "❌"  # noqa: E731
             rows.append(f"<tr><td>{escape(r.home)} v {escape(r.away)}<div class=lg>{escape(r.league_name)}"
-                        f"{' · acca ' + escape(str(r.acca)) if isinstance(r.acca, str) and r.acca else ''}</div></td>"
+                        f"{' · O1.5 acca ' + escape(str(r.acca)) if isinstance(r.acca, str) and r.acca else ''}"
+                        f"{' · GIBH acca ' + escape(str(r.gibh_acca)) if isinstance(r.gibh_acca, str) and r.gibh_acca else ''}</div></td>"
                         f"<td class=n>{r.fthg}-{r.ftag} <span class=gp>HT {r.hthg}-{r.htag}</span></td>"
                         f"<td class=n>{r.o15_combined:.0f}% {tick(r.o15_hit)}</td><td class=n>{r.gibh_combined:.0f}% {tick(r.gibh_hit)}</td></tr>")
         body = ("<table><thead><tr><th>Fixture</th><th class=n>Score</th><th class=n>O1.5</th><th class=n>GIBH</th></tr></thead>"
                 f"<tbody>{''.join(rows)}</tbody></table>")
     title = f"Results – {last}" if last else "Results"
     main_ = (f"<main><h1>{title}</h1><p class=sub><a href='index.html'>← Back to the latest report</a></p>{body}"
-             f"{_track({'hit_rates': hit_rates})}</main>")
+             f"{_track(hit_rates)}</main>")
     return (f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
             f"<title>Goals Results</title><style>{CSS}</style></head><body>{main_}</body></html>")
