@@ -69,11 +69,11 @@ jobs:
           exit 1
 
       - name: Assemble the published site
-        if: steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch
+        if: steps.gate.outputs.go == 'true' && github.ref_name == 'main'
         env:
           OWNER: ${{ github.repository_owner }}
-          REPO: ${{ github.event.repository.name }}
         run: |
+          REPO="${GITHUB_REPOSITORY#*/}"   # not github.event.*: scheduled runs don't carry it
           mkdir -p _site/goals
           cp -r nfl_prop_engine/site/. _site/
           cp -r football_goals/site/. _site/goals/
@@ -86,12 +86,12 @@ jobs:
             || echo "::warning::Could not copy the live NFL data.json; using the repo copy"
 
       - uses: actions/upload-pages-artifact@v3
-        if: steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch
+        if: steps.gate.outputs.go == 'true' && github.ref_name == 'main'
         with:
           path: _site
 
     outputs:
-      publish: ${{ steps.gate.outputs.go == 'true' && github.ref_name == github.event.repository.default_branch }}
+      publish: ${{ steps.gate.outputs.go == 'true' && github.ref_name == 'main' }}
 
   deploy:
     needs: grade

@@ -59,6 +59,7 @@ def league_id(region: str, on: date) -> int:
 
 
 _fixture_cache: dict[tuple, list] = {}
+_refreshed: set = set()
 
 
 def _season_fixtures(region: str, on: date) -> list:
@@ -106,7 +107,10 @@ def fixtures_on(region: str, on: date):
 
 def result_on(region: str, on: date, home: str, away: str):
     """Graded result for a past fixture: dict, 'void', or None if not finished yet."""
-    _fixture_cache.pop((region, season_year(on)), None)  # always fresh for grading
+    k = (region, season_year(on))
+    if k not in _refreshed:  # fresh for grading, but once per run, not once per fixture
+        _fixture_cache.pop(k, None)
+        _refreshed.add(k)
     for f in _season_fixtures(region, on):
         ko, h, a, st = _row(f)
         if ko.date() == on and h == home and a == away:

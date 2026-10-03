@@ -224,6 +224,8 @@ def build_acca(rows, cfg, market: str, odds_on: bool):
         under = [r for r in rows
                  if r[market]["combined_pct"] is not None and r[market]["combined_pct"] < min_pct
                  and not r["data_problem"] and not (a["require_min_games"] and r["low_games"])]
+        if market == "o15" and odds_on and cfg["odds"]["min_price"] > 1.0:  # same price rule as the legs
+            under = [r for r in under if r.get("price") and r["price"]["price"] > cfg["odds"]["min_price"]]
         under.sort(key=lambda r: (r[market]["combined_pct"], r[market]["venue_pct"] or 0,
                                   min(r[market]["home_gp"], r[market]["away_gp"])), reverse=True)
         below = under[:nres - len(reserves)]
@@ -313,7 +315,7 @@ def run(on: date, cfg: dict) -> dict:
                 "acca": r.get("acca", ""), "gibh_acca": r.get("gibh_acca", ""), "price": (r.get("price") or {}).get("price"),
                 "flags": "; ".join(r["flags"]),
             })
-    history.record_report(hist_rows, on.isoformat())
+    history.record_report(hist_rows, on.isoformat(), leagues={res["league"].key for res in loaded})
 
     hit_rates = history.hit_rates(cfg=cfg)
     return {

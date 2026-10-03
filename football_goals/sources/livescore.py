@@ -53,16 +53,26 @@ def _parse(feed: dict) -> dict[str, list[dict]]:
     return out
 
 
+_downloaded: dict[date, dict] = {}  # this run's downloads, so a day is fetched at most once per run
+
+
 def day(d: date, today: date | None = None, refresh: bool = False) -> dict[str, list[dict]]:
+    """One match day. A day more than SETTLE_DAYS before *today's real date* is
+    saved and never downloaded again; anything newer is always fetched fresh
+    (once per run). `today` is only for tests: it must never be a report date,
+    or future days would be saved before they're played."""
     today = today or date.today()
     path = STORE / f"{d.isoformat()}.json"
     if path.exists() and not refresh:
         return json.loads(path.read_text())
+    if d in _downloaded:
+        return _downloaded[d]
     r = fetch(URL.format(ymd=d.strftime("%Y%m%d")))
     try:
         rows = _parse(r.json())
     except (ValueError, KeyError) as e:
         raise LiveScoreError(f"LiveScore feed format changed ({type(e).__name__}: {e})") from e
+    _downloaded[d] = rows
     if (today - d).days > SETTLE_DAYS:
         STORE.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(rows, indent=0))
@@ -77,7 +87,7 @@ def season_start(on: date) -> date:
 def _season(stage: str, on: date) -> list[dict]:
     rows, d = [], season_start(on)
     while d < on:
-        rows += day(d, today=on)[stage]
+        rows += day(d)[stage]  # settled-or-not is judged against the real date, never the report date
         d += timedelta(days=1)
     return rows
 
@@ -101,7 +111,7 @@ def load_results(region: str, on: date):
 
 
 def fixtures_on(region: str, on: date):
-    rows = day(on, today=on, refresh=True)[region]
+    rows = day(on, refresh=True)[region]
     fx = [{"home": r["home"], "away": r["away"], "kickoff": r["kickoff"]} for r in rows if not _is_off(r["status"])]
     off = [{"home": r["home"], "away": r["away"], "status": r["status"]} for r in rows if _is_off(r["status"])]
     return fx, off
