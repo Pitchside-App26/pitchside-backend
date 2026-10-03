@@ -200,6 +200,6 @@ def test_accumulator_markup_is_ready_for_a_checklist():
     rep = {"date": DAY, "config": cfg, "odds": {"enabled": False}, "o15": rows, "gibh": [],
            "accas": {"o15": run_report.build_acca(rows, cfg, "o15", False), "gibh": run_report.build_acca([], cfg, "gibh", False)}}
     out = render._acca(rep, "o15")
-    assert out.count("data-role=leg>") == 16 and out.count("data-role=reserve>") == 1
+    assert out.count("data-role=leg ") == 16 and out.count("data-role=reserve ") == 1
     assert "data-key='2026-10-03|T0|T0 B'" in out
     assert "SpreadEx acca boost" in out

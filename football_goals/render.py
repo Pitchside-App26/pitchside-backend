@@ -10,7 +10,7 @@ import csv as _csv
 from html import escape
 from zoneinfo import ZoneInfo
 
-from . import scope, update_button
+from . import betslip, scope, update_button
 
 UK = ZoneInfo("Europe/London")
 MARKETS = (("o15", "Over 1.5 goals", "over_1_5_highlight"), ("gibh", "Goal in both halves", "gibh_highlight"))
@@ -109,7 +109,7 @@ td.n,th.n{text-align:right;white-space:nowrap}
 .scroll{overflow-x:auto}
 details.card>summary{cursor:pointer;font-weight:600}
 details.card ul{padding-left:1.1rem;margin:.5rem 0 0}
-""" + update_button.CSS
+""" + update_button.CSS + betslip.CSS
 
 ICONS = {
     "o15": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/><path d='M12 3v4M12 17v4M3 12h4M17 12h4'/></svg>",
@@ -140,12 +140,14 @@ def _acca(report, mk):
         price = f" · {p['price']:.2f}" if odds and p else ""
         tag = f"<span class=tag>{escape(mark)}</span>" if mark else ""
         hi = m["combined_pct"] is not None and m["combined_pct"] >= thr
-        return (f"<li data-key='{escape(_key(report, r))}' data-role={role}><span class=num>{i}</span>"
+        return (f"<li data-key='{escape(_key(report, r))}' data-role={role} data-fx='{escape(_fixture(r))}' "
+                f"data-lg='{escape(r['league_name'])}' data-pct='{pct(m['combined_pct'], 1)}'><span class=num>{i}</span>"
                 f"<span class=fxn>{escape(_fixture(r))}<small>{escape(r['league_name'])} · "
                 f"{escape(r['kickoff'] or '–')}{price}{tag}</small></span>"
                 f"<b class='pc{' hi' if hi else ''}'>{pct(m['combined_pct'], 1)}</b></li>")
     size = f"{len(a['legs'])}-fold" if a["legs"] else "no fold"
-    out = [f"<div class=card><div class=acc-head><b>{title}</b><span class=sub>{size}</span></div>"
+    out = [f"<div class='card acca' data-mk={mk} data-date={report['date'].isoformat()} data-title='{escape(title)}'>"
+           f"<div class=acc-head><b>{title}</b><span class=sub>{size}</span></div>"
            f"<p class=sub style='margin:.2rem 0 0'>{escape(a['message'])}</p>"]
     if a.get("note"):  # e.g. the bookmaker's boost rule: read before placing
         out.append(f"<div class=note>{escape(a['note'])}</div>")
@@ -328,6 +330,7 @@ def _info(report):
                "<input type=date id=run-date aria-label='Match date'><div class=row>"
                + update_button.button(update_button.REPORT_WF, "Update report", date_from="run-date") + "</div></div>")
     out.append(update_button.setup_card())
+    out.append(betslip.BACKUP_CARD)
     rows = []
     for res in report["loaded"]:
         lg, meta = res["league"], res["meta"]
@@ -416,14 +419,16 @@ def html(report) -> str:
     for mk in ("o15", "gibh"):
         secs.append(f"<section class=sec id=sec-{mk}>{''.join(banners)}<h2>{MARKET_META[mk][0]}</h2>{_acca(report, mk)}"
                     f"{track_line(hr, mk)}{_fixture_list(report, mk)}</section>")
-    secs.append(f"<section class=sec id=sec-results>{RESULTS_START}{report['results_html']}{RESULTS_END}</section>")
+    secs.append(f"<section class=sec id=sec-results>{betslip.MY_BETS}{RESULTS_START}{report['results_html']}"
+                f"{RESULTS_END}</section>")
     secs.append(f"<section class=sec id=sec-info>{_info(report)}</section>")
     nav = "<nav class=bnav>" + "".join(
         f"<a href='#{k}' aria-current=false>{ICONS[k]}{label}</a>" for k, label in SECTIONS) + "</nav>"
     return (f"<!doctype html><html lang=en><head><meta charset=utf-8>"
             f"<meta name=viewport content='width=device-width,initial-scale=1,viewport-fit=cover'>"
             f"<title>Goals {d.strftime('%d %b')}</title><style>{CSS}</style></head><body>{top}"
-            f"<main>{''.join(secs)}</main>{nav}{update_button.script()}{APP_JS}</body></html>")
+            f"<main>{''.join(secs)}</main>{nav}{update_button.script()}{APP_JS}"
+            f"{betslip.script(report['config'])}</body></html>")
 
 
 def _swap(page: str, start: str, end: str, inner: str) -> str:
