@@ -66,6 +66,33 @@ site" in the browser menu if the button is missing.
 
 ---
 
+## The bet slip and "My bets"
+
+Each accumulator card works as a checklist while you place the bet:
+
+- **Tap the circle** next to a leg once it's on the bookmaker's slip. The bar under the card counts them, e.g.
+  "16-fold · 12 of 16 ticked".
+- **✕ (can't get this):** the leg is crossed out and the next reserve comes in. Use this when a leg is too short
+  for a boost or not offered. **↺** puts it back.
+- **+ on a reserve:** adds it as an extra leg, e.g. playing an 8-fold from a 6-fold. **−** takes it off again.
+- **Log bet:**
+  1. Pick the bookmaker. SpreadEx is pre-selected for Over 1.5 and Sky Bet for GIBH, and the last one you used
+     for each market is remembered. Bet365, BetFred, BoyleSports and "Other" are in the list.
+  2. Enter the stake.
+  3. Enter the **return shown on the bet slip**, so boosts are included exactly.
+
+  The bet is saved with its exact legs and appears under **Results → My bets**.
+
+**Where your bets are kept:** only in your phone's browser. They're never uploaded, because the repo and the site
+are public. Clearing browser data deletes them, so use **Info → My bets backup → Back up** now and then; the same
+file moves them to another phone. **Restore** never duplicates a bet that's already there.
+
+Coming next: settling each bet (won/lost) and profit and loss, by market and bookmaker.
+
+To change the bookmaker list or the defaults, edit `betting:` in `config.yaml`.
+
+---
+
 ## Changing the thresholds
 
 All the numbers you might want to change are in one file,

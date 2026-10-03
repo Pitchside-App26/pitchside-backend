@@ -41,6 +41,12 @@ gibh_accumulator:               # the goal-in-both-halves accumulator
   fill_reserves_below_line: true
   note: ""
 
+betting:                        # the bet-slip checklist and "Log bet" on each accumulator
+  bookmakers: ["SpreadEx", "Sky Bet", "Bet365", "BetFred", "BoyleSports"]   # "Other" is always offered too
+  default_bookmaker:            # pre-selected when logging; the last one you used for a market wins after that
+    over_1_5: "SpreadEx"
+    gibh: "Sky Bet"
+
 odds:
   enabled: false                # set to true to add prices (needs the ODDS_API_KEY secret)
   min_price: 1.0                # only include a leg if its Over 1.5 price is better than this (1.0 = no filter)
