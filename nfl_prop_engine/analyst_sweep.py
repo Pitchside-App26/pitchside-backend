@@ -101,28 +101,40 @@ def fetch_analyst_picks_with_usage(game_description: str, week: int, api_key: st
     game -- the Sources gate then just fails for that game's props, which
     is the correct, safe outcome for "couldn't verify", not a crash.
     """
-    client = anthropic.Anthropic(api_key=api_key)
     system = SYSTEM_PROMPT.format(
         outlets=", ".join(ANALYST_SWEEP["outlets"]),
         max_age_days=ANALYST_SWEEP["max_age_days"],
     )
-    user_message = {"role": "user", "content": f"Game: {game_description}. NFL Week {week}."}
+    return search_for_picks(
+        system, f"Game: {game_description}. NFL Week {week}.", game_description,
+        max_searches=6, max_continuations=ANALYST_SWEEP["max_continuations"], api_key=api_key,
+    )
+
+
+def search_for_picks(
+    system: str, user_text: str, label: str, max_searches: int, max_continuations: int,
+    api_key: str | None = None, model: str | None = None,
+) -> tuple[list[dict], dict]:
+    """One Claude call with web search that should end in a JSON array of
+    picks. Returns (picks, usage); a failed call logs and returns no picks."""
+    client = anthropic.Anthropic(api_key=api_key)
+    user_message = {"role": "user", "content": user_text}
     usage = {"input_tokens": 0, "output_tokens": 0, "web_searches": 0}
     messages = [user_message]
     try:
         # A long web-search turn can come back as stop_reason="pause_turn"
         # (the server's own iteration limit); resending the paused turn
-        # resumes it. Without this a paused game reads as "no picks found".
-        for _ in range(1 + ANALYST_SWEEP["max_continuations"]):
+        # resumes it. Without this a paused search reads as "no picks found".
+        for _ in range(1 + max_continuations):
             response = client.messages.create(
-                model=ANALYST_SWEEP["model"],
+                model=model or ANALYST_SWEEP["model"],
                 # 16000 (not 4096): Sonnet 5 runs adaptive thinking on by
                 # default, and thinking + the web_search tool's own turns
                 # share this budget with the final JSON. 4096 returned zero
                 # picks in the first real smoke test; 16000 returned four.
                 max_tokens=16000,
                 system=system,
-                tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 6}],
+                tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": max_searches}],
                 messages=messages,
             )
             for k, v in _usage_dict(response).items():
@@ -131,29 +143,29 @@ def fetch_analyst_picks_with_usage(game_description: str, week: int, api_key: st
                 break
             messages = [user_message, {"role": "assistant", "content": response.content}]
     except anthropic.APIError as exc:
-        logger.warning("Analyst sweep API call failed for %r (%s) -- skipping this game.", game_description, exc)
+        logger.warning("Analyst search failed for %r (%s) -- no picks from it.", label, exc)
         return [], usage
 
     block_types = dict(Counter(block.type for block in response.content))
     logger.info(
-        "Analyst sweep response for %r: stop_reason=%s, blocks=%s, usage=%s (~$%.2f)",
-        game_description, response.stop_reason, block_types, usage, estimate_cost_usd(usage),
+        "Analyst search response for %r: stop_reason=%s, blocks=%s, usage=%s (~$%.2f)",
+        label, response.stop_reason, block_types, usage, estimate_cost_usd(usage),
     )
     if response.stop_reason == "max_tokens":
         logger.warning(
-            "Analyst sweep for %r hit max_tokens before finishing -- output was likely "
-            "truncated. Consider raising max_tokens further.", game_description,
+            "Analyst search for %r hit max_tokens before finishing -- output was likely "
+            "truncated. Consider raising max_tokens further.", label,
         )
 
     text = "".join(block.text for block in response.content if block.type == "text")
     if not text.strip():
         logger.warning(
-            "Analyst sweep for %r got no text block back (stop_reason=%s, blocks=%s) -- "
-            "nothing to parse.", game_description, response.stop_reason, block_types,
+            "Analyst search for %r got no text block back (stop_reason=%s, blocks=%s) -- "
+            "nothing to parse.", label, response.stop_reason, block_types,
         )
-    picks = parse_picks_json(text, game_description)
+    picks = parse_picks_json(text, label)
     if not picks and text.strip():
-        logger.info("Analyst sweep for %r raw text (first 2000 chars): %s", game_description, text[:2000])
+        logger.info("Analyst search for %r raw text (first 2000 chars): %s", label, text[:2000])
     return picks, usage
 
 
@@ -243,14 +255,28 @@ def normalize_side(text: str | None) -> str | None:
     return side if side in ("over", "under") else None
 
 
+def line_tolerance_for(market: str, line: float) -> float:
+    """How far an analyst's line can sit from the consensus and still count
+    as the same bet. Yardage: 5% of the line, at least 2.5 yards (a pick
+    at 61.5 when the consensus is 59.5 is the same view). Counts: 1, but
+    exact below 2 -- over 0.5 TDs and over 1.5 TDs are different bets."""
+    if market in ("player_pass_yds", "player_rush_yds", "player_reception_yds"):
+        return max(2.5, 0.05 * abs(line))
+    return 1.0 if abs(line) >= 2 else 0.0
+
+
 def match_picks_to_candidate(
-    picks: list[dict], player: str, market: str, line: float, line_tolerance: float = 2.0
+    picks: list[dict], player: str, market: str, line: float | None, line_tolerance: float | None = None
 ) -> list[dict]:
     """A pick at a different line still counts if it's within tolerance
     (per the spec) -- the analyst may have picked before the line moved
     to what bet365 or the US consensus now shows. Market and side are
     normalized first: articles say "Receiving Yards" and "Over", never
     the engine's own "player_reception_yds" / "over"."""
+    if line is None:  # a thin market has no consensus line to compare against
+        return []
+    if line_tolerance is None:
+        line_tolerance = line_tolerance_for(market, line)
     matched = []
     for pick in picks:
         if not _same_player(pick.get("player"), player):

@@ -128,7 +128,8 @@ def _clean_tree(value):
 
 
 def write_json(
-    ranked: list[RankedProp], season: int, week: int, path: str, accumulator: dict | None = None
+    ranked: list[RankedProp], season: int, week: int, path: str, accumulator: dict | None = None,
+    analyst_picks: dict | None = None,
 ) -> None:
     payload = {
         "season": season,
@@ -138,5 +139,7 @@ def write_json(
     }
     if accumulator is not None:
         payload["accumulator"] = _clean_tree(accumulator)
+    if analyst_picks is not None:
+        payload["analyst_picks"] = _clean_tree(analyst_picks)
     with open(path, "w") as f:
         json.dump(payload, f, indent=2, allow_nan=False)

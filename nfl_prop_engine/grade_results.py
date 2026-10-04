@@ -25,7 +25,7 @@ import pandas as pd
 from config import RESULTS_DB_PATH
 from fetch_schedule import load_schedule_seasons
 from fetch_stats import fetch_all_stats
-from results_log import _connect, grade_acca_week, grade_week
+from results_log import _connect, grade_acca_week, grade_analyst_week, grade_week
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ def _ungraded_season_weeks(db_path: str = RESULTS_DB_PATH) -> list[tuple[int, in
         cur = conn.execute(
             """SELECT season, week FROM weekly_output WHERE actual_value IS NULL
                UNION SELECT season, week FROM acca_legs WHERE actual_value IS NULL
+               UNION SELECT season, week FROM analyst_picks WHERE actual_value IS NULL
                ORDER BY season, week"""
         )
         return cur.fetchall()
@@ -50,8 +51,10 @@ def _ungraded_pairs(season: int, week: int, db_path: str = RESULTS_DB_PATH) -> s
             """SELECT player_id, stat_col FROM weekly_output
                WHERE season=? AND week=? AND actual_value IS NULL AND player_id IS NOT NULL
                UNION SELECT player_id, stat_col FROM acca_legs
+               WHERE season=? AND week=? AND actual_value IS NULL AND player_id IS NOT NULL
+               UNION SELECT player_id, stat_col FROM analyst_picks
                WHERE season=? AND week=? AND actual_value IS NULL AND player_id IS NOT NULL""",
-            (season, week, season, week),
+            (season, week, season, week, season, week),
         )
         return {(pid, stat) for pid, stat in cur.fetchall()}
     finally:
@@ -130,12 +133,13 @@ def grade_all_ungraded(db_path: str = RESULTS_DB_PATH) -> int:
             continue
         n = grade_week(season, week, actuals, db_path)
         n_acca = grade_acca_week(season, week, actuals, db_path)
+        n_analyst = grade_analyst_week(season, week, actuals, db_path)
         logger.info(
-            "Season %s week %s: graded %d logged row(s) and %d accumulator leg(s) covering %d distinct "
-            "player/stat pair(s).",
-            season, week, n, n_acca, len(actuals),
+            "Season %s week %s: graded %d logged row(s), %d accumulator leg(s) and %d analyst pick(s) covering "
+            "%d distinct player/stat pair(s).",
+            season, week, n, n_acca, n_analyst, len(actuals),
         )
-        total_graded += n + n_acca
+        total_graded += n + n_acca + n_analyst
     return total_graded
 
 
@@ -246,6 +250,40 @@ def print_acca_report(db_path: str = RESULTS_DB_PATH) -> None:
         _summarize(rows, label)
 
 
+def analyst_groups(df: pd.DataFrame, min_outlet_picks: int = 5) -> list[tuple[str, pd.DataFrame]]:
+    """Graded analyst picks, each judged at the analyst's own line and side.
+    A pick logged by several runs in one week counts once (latest run)."""
+    df = df.sort_values("logged_at").drop_duplicates(
+        ["season", "week", "player_id", "stat_col", "side", "outlet", "analyst"], keep="last").copy()
+    df["outcome"] = [_direction_hit(side, line, actual) for side, line, actual in zip(df["side"], df["line"], df["actual_value"])]
+    groups = [
+        ("all analyst picks", df),
+        ("overs", df[df["side"] == "over"]),
+        ("unders", df[df["side"] == "under"]),
+        ("engine agrees", df[df["engine_status"].isin(["engine_agree", "slip_agree"])]),
+        ("engine disagrees", df[df["engine_status"].isin(["engine_disagree", "slip_against"])]),
+    ]
+    for outlet, rows in df.groupby("outlet"):
+        if outlet and len(rows) >= min_outlet_picks:
+            groups.append((f"outlet: {outlet[:20]}", rows))
+    return groups
+
+
+def print_analyst_report(db_path: str = RESULTS_DB_PATH) -> None:
+    conn = _connect(db_path)
+    try:
+        df = pd.read_sql_query("SELECT * FROM analyst_picks WHERE actual_value IS NOT NULL", conn)
+    finally:
+        conn.close()
+    print()
+    if df.empty:
+        print("No graded analyst picks yet.")
+        return
+    print("Analyst picks (at the analyst's own line and side; break-even at ~1.85 odds is 54%):")
+    for label, rows in analyst_groups(df):
+        _summarize(rows, label)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Grade logged props against real results and report hit rate.")
     parser.add_argument("--report", action="store_true", help="skip grading, just report on what's already graded")
@@ -257,6 +295,7 @@ def main():
         logger.info("Graded %d prop(s) this run.", n)
     print_report()
     print_acca_report()
+    print_analyst_report()
 
 
 if __name__ == "__main__":

@@ -65,6 +65,37 @@ CREATE TABLE IF NOT EXISTS acca_legs (
 """
 
 
+# Every analyst pick the slate-wide search found (analyst_picks.py), judged
+# at the analyst's own line and side when graded: does following analysts
+# beat the market, and does the engine agreeing with them help?
+ANALYST_SCHEMA = """
+CREATE TABLE IF NOT EXISTS analyst_picks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    logged_at TEXT NOT NULL,
+    season INTEGER NOT NULL,
+    week INTEGER NOT NULL,
+    player_id TEXT,
+    player_name TEXT,
+    team TEXT,
+    stat_col TEXT,
+    market TEXT,
+    game TEXT,
+    window TEXT,
+    side TEXT,
+    line REAL,
+    price TEXT,
+    outlet TEXT,
+    analyst TEXT,
+    url TEXT,
+    publish_date TEXT,
+    engine_status TEXT,
+    engine_projection REAL,
+    actual_value REAL,
+    graded_at TEXT
+);
+"""
+
+
 # Columns added after acca_legs first shipped, so a database created by an
 # earlier run gets them too (CREATE TABLE IF NOT EXISTS won't add them).
 ACCA_ADDED_COLUMNS = {"window": "TEXT", "filler": "INTEGER NOT NULL DEFAULT 0"}
@@ -74,6 +105,7 @@ def _connect(db_path: str = RESULTS_DB_PATH) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.execute(SCHEMA)
     conn.execute(ACCA_SCHEMA)
+    conn.execute(ANALYST_SCHEMA)
     existing = {row[1] for row in conn.execute("PRAGMA table_info(acca_legs)")}
     for column, decl in ACCA_ADDED_COLUMNS.items():
         if column not in existing:
@@ -103,6 +135,40 @@ def log_acca_legs(rows: list[dict], season: int, week: int, db_path: str = RESUL
         )
     conn.close()
     return len(rows)
+
+
+def log_analyst_picks(rows: list[dict], season: int, week: int, db_path: str = RESULTS_DB_PATH) -> int:
+    logged_at = datetime.now(timezone.utc).isoformat()
+    cols = ["player_id", "player_name", "team", "stat_col", "market", "game", "window", "side", "line", "price",
+            "outlet", "analyst", "url", "publish_date", "engine_status", "engine_projection"]
+    conn = _connect(db_path)
+    with conn:
+        conn.executemany(
+            f"INSERT INTO analyst_picks (logged_at, season, week, {', '.join(cols)}) "
+            f"VALUES ({', '.join('?' * (3 + len(cols)))})",
+            [(logged_at, season, week, *(r.get(c) for c in cols)) for r in rows],
+        )
+    conn.close()
+    return len(rows)
+
+
+def grade_analyst_week(season: int, week: int, actuals: dict[tuple[str, str], float], db_path: str = RESULTS_DB_PATH) -> int:
+    """Same actuals as grade_week, applied to the analyst_picks log."""
+    conn = _connect(db_path)
+    graded_at = datetime.now(timezone.utc).isoformat()
+    count = 0
+    with conn:
+        cur = conn.execute(
+            "SELECT id, player_id, stat_col FROM analyst_picks WHERE season=? AND week=? AND actual_value IS NULL",
+            (season, week),
+        )
+        for row_id, player_id, stat_col in cur.fetchall():
+            actual = actuals.get((player_id, stat_col))
+            if actual is not None:
+                conn.execute("UPDATE analyst_picks SET actual_value=?, graded_at=? WHERE id=?", (actual, graded_at, row_id))
+                count += 1
+    conn.close()
+    return count
 
 
 def grade_acca_week(season: int, week: int, actuals: dict[tuple[str, str], float], db_path: str = RESULTS_DB_PATH) -> int:

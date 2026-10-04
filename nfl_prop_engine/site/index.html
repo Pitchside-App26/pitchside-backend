@@ -417,6 +417,29 @@
   }
 
   .pill.warn { color: var(--low-conf); border-color: var(--low-conf); }
+  .pill.good { color: var(--over); border-color: var(--over); }
+  .pill.bad { color: var(--under); border-color: var(--under); }
+
+  /* ── Analyst picks ── */
+  .analysts { margin: 4px 0 26px; }
+  .tip-group {
+    margin-top: 14px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sub);
+  }
+  .tip {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+  .tip .who { font-weight: 600; }
+  .tip .bet { font-variant-numeric: tabular-nums; }
+  .tip .src { color: var(--sub); font-size: 0.78rem; overflow-wrap: anywhere; }
+  .tip .src a { color: var(--text); text-underline-offset: 2px; }
+  .tip .pills { margin-top: 4px; }
 
   .sources {
     margin-top: 8px;
@@ -620,6 +643,8 @@
     </header>
 
     <section class="acca" id="acca" hidden aria-labelledby="acca-title"></section>
+
+    <section class="analysts" id="analysts" hidden aria-labelledby="analysts-title"></section>
 
     <div class="section-head ranked-head">
       <h2>All ranked props</h2>
@@ -1063,7 +1088,9 @@
       </details>` : "";
 
     const sweep = a.analyst_sweep || {};
-    const sweepNote = sweep.ran
+    const sweepNote = sweep.ran && !sweep.usage
+      ? `Analysts: ${esc(sweep.note)}.`
+      : sweep.ran
       ? `Analyst sweep covered ${sweep.games.length} game${sweep.games.length === 1 ? "" : "s"}${sweep.usage ? `, estimated cost $${esc(money(sweep.usage.estimated_cost_usd))}` : ""}.`
       : `Analyst sweep: ${esc(sweep.note || "didn't run")}.`;
     const feedNote = a.bet365_in_feed
@@ -1081,6 +1108,54 @@
         <div>Not checked automatically:</div>
         <ul>${(a.not_checked || []).map(n => `<li>${esc(n)}</li>`).join("")}</ul>
       </div>`;
+  }
+
+  const TIP_PILL = { slip_agree: "good", slip_against: "bad", engine_agree: "", engine_disagree: "warn", unrated: "" };
+
+  function tipHtml(t) {
+    const e = t.engine || {};
+    const engineDetail = e.slip_line !== null && e.slip_line !== undefined
+      ? ` (slip: over ≤ ${esc(fmtLine(e.slip_line))})`
+      : e.projection !== null && e.projection !== undefined
+      ? ` (projects ${esc(fmtLine(e.projection))} vs ${esc(fmtLine(e.engine_line))})` : "";
+    const who = [t.outlet, t.analyst].filter(Boolean).join(", ") || "unnamed source";
+    const url = safeUrl(t.url);
+    const src = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(who)}</a>` : esc(who);
+    return `<div class="tip">
+      <div><span class="who">${esc(t.player)}</span> · <span class="bet">${esc(t.stat_label)} ${esc(t.side)} ${esc(fmtLine(t.line))}${t.price ? ` (${esc(t.price)})` : ""}</span></div>
+      <div class="src">${src}${t.publish_date ? ` · ${esc(t.publish_date)}` : ""} · ${esc(t.game)}</div>
+      <div class="pills"><span class="pill ${TIP_PILL[e.status] || ""}">${esc(e.label || "")}${engineDetail}</span></div>
+    </div>`;
+  }
+
+  function renderAnalysts(feed) {
+    const el = document.getElementById("analysts");
+    if (!feed) return;  // older data.json without the section
+    el.hidden = false;
+    const head = `
+      <div class="section-head">
+        <h2 id="analysts-title">What analysts are tipping</h2>
+        <span class="kicker">Not used to pick legs · graded on Tuesday</span>
+      </div>`;
+    const picks = feed.picks || [];
+    if (!feed.ran || !picks.length) {
+      el.innerHTML = head + `<div class="acca-empty">${feed.ran ? "The search found no usable picks on the early or late games this week." : esc(feed.note || "The analyst search didn't run.")}</div>`;
+      return;
+    }
+    const cost = feed.usage ? ` One web search, about $${esc(money(feed.usage.estimated_cost_usd))}.` : "";
+    const dropped = feed.n_dropped ? ` ${esc(feed.n_dropped)} more found but skipped (a market the engine doesn't cover, no line, or a player or game it couldn't match).` : "";
+    const onSlips = picks.filter(t => t.engine && t.engine.status.startsWith("slip_"));
+    const slipHtml = onSlips.length
+      ? `<div class="tip-group">On your slips</div>` + onSlips.map(tipHtml).join("")
+      : `<div class="acca-summary">No analyst tipped a leg on your slips.</div>`;
+    const byGame = {};
+    picks.forEach(t => { (byGame[t.game] = byGame[t.game] || []).push(t); });
+    const allHtml = Object.entries(byGame).map(([game, tips]) =>
+      `<div class="tip-group">${esc(game)}</div>` + tips.map(tipHtml).join("")).join("");
+    el.innerHTML = head +
+      `<div class="acca-summary"><strong>${picks.length}</strong> pick${picks.length === 1 ? "" : "s"} on the early and late games.${cost}${dropped}</div>` +
+      slipHtml +
+      `<details class="more"><summary>Every analyst pick, by game (${picks.length})</summary>${allHtml}</details>`;
   }
 
   function timeAgo(iso) {
@@ -1105,6 +1180,7 @@
         `<span>Updated ${timeAgo(data.generated_at)}</span>` +
         `<span>${state.props.length} props</span>`;
       renderAcca(data.accumulator, data);
+      renderAnalysts(data.analyst_picks);
       render();
     })
     .catch(err => {

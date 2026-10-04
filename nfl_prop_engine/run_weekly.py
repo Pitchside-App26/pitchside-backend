@@ -14,9 +14,15 @@ import logging
 
 import pandas as pd
 
-from acca_report import LegContext, build_acca_report
+import os
+
+from acca_report import ABBR_TO_TEAM_NAME, LegContext, build_acca_report
+from analyst_picks import GameRef, PlayerRef, build_feed, fetch_slate_picks, picks_by_game, resolve_picks
+from analyst_picks import log_rows as analyst_log_rows
 from config import (
+    ACCA_WINDOWS,
     ALL_MARKETS,
+    ANALYST_PICKS,
     CREDIT_CAP,
     DEFENSE_MARKETS,
     FORM_WINDOW,
@@ -46,7 +52,7 @@ from opponent_stats import add_opponent_column, allowed_rate_table
 from output import print_report, write_json
 from projection_engine import Projection, league_fallback_std, project_rookie, project_veteran
 from rank_props import build_ranked_prop, rank
-from results_log import log_acca_legs, log_weekly_output
+from results_log import log_acca_legs, log_analyst_picks, log_weekly_output
 
 SITE_DATA_PATH = "site/data.json"
 
@@ -133,6 +139,63 @@ def rows_for_matched_player(
     in_game = latest[latest[team_col].isin(candidate_teams)]
     chosen = (in_game if not in_game.empty else latest).iloc[-1]["player_id"]
     return rows[rows["player_id"] == chosen]
+
+
+def window_team_games(games: pd.DataFrame, window_lookup: dict[str, str]) -> dict[str, GameRef]:
+    """team -> its game, for teams playing in one of the acca windows."""
+    result = {}
+    for row in games.itertuples():
+        window = window_lookup.get(row.home_team)
+        if window not in ACCA_WINDOWS:
+            continue
+        ref = GameRef(
+            game=f"{row.away_team} @ {row.home_team}",
+            description=f"{ABBR_TO_TEAM_NAME.get(row.away_team, row.away_team)} at {ABBR_TO_TEAM_NAME.get(row.home_team, row.home_team)}",
+            window=window,
+        )
+        result[row.home_team] = result[row.away_team] = ref
+    return result
+
+
+def players_on_teams(teams: set[str], *stat_frames: pd.DataFrame) -> list[PlayerRef]:
+    """Everyone whose latest stats row is on one of these teams."""
+    players = []
+    for frame in stat_frames:
+        if frame.empty:
+            continue
+        team_col = "recent_team" if "recent_team" in frame.columns else "team"
+        latest = frame.sort_values(["season", "week"]).groupby("player_id").tail(1)
+        for row in latest[latest[team_col].isin(teams)].itertuples():
+            players.append(PlayerRef(row.player_id, row.player_display_name, getattr(row, team_col)))
+    return players
+
+
+def run_analyst_search(
+    games: pd.DataFrame, window_lookup: dict[str, str], week: int, season: int, *stat_frames: pd.DataFrame,
+) -> tuple[list[dict], dict, dict[str, list[dict]] | None]:
+    """(resolved picks, info for the page, picks by game for the slips).
+    Never raises: the slips and rankings don't depend on it."""
+    if not ANALYST_PICKS["enabled"]:
+        return [], {"ran": False, "note": "the analyst search is turned off in config"}, None
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return [], {"ran": False, "note": "no ANTHROPIC_API_KEY in this run, so the analyst search didn't run"}, None
+    team_games = window_team_games(games, window_lookup)
+    if not team_games:
+        return [], {"ran": False, "note": "no games in the acca windows this week"}, None
+    try:
+        lines = sorted({
+            f"{ref.description} ({ACCA_WINDOWS[ref.window]['label'].lower()})" for ref in team_games.values()
+        })
+        raw, usage = fetch_slate_picks(lines, week, season)
+        resolved, dropped = resolve_picks(raw, players_on_teams(set(team_games), *stat_frames), team_games)
+    except Exception as exc:
+        logger.exception("Analyst search failed")
+        return [], {"ran": False, "note": f"the analyst search failed ({type(exc).__name__})"}, None
+    logger.info("Analyst search: %d pick(s) found, %d kept, usage %s", len(raw), len(resolved), usage)
+    info = {"ran": True, "n_found": len(raw), "n_dropped": dropped, "usage": usage,
+            "note": f"{len(resolved)} pick(s) from one web search over the early and late games"}
+    by_game = picks_by_game(resolved, sorted({ref.description for ref in team_games.values()}))
+    return resolved, info, by_game
 
 
 def prep_position_group(df: pd.DataFrame, position_col: str, constant: str | None = None) -> pd.DataFrame:
@@ -350,6 +413,10 @@ def run(
     print_report(ranked, season, week)
     log_weekly_output(ranked, season, week)
 
+    analyst_picks, analyst_info, slate_picks = run_analyst_search(
+        games, window_lookup, week, season, offense_df, defense_df,
+    )
+
     # The rankings page must still publish if the newer accumulator stage
     # fails, so a failure here becomes a message on the page, not a crash.
     try:
@@ -357,6 +424,7 @@ def run(
             acca_contexts, per_book_rows, week, season,
             log_rows=lambda rows: log_acca_legs(rows, season, week),
             window_kickoffs=window_uk_kickoffs(games),
+            slate_picks=slate_picks,
         )
         for acca in accumulator["accumulators"]:
             logger.info(
@@ -368,7 +436,14 @@ def run(
         logger.exception("Accumulator report failed")
         accumulator = {"error": f"{type(exc).__name__}: {exc}"}
 
-    write_json(ranked, season, week, SITE_DATA_PATH, accumulator=accumulator)
+    ranked_view = {
+        (p.player_id, p.stat_col): {"projection": p.projection, "line": p.line, "direction": p.direction} for p in ranked
+    }
+    analyst_feed = build_feed(analyst_picks, accumulator, ranked_view, analyst_info)
+    if analyst_feed["picks"]:
+        log_analyst_picks(analyst_log_rows(analyst_feed), season, week)
+
+    write_json(ranked, season, week, SITE_DATA_PATH, accumulator=accumulator, analyst_picks=analyst_feed)
     logger.info("Wrote %d ranked props to %s", len(ranked), SITE_DATA_PATH)
 
 

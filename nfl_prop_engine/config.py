@@ -268,7 +268,11 @@ def market_kind_for(stat_col: str) -> str:
 
 
 ANALYST_SWEEP = {
-    "enabled": True,
+    # Off since 4 Oct: the per-game search cost ~$0.84 a game, covered 3
+    # games, and found no backers for any slip leg on its first live Sunday.
+    # ANALYST_PICKS below replaces it with one search over the whole slate;
+    # its picks still fill in each leg's analyst backing.
+    "enabled": False,
     # False (since 1 Oct): analyst backing is shown and logged per leg but
     # doesn't exclude anything. Turn back into a gate (MIN_SOURCES backers
     # required) if graded results show backed legs hit more -- see the
@@ -296,6 +300,17 @@ ANALYST_SWEEP = {
         "SportsBettingDime", "SBR", "Fantasy Life", "VSiN", "RotoWire", "ESPN",
         "Dimers", "Action Network player projections",
     ],
+}
+
+# What analysts are tipping across the Sunday windows, from ONE web search
+# per run (analyst_picks.py). Shown in its own panel, logged and graded --
+# never used to pick legs. Searches are the cost driver (each pulls tens of
+# thousands of tokens of results), so max_searches caps the bill: ~$1-2 a run.
+ANALYST_PICKS = {
+    "enabled": True,
+    "model": ANALYST_SWEEP["model"],
+    "max_searches": 8,
+    "max_continuations": 2,
 }
 
 # Bet-slip intake: Dan opens a GitHub issue with a screenshot of the slip he
