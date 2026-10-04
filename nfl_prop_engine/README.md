@@ -39,6 +39,13 @@ python grade_results.py            # grade every ungraded logged week, then repo
 python grade_results.py --report   # skip grading, just report on what's already graded
 ```
 
+Since 4 Oct every logged prop also keeps both sides' prices at its line,
+the book, and the no-vig chance of the over. The report then shows profit
+at those prices (1 unit a bet) for every over, every under and the
+engine's own picks: a hit rate only means something if it beats the price
+(e.g. under 0.5 sacks hits most weeks but is usually priced around 1.30).
+Weeks 1-2 were logged without prices, so they count for hit rate only.
+
 `results_log.py` has logged every ranked prop since the very first real
 run, but until this existed nothing ever read `actual_value` back in --
 "is this ranking any good" was an unanswered question no matter how many

@@ -25,6 +25,7 @@ import pandas as pd
 from config import RESULTS_DB_PATH
 from fetch_schedule import load_schedule_seasons
 from fetch_stats import fetch_all_stats
+from pricing import american_to_decimal
 from results_log import _connect, grade_acca_week, grade_analyst_week, grade_week
 
 logger = logging.getLogger(__name__)
@@ -161,6 +162,45 @@ def _summarize(rows: pd.DataFrame, label: str) -> None:
     print(f"  {label:<28} n={len(rows):<4} hit={hits:<4} miss={misses:<4} hit-rate={rate}")
 
 
+def bet_profit(side: str, line: float, actual: float, american_price: float | None) -> float | None:
+    """Units won or lost betting 1 unit on `side` at the logged price; None
+    with no price. A push returns the stake (0)."""
+    decimal = american_to_decimal(american_price)
+    if decimal is None:
+        return None
+    outcome = _direction_hit(side, line, actual)
+    return 0.0 if outcome == "push" else decimal - 1 if outcome == "hit" else -1.0
+
+
+def profit_groups(df: pd.DataFrame) -> list[tuple[str, list[float]]]:
+    """(label, per-bet profits) at the logged prices: every over, every
+    under, and the engine's own picks. One row per player/stat/week (latest
+    run), and only rows with both prices."""
+    if "over_price" not in df.columns:
+        return []
+    df = df[df["over_price"].notna() & df["under_price"].notna()]
+    df = df.sort_values("logged_at").drop_duplicates(["season", "week", "player_id", "stat_col"], keep="last")
+    def profits(side_of):
+        return [bet_profit(side_of(r), r.line, r.actual_value, r.over_price if side_of(r) == "over" else r.under_price)
+                for r in df.itertuples()]
+    return [
+        ("every over", profits(lambda r: "over")),
+        ("every under", profits(lambda r: "under")),
+        ("the engine's picks", profits(lambda r: r.direction)),
+    ]
+
+
+def print_profit(df: pd.DataFrame) -> None:
+    groups = profit_groups(df)
+    if not groups or not groups[0][1]:
+        print("No graded props with prices yet (prices are logged from 4 Oct on).")
+        return
+    print("At the logged prices, 1 unit a bet -- a hit rate only matters if it beats the price:")
+    for label, profits in groups:
+        units = sum(profits)
+        print(f"  {label:<28} n={len(profits):<4} profit={units:+.2f}u  ROI={units / len(profits):+.1%}")
+
+
 def print_report(db_path: str = RESULTS_DB_PATH) -> None:
     conn = sqlite3.connect(db_path)
     try:
@@ -209,6 +249,8 @@ def print_report(db_path: str = RESULTS_DB_PATH) -> None:
     df["edge_bucket"] = pd.cut(df["edge_score"].abs(), bins=bins, labels=labels, right=False)
     for bucket, group in df.groupby("edge_bucket", observed=True):
         _summarize(group, str(bucket))
+    print()
+    print_profit(df)
 
 
 def acca_groups(df: pd.DataFrame) -> list[tuple[str, pd.DataFrame]]:

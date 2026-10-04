@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 from explain import explain_projection
-from pricing import explain_value, model_probability, no_vig_probability, value_pct
+from pricing import _missing, explain_value, model_probability, no_vig_probability, value_pct
 from projection_engine import Projection
 
 
@@ -44,6 +44,12 @@ class RankedProp:
     # fetch_stats.fetch_receiving_usage.
     avg_targets: float | None = None
 
+    # Both sides' American prices at `line` and the book they came from, so
+    # graded results can be judged on profit at the price, not just hit rate.
+    over_price: float | None = None
+    under_price: float | None = None
+    bookmaker: str | None = None
+
 
 def compute_hit_rate(current_values: list[float], line: float, direction: str) -> tuple[float | None, int]:
     """Fraction of this player's own games this season that would have
@@ -65,7 +71,7 @@ def build_ranked_prop(
     proj: Projection, line: float, current_season_values: list[float],
     team: str = "", opponent: str = "", kickoff: str = "",
     over_price: float | None = None, under_price: float | None = None,
-    injury_status: str | None = None, avg_targets: float | None = None,
+    injury_status: str | None = None, avg_targets: float | None = None, bookmaker: str | None = None,
 ) -> RankedProp:
     if proj.season_std and proj.season_std > 0:
         edge_score = (proj.projection - line) / proj.season_std
@@ -103,6 +109,9 @@ def build_ranked_prop(
         explanation=explanation,
         price=price, market_prob=market_prob, model_prob=model_prob, value_pct=val_pct,
         injury_status=injury_status, avg_targets=avg_targets,
+        over_price=None if _missing(over_price) else float(over_price),
+        under_price=None if _missing(under_price) else float(under_price),
+        bookmaker=bookmaker or None,
     )
 
 
