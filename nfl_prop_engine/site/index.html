@@ -652,36 +652,51 @@
     return Number.isFinite(v) ? (Number.isInteger(v) ? v : v.toFixed(1)) : "-";
   }
 
-  function edgeMagnitude(p) {
-    // Sort by the same number the badge displays (edge_pct) -- sorting by
-    // edge_score (the std-dev-scaled version used internally for logging)
-    // while displaying edge_pct produced a list that looked unsorted, since
-    // the two don't always agree. Falls back to edge_score only for the
-    // rare prop with a zero line, where edge_pct is null.
-    return Math.abs(p.edge_pct ?? p.edge_score);
-  }
+  // Each sort shows its own number in the badge, so the list always reads
+  // as sorted. Edge sorts by the standardised edge (projection minus line,
+  // in that player's usual game-to-game swings): edge as a % of the line
+  // put every 0.5 line at the top. Value is signed, best first, with
+  // unpriced props last: sorting by its size alone put the worst-priced
+  // bets next to the best ones.
+  const MIN_HIT_SAMPLE = 3;
 
-  function valueMagnitude(p) {
-    // value_pct (model probability vs. the market's own no-vig price) is
-    // what actually answers "is this worth betting" -- edge_pct alone is
-    // just distance from the line, blind to the price. Falls back to
-    // edgeMagnitude for props with no price data (e.g. a backtest run).
-    return p.value_pct !== null && p.value_pct !== undefined ? Math.abs(p.value_pct) : edgeMagnitude(p);
+  function hasValue(p) {
+    return p.value_pct !== null && p.value_pct !== undefined;
   }
 
   function sortProps(list) {
     const arr = list.slice();
+    const byEdge = (a, b) => Math.abs(b.edge_score) - Math.abs(a.edge_score);
     if (state.sort === "hit_rate") {
-      arr.sort((a, b) => (b.hit_rate ?? -1) - (a.hit_rate ?? -1));
+      // A 100% hit rate from one game says little, so 3+ games rank first.
+      const tier = p => (p.hit_rate === null || p.hit_rate === undefined) ? 2 : p.sample_size >= MIN_HIT_SAMPLE ? 0 : 1;
+      arr.sort((a, b) => tier(a) - tier(b) || (b.hit_rate ?? 0) - (a.hit_rate ?? 0) || b.sample_size - a.sample_size || byEdge(a, b));
     } else if (state.sort === "player") {
       arr.sort((a, b) => a.player.localeCompare(b.player));
     } else if (state.sort === "edge") {
-      arr.sort((a, b) => edgeMagnitude(b) - edgeMagnitude(a));
+      arr.sort(byEdge);
     } else {
-      arr.sort((a, b) => valueMagnitude(b) - valueMagnitude(a));
+      arr.sort((a, b) => (hasValue(b) - hasValue(a)) || (hasValue(a) ? b.value_pct - a.value_pct : 0) || byEdge(a, b));
     }
     return arr;
   }
+
+  function badgeText(p) {
+    if (state.sort === "value") {
+      return hasValue(p) ? `${p.value_pct > 0 ? "+" : ""}${p.value_pct.toFixed(1)} pts` : "no price";
+    }
+    if (state.sort === "edge") {
+      return `${p.edge_score > 0 ? "+" : ""}${p.edge_score.toFixed(2)} SD`;
+    }
+    return p.edge_pct !== null ? `${p.edge_pct > 0 ? "+" : ""}${p.edge_pct.toFixed(1)}%` : `${p.edge_score.toFixed(2)} SD`;
+  }
+
+  const SORT_NOTES = {
+    value: "Value: our chance minus the market's fair chance, in percentage points. Best first; props with no price last.",
+    edge: "Edge: how far our projection is from the line, in the player's usual game-to-game swings (SD).",
+    hit_rate: "Hit rate this season. Players with 3+ games come first.",
+    player: "",
+  };
 
   function render() {
     const list = document.getElementById("list");
@@ -695,7 +710,8 @@
     });
     filtered = sortProps(filtered);
 
-    countEl.textContent = filtered.length + (filtered.length === 1 ? " prop" : " props");
+    countEl.textContent = filtered.length + (filtered.length === 1 ? " prop" : " props")
+      + (SORT_NOTES[state.sort] ? ` · ${SORT_NOTES[state.sort]}` : "");
 
     if (filtered.length === 0) {
       list.innerHTML = '<div class="empty">No props match this filter.</div>';
@@ -703,8 +719,7 @@
     }
 
     list.innerHTML = filtered.map(p => {
-      const edgeSign = p.edge_pct > 0 ? "+" : "";
-      const edgeLabel = p.edge_pct !== null ? `${edgeSign}${p.edge_pct.toFixed(1)}%` : `${p.edge_score.toFixed(2)}σ`;
+      const edgeLabel = badgeText(p);
       const priceLabel = p.price !== null && p.price !== undefined ? `, ${p.price > 0 ? "+" : ""}${p.price}` : "";
       const matchup = [p.team, p.opponent ? `vs ${p.opponent}` : "", p.kickoff].filter(Boolean).join(" · ");
       const hitRate = p.hit_rate !== null

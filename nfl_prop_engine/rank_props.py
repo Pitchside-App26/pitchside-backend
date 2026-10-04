@@ -108,12 +108,10 @@ def build_ranked_prop(
 
 def rank(props: list[RankedProp]) -> list[RankedProp]:
     # value_pct (model probability vs. the market's own no-vig price) is
-    # what actually answers "is this worth betting" -- prefer it over
-    # edge_score (distance from the line alone) whenever price data is
-    # available. Falls back to edge_score for props missing a price (e.g.
-    # a backtest run over old data that never had one).
-    return sorted(
-        props,
-        key=lambda p: abs(p.value_pct) if p.value_pct is not None else abs(p.edge_score),
-        reverse=True,
-    )
+    # what actually answers "is this worth betting". Best value first,
+    # signed: ranking by its size alone put the worst-priced bets (big
+    # negative value) next to the best. Props with no price follow, by
+    # standardised edge (e.g. a backtest over data that never had prices).
+    priced = sorted((p for p in props if p.value_pct is not None), key=lambda p: p.value_pct, reverse=True)
+    unpriced = sorted((p for p in props if p.value_pct is None), key=lambda p: abs(p.edge_score), reverse=True)
+    return priced + unpriced

@@ -64,17 +64,23 @@ def _team_changed(current_rows: pd.DataFrame, prior_rows: pd.DataFrame, team_col
     return current_team != prior_team
 
 
+MIN_GAMES_FOR_OWN_STD = 6
+
+
 def _season_std(current_values: list[float], prior_values: list[float], league_fallback_std: float) -> float:
-    """stdev needs >=2 points. With fewer, fall back to prior-season stdev,
-    then to a precomputed league-wide fallback for this stat/position --
-    returning 0 here would silently overstate confidence in rank_props.py's
-    edge score (division by a fake zero-width band).
-    """
-    if len(current_values) >= 2:
-        return statistics.stdev(current_values)
-    if len(prior_values) >= 2:
-        return statistics.stdev(prior_values)
-    return league_fallback_std
+    """A player's game-to-game spread for this stat, the denominator of the
+    edge score. Until he has MIN_GAMES_FOR_OWN_STD games this season it's
+    measured over this season and last together: two or three games give
+    a near-zero spread by luck (three similar games -> "+19 SD" edges and
+    ~100% model chances). Never below half the league-typical spread for
+    the stat, for the same reason; the league figure is also the fallback
+    with fewer than 2 games. Returning 0 would overstate confidence in
+    rank_props.py's edge score (division by a fake zero-width band)."""
+    pool = current_values if len(current_values) >= MIN_GAMES_FOR_OWN_STD else prior_values + current_values
+    own = statistics.stdev(pool) if len(pool) >= 2 else 0.0
+    if own <= 0:
+        return league_fallback_std
+    return max(own, 0.5 * league_fallback_std)
 
 
 def league_fallback_std(weekly_df: pd.DataFrame, stat_col: str, min_games: int = 2) -> float:
