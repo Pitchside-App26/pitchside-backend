@@ -7,6 +7,7 @@ import sqlite3
 from datetime import datetime, timezone
 
 from config import RESULTS_DB_PATH
+from pricing import no_vig_probability
 from rank_props import RankedProp
 
 SCHEMA = """
@@ -99,6 +100,17 @@ CREATE TABLE IF NOT EXISTS analyst_picks (
 # Columns added after acca_legs first shipped, so a database created by an
 # earlier run gets them too (CREATE TABLE IF NOT EXISTS won't add them).
 ACCA_ADDED_COLUMNS = {"window": "TEXT", "filler": "INTEGER NOT NULL DEFAULT 0"}
+# Prices logged since 4 Oct: both sides at the logged line, the book, and the
+# no-vig chance of the over. Before that only the line was kept, so earlier
+# weeks can be judged on hit rate but not on profit.
+WEEKLY_ADDED_COLUMNS = {"over_price": "REAL", "under_price": "REAL", "bookmaker": "TEXT", "market_over_prob": "REAL"}
+
+
+def _add_columns(conn: sqlite3.Connection, table: str, columns: dict[str, str]) -> None:
+    existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+    for column, decl in columns.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
 
 
 def _connect(db_path: str = RESULTS_DB_PATH) -> sqlite3.Connection:
@@ -106,10 +118,8 @@ def _connect(db_path: str = RESULTS_DB_PATH) -> sqlite3.Connection:
     conn.execute(SCHEMA)
     conn.execute(ACCA_SCHEMA)
     conn.execute(ANALYST_SCHEMA)
-    existing = {row[1] for row in conn.execute("PRAGMA table_info(acca_legs)")}
-    for column, decl in ACCA_ADDED_COLUMNS.items():
-        if column not in existing:
-            conn.execute(f"ALTER TABLE acca_legs ADD COLUMN {column} {decl}")
+    _add_columns(conn, "acca_legs", ACCA_ADDED_COLUMNS)
+    _add_columns(conn, "weekly_output", WEEKLY_ADDED_COLUMNS)
     return conn
 
 
@@ -197,13 +207,15 @@ def log_weekly_output(ranked: list[RankedProp], season: int, week: int, db_path:
         conn.executemany(
             """INSERT INTO weekly_output
                (logged_at, season, week, player_id, player_name, stat_col, line, projection,
-                edge_score, direction, hit_rate, sample_size, method, confidence)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                edge_score, direction, hit_rate, sample_size, method, confidence,
+                over_price, under_price, bookmaker, market_over_prob)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             [
                 (
                     logged_at, season, week, p.player_id, p.player_name, p.stat_col, p.line,
                     p.projection, p.edge_score, p.direction, p.hit_rate, p.sample_size,
                     p.method, p.confidence,
+                    p.over_price, p.under_price, p.bookmaker, no_vig_probability(p.over_price, p.under_price),
                 )
                 for p in ranked
             ],

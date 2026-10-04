@@ -159,3 +159,54 @@ def test_grading_never_overwrites_an_already_graded_acca_leg(tmp_path):
     log_acca_legs([_acca_row("p")], 2026, 4, db_path=db)
     grade_acca_week(2026, 4, {("p", "rushing_yards"): 70.0}, db_path=db)
     assert grade_acca_week(2026, 4, {("p", "rushing_yards"): 10.0}, db_path=db) == 0
+
+
+def test_bet_profit_at_american_prices():
+    from grade_results import bet_profit
+
+    assert bet_profit("over", 50.5, 60, -110) == pytest.approx(100 / 110)
+    assert bet_profit("under", 50.5, 60, -110) == -1.0
+    assert bet_profit("over", 50.0, 50, 120) == 0.0  # push returns the stake
+    assert bet_profit("under", 0.5, 0, -300) == pytest.approx(1 / 3)
+    assert bet_profit("over", 50.5, 60, None) is None
+
+
+def test_prices_are_logged_and_judged_on_profit(tmp_path):
+    import sqlite3
+
+    import pandas as pd
+
+    from grade_results import profit_groups
+    from projection_engine import Projection
+    from rank_props import build_ranked_prop
+    from results_log import grade_week, log_weekly_output
+
+    db = str(tmp_path / "log.sqlite3")
+    proj = Projection(player_id="p1", player_name="P", stat_col="rushing_yards", projection=70.0, season_std=10.0,
+                      n_current_games=4, n_prior_games=0, method="veteran", confidence="normal")
+    prop = build_ranked_prop(proj, 60.5, [], over_price=-120, under_price=100, bookmaker="draftkings")
+    assert (prop.over_price, prop.under_price, prop.bookmaker) == (-120, 100, "draftkings")
+    log_weekly_output([prop], 2026, 5, db)
+    grade_week(2026, 5, {("p1", "rushing_yards"): 80.0}, db)
+    df = pd.read_sql_query("SELECT * FROM weekly_output", sqlite3.connect(db))
+    assert df.loc[0, "market_over_prob"] == pytest.approx((120 / 220) / (120 / 220 + 0.5))
+    groups = dict(profit_groups(df))
+    assert groups["every over"] == [pytest.approx(100 / 120)]
+    assert groups["every under"] == [-1.0]
+    assert groups["the engine's picks"] == [pytest.approx(100 / 120)]  # engine picked the over
+
+
+def test_an_old_database_gets_the_price_columns(tmp_path):
+    import sqlite3
+
+    from results_log import _connect
+
+    db = str(tmp_path / "old.sqlite3")
+    old = sqlite3.connect(db)
+    old.execute("CREATE TABLE weekly_output (id INTEGER PRIMARY KEY, logged_at TEXT, season INTEGER, week INTEGER, "
+                "player_id TEXT, player_name TEXT, stat_col TEXT, line REAL, projection REAL, edge_score REAL, "
+                "direction TEXT, hit_rate REAL, sample_size INTEGER, method TEXT, confidence TEXT, "
+                "actual_value REAL, graded_at TEXT)")
+    old.commit(); old.close()
+    cols = {r[1] for r in _connect(db).execute("PRAGMA table_info(weekly_output)")}
+    assert {"over_price", "under_price", "bookmaker", "market_over_prob"} <= cols

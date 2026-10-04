@@ -406,7 +406,7 @@ def run(
             proj, row["point"], current_rows[stat_col].tolist(),
             team=player_team, opponent=opponent_team or "", kickoff=kickoff_lookup.get(player_team, ""),
             over_price=row.get("over_price"), under_price=row.get("under_price"),
-            injury_status=injury_status, avg_targets=avg_targets,
+            injury_status=injury_status, avg_targets=avg_targets, bookmaker=row.get("bookmaker"),
         ))
 
     ranked = rank(ranked_props)
