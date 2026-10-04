@@ -2,7 +2,9 @@ from accumulator import Candidate, build_accumulator, filter_by_side
 from leg_gates import GateResult
 
 
-def _candidate(player, game, fair_prob=0.6, price=1.9, passed=True, market="player_pass_yds", side="over"):
+def _candidate(player, game, fair_prob=0.6, price=1.9, passed=True, market=None, side="over"):
+    # A market per player by default, so the 2-per-stat cap only applies where a test sets it up.
+    market = market or f"market_{player}"
     gates = [GateResult("line", passed, "test")]
     return Candidate(player=player, game=game, market=market, side=side, line=50.0, price_decimal=price, fair_prob=fair_prob, gates=gates)
 
@@ -114,4 +116,11 @@ def test_one_leg_per_player():
                   _candidate("B", "G2"), _candidate("C", "G3")]
     result = build_accumulator(candidates)
     assert [c.player for c in result.legs] == ["A", "B", "C"]
-    assert result.legs[0].market == "player_pass_yds"
+    assert result.legs[0].market == "market_A"
+
+
+def test_at_most_two_legs_of_the_same_stat():
+    candidates = [_candidate(p, f"G{p}", fair_prob=0.7, market="player_pass_interceptions") for p in "ABC"]
+    candidates += [_candidate("D", "GD", fair_prob=0.6), _candidate("E", "GE", fair_prob=0.55)]
+    result = build_accumulator(candidates)
+    assert [c.player for c in result.legs] == ["A", "B", "D", "E"]

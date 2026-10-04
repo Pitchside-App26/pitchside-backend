@@ -6,7 +6,7 @@ this whole upgrade exists to fix.
 import math
 from dataclasses import dataclass, field
 
-from config import MAX_LEGS, MAX_LEGS_PER_GAME, SIDES, STAKE_GBP
+from config import MAX_LEGS, MAX_LEGS_PER_GAME, MAX_LEGS_PER_STAT, SIDES, STAKE_GBP
 from leg_gates import GateResult
 
 
@@ -56,9 +56,11 @@ def build_accumulator(
     max_legs: int = MAX_LEGS,
     max_legs_per_game: int = MAX_LEGS_PER_GAME,
     stake_gbp: float = STAKE_GBP,
+    max_legs_per_market: int = MAX_LEGS_PER_STAT,
 ) -> AccumulatorResult:
     """Selects gate-passing legs only, highest fair-probability first,
-    respecting max_legs, max_legs_per_game and one leg per player. Never adds a failing leg to
+    respecting max_legs, max_legs_per_game, max_legs_per_market and one leg
+    per player. Never adds a failing leg to
     reach max_legs -- if only 4 pass, the output is a 4-fold, not a padded
     6-fold. Fewer than 3 passing legs isn't accumulator territory (too
     correlated a bet on too little confirmed edge): outputs singles
@@ -81,6 +83,8 @@ def build_accumulator(
         # One leg per player: two overs on the same player are close to one
         # bet twice (a quiet game sinks both), which the acca's price ignores.
         if any(s.player == c.player for s in selected):
+            continue
+        if sum(s.market == c.market for s in selected) >= max_legs_per_market:
             continue
         selected.append(c)
         per_game_count[c.game] = per_game_count.get(c.game, 0) + 1

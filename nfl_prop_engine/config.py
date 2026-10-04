@@ -247,6 +247,10 @@ ACCA_WINDOWS = {
 # "never pad" rule; set False to go back to it.
 FILL_WITH_NEAR_MISSES = True
 MAX_LEGS_PER_GAME = 2  # same-game pairs are tagged as bet-builder legs -- bet365 prices those separately
+# Dan's call (4 Oct): the late slip that day had three interception overs.
+# Low-swing stats (INTs, TDs) score high on the standardised edge, so one
+# stat could fill a slip; this keeps each slip spread across stat types.
+MAX_LEGS_PER_STAT = 2
 STAKE_GBP = 5.0  # flat stake; never rises after a loss
 
 TIMEZONE = "Europe/London"  # display only -- everything is stored in UTC
