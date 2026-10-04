@@ -27,13 +27,22 @@ def test_team_changed_false_when_no_prior_data():
     assert _team_changed(current, prior, "team") is False
 
 
-def test_season_std_uses_current_when_enough_points():
-    assert _season_std([10, 20, 30], [], league_fallback_std=999) == pytest.approx(10.0)
+def test_season_std_uses_this_season_alone_once_there_are_six_games():
+    assert _season_std([10, 20, 30, 10, 20, 30], [0, 100], league_fallback_std=1) == pytest.approx(8.94427191)
 
 
-def test_season_std_falls_back_to_prior_then_league():
-    assert _season_std([10], [10, 20, 30], league_fallback_std=999) == pytest.approx(10.0)
-    assert _season_std([10], [10], league_fallback_std=42) == 42
+def test_season_std_pools_both_seasons_before_six_games():
+    # Three near-identical games would give a spread of ~0.6 on their own.
+    assert _season_std([50, 51, 50], [20, 80, 45, 60], league_fallback_std=1) == pytest.approx(17.8925364)
+
+
+def test_season_std_falls_back_to_league_with_too_few_games():
+    assert _season_std([10], [], league_fallback_std=42) == 42
+    assert _season_std([], [], league_fallback_std=42) == 42
+
+
+def test_season_std_never_below_half_the_league_spread():
+    assert _season_std([50, 51, 50], [], league_fallback_std=20) == pytest.approx(10.0)
 
 
 def test_project_veteran_blends_toward_prior_season_for_thin_current_sample():
@@ -265,3 +274,8 @@ def test_project_rookie_returns_none_without_any_analog_data():
     weekly_df = pd.DataFrame({"player_id": [], "season": [], "week": [], "yards": []})
     result = project_rookie("z", "Zero Data", "yards", "WR", 5, draft_df, weekly_df)
     assert result is None
+
+
+def test_season_std_skips_a_zero_spread():
+    # 1 TD in each of 3 games with no other data: a stdev of 0 would make every edge infinite or zero.
+    assert _season_std([1, 1, 1], [], league_fallback_std=0.9) == pytest.approx(0.9)

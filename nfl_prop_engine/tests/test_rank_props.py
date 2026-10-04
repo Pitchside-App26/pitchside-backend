@@ -58,3 +58,14 @@ def test_rank_prefers_value_pct_over_edge_score_when_available():
     assert abs(small_edge_big_value.value_pct) > abs(big_edge_no_price.edge_score)
     ranked = rank([big_edge_no_price, small_edge_big_value])
     assert ranked[0] is small_edge_big_value
+
+
+def test_rank_puts_negative_value_below_positive_value():
+    # Model ~54% over, market says ~29% (+200): positive value.
+    good = build_ranked_prop(_proj(51.0, std=10.0), line=50.0, current_season_values=[], over_price=200, under_price=-400)
+    # Model ~54% over, market says ~80% (-400): a big NEGATIVE value, which
+    # ranking by size alone used to put on top.
+    bad = build_ranked_prop(_proj(51.0, std=10.0), line=50.0, current_season_values=[], over_price=-400, under_price=200)
+    no_price = build_ranked_prop(_proj(90.0, std=10.0), line=50.0, current_season_values=[])
+    assert bad.value_pct < 0 < good.value_pct
+    assert rank([bad, no_price, good]) == [good, bad, no_price]
