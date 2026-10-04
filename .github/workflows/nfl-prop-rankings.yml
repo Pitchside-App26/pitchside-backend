@@ -26,8 +26,9 @@ jobs:
   # GitHub often starts the Sunday schedule hours late, so Dan presses Run
   # workflow instead -- and the late scheduled run would then spend another
   # ~150 Odds API credits on the same slate. A scheduled run skips itself if
-  # a manual run started in the last 12 hours is still going or succeeded.
-  # (A manual run limited to a few teams counts too.)
+  # a manual run started in the last 12 hours wasn't cancelled -- a red run
+  # can still have fetched the odds and published the page. (A manual run
+  # limited to a few teams counts too.)
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -42,7 +43,7 @@ jobs:
           since=$(date -u -d '12 hours ago' +%Y-%m-%dT%H:%M:%SZ)
           n=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/nfl-prop-rankings.yml/runs" \
                 -f created=">=$since" -f event=workflow_dispatch -f per_page=20 \
-                --jq '[.workflow_runs[] | select(.conclusion == "success" or .status != "completed")] | length')
+                --jq '[.workflow_runs[] | select(.conclusion != "cancelled")] | length')
           if [ "$n" -gt 0 ]; then
             echo "A manual run in the last 12 hours already covers this slate; skipping to save Odds API credits."
             echo "go=false" >> "$GITHUB_OUTPUT"
@@ -123,8 +124,10 @@ jobs:
           git add results_log.sqlite3
           git diff --cached --quiet && exit 0
           git commit -m "chore: log week's prop rankings"
+          # --autostash: the run also rewrites the tracked site/data.json,
+          # and git won't rebase over unsaved changes without it.
           for attempt in 1 2 3; do
-            git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
+            git pull --rebase --autostash origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
             sleep $((attempt * 5))
           done
           exit 1
