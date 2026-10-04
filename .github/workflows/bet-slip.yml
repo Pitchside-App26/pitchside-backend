@@ -116,7 +116,7 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "chore: log bet slip from issue #$ISSUE_NUMBER"
           for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            git pull --rebase --autostash origin main && git push origin HEAD:main && exit 0
             sleep $((attempt * 5))
           done
           exit 1
