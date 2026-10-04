@@ -688,7 +688,10 @@
     if (state.sort === "edge") {
       return `${p.edge_score > 0 ? "+" : ""}${p.edge_score.toFixed(2)} SD`;
     }
-    return p.edge_pct !== null ? `${p.edge_pct > 0 ? "+" : ""}${p.edge_pct.toFixed(1)}%` : `${p.edge_score.toFixed(2)} SD`;
+    // The gap in the stat's own units (+4.9 yds). Not a % of the line: on a
+    // 0.5 line a 5-yard projection read as "+985%".
+    const gap = p.projection - p.line;
+    return `${gap > 0 ? "+" : ""}${fmtLine(Math.round(gap * 10) / 10)} vs line`;
   }
 
   const SORT_NOTES = {
