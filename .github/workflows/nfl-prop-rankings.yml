@@ -20,9 +20,39 @@ permissions:
   contents: write  # needed to commit results_log.sqlite3 back to the repo
   pages: write     # needed to publish the results page
   id-token: write  # required by actions/deploy-pages for its OIDC token
+  actions: read    # the schedule check below lists this workflow's recent runs
 
 jobs:
+  # GitHub often starts the Sunday schedule hours late, so Dan presses Run
+  # workflow instead -- and the late scheduled run would then spend another
+  # ~150 Odds API credits on the same slate. A scheduled run skips itself if
+  # a manual run started in the last 12 hours is still going or succeeded.
+  # (A manual run limited to a few teams counts too.)
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != "schedule" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          since=$(date -u -d '12 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          n=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/nfl-prop-rankings.yml/runs" \
+                -f created=">=$since" -f event=workflow_dispatch -f per_page=20 \
+                --jq '[.workflow_runs[] | select(.conclusion == "success" or .status != "completed")] | length')
+          if [ "$n" -gt 0 ]; then
+            echo "A manual run in the last 12 hours already covers this slate; skipping to save Odds API credits."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
   run:
+    needs: check
+    if: needs.check.outputs.go == 'true'
     runs-on: ubuntu-latest
     # Shared with every workflow that commits results_log.sqlite3, so two
     # runs never write the file at once.
@@ -104,7 +134,7 @@ jobs:
     # Publishes even if only the results-log commit failed: the page artifact
     # is uploaded before that step. The run job still shows red, so a lost
     # log commit doesn't go unnoticed.
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && needs.run.result != 'skipped' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
