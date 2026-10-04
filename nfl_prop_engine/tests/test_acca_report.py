@@ -31,6 +31,15 @@ def per_game_sweep_on(monkeypatch):
     monkeypatch.setitem(acca_report.ANALYST_SWEEP, "enabled", True)
 
 
+@pytest.fixture(autouse=True)
+def no_stat_cap(monkeypatch):
+    # Most slates here use one stat for every leg to test other rules; the
+    # 2-per-stat cap has its own test below.
+    import acca_report
+
+    monkeypatch.setattr(acca_report, "MAX_LEGS_PER_STAT", 99)
+
+
 @pytest.fixture
 def gate_mode(monkeypatch):
     import acca_report
@@ -546,3 +555,15 @@ def test_a_crashing_sweep_still_leaves_the_accumulators():
     assert report["analyst_sweep"]["ran"] is False
     assert "failed" in report["analyst_sweep"]["note"]
     assert _acca(report)["legs"][0]["sources_note"] == report["analyst_sweep"]["note"]
+
+
+def test_a_slip_takes_at_most_two_legs_of_one_stat_including_fillers(monkeypatch):
+    import acca_report
+
+    monkeypatch.setattr(acca_report, "MAX_LEGS_PER_STAT", 2)
+    specs = [(f"Pass {i}", f"e{i}", f"A{i}", f"H{i}", "early", 1.1, 80 - i) for i in range(4)]
+    specs += [(f"Fill {i}", f"e{10 + i}", f"X{i}", f"Y{i}", "early", 0.8, 90) for i in range(3)]
+    contexts, rows = _window_slate(specs)  # every leg is rushing yards
+    acca = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    assert [leg["player"] for leg in acca["legs"]] == ["Pass 0", "Pass 1"]
+    assert acca["mode"] == "singles"

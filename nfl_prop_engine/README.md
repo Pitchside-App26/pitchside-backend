@@ -477,8 +477,10 @@ For each over:
      UK and US clocks change a week apart.
    - Games outside both windows (London mornings, Thursday, Sunday and
      Monday nights) are ranked and logged but never used for an acca.
-   - Each window takes up to 6 legs that passed every gate, max 2 per game
-     and 1 per player (two overs on one player mostly win or lose together).
+   - Each window takes up to 6 legs that passed every gate, max 2 per game,
+     2 per stat (since 4 Oct, after a late slip with three interception
+     overs) and 1 per player (two overs on one player mostly win or lose
+     together).
    - Legs are picked by standardised edge: how far the projection clears the
      max line, in that player's usual game-to-game spread for the stat (the
      same measure the rankings use). Dividing by the line instead let every
@@ -534,7 +536,7 @@ acceptable bet365 line. If backed legs clearly hit more over 4–6 weeks, set
   the reason not to.
 - When a leg fails, the page offers the next-best spare. Spares are the
   report's unused passing legs first, then one-gate failures, and the page
-  keeps to 2 legs per game and 1 per player. A swap can be undone.
+  keeps to 2 legs per game, 2 per stat and 1 per player. A swap can be undone.
 - Once every leg is checked, the entered prices are compared with fair odds.
 - Entries and swaps are kept in the browser's localStorage, so they stay on
   that phone and nowhere else.

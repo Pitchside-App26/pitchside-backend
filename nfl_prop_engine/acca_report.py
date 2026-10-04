@@ -27,6 +27,7 @@ from config import (
     LINE_THRESHOLD,
     MAX_LEGS,
     MAX_LEGS_PER_GAME,
+    MAX_LEGS_PER_STAT,
     MAX_US_FAIR_PROB,
     MIN_PRICE_DECIMAL,
     ODDS_API_TEAM_NAME_TO_ABBR,
@@ -346,7 +347,7 @@ def _build(surviving: list[Leg]) -> list[Leg]:
         )
         candidates.append(candidate)
         by_candidate[id(candidate)] = leg
-    return [by_candidate[id(c)] for c in build_accumulator(candidates).legs]
+    return [by_candidate[id(c)] for c in build_accumulator(candidates, max_legs_per_market=MAX_LEGS_PER_STAT).legs]
 
 
 SPARES_PER_WINDOW = 10
@@ -363,14 +364,15 @@ def _can_fill(leg: Leg) -> bool:
 def select_window(window_legs: list[Leg]) -> tuple[list[Leg], list[Leg], list[Leg]]:
     """(legs that passed every gate, fillers, spares) for one window. Fillers top
     the acca up to MAX_LEGS from legs that failed exactly one gate, best
-    projection margin first, still at most MAX_LEGS_PER_GAME per game and
-    one leg per player. NEVER_FILL_GATES lists the failures that rule a leg
+    projection margin first, still at most MAX_LEGS_PER_GAME per game,
+    MAX_LEGS_PER_STAT per stat and one leg per player. NEVER_FILL_GATES lists the failures that rule a leg
     out as a filler."""
     chosen = _build([leg for leg in window_legs if not leg.failed])
     fillers: list[Leg] = []
     if FILL_WITH_NEAR_MISSES and len(chosen) < MAX_LEGS:
         per_game = Counter(leg.ctx.game for leg in chosen)
         players = {leg.ctx.player for leg in chosen}
+        per_stat = Counter(leg.ctx.stat_col for leg in chosen)
         pool = sorted(
             (leg for leg in window_legs if _can_fill(leg)),
             key=lambda leg: leg.score, reverse=True,
@@ -378,11 +380,13 @@ def select_window(window_legs: list[Leg]) -> tuple[list[Leg], list[Leg], list[Le
         for leg in pool:
             if len(chosen) + len(fillers) >= MAX_LEGS:
                 break
-            if per_game[leg.ctx.game] >= MAX_LEGS_PER_GAME or leg.ctx.player in players:
+            if (per_game[leg.ctx.game] >= MAX_LEGS_PER_GAME or leg.ctx.player in players
+                    or per_stat[leg.ctx.stat_col] >= MAX_LEGS_PER_STAT):
                 continue
             fillers.append(leg)
             per_game[leg.ctx.game] += 1
             players.add(leg.ctx.player)
+            per_stat[leg.ctx.stat_col] += 1
     return chosen, fillers, _spares(window_legs, chosen + fillers)
 
 
@@ -390,8 +394,8 @@ def _spares(window_legs: list[Leg], used: list[Leg]) -> list[Leg]:
     """Replacements the page offers when a leg fails the bet365 check:
     unused legs that passed every gate first, then (when fillers are on)
     unused one-gate failures, best projection margin first. The page applies
-    the per-game and per-player caps itself, since they depend on which legs
-    are still in."""
+    the per-game, per-stat and per-player caps itself, since they depend on
+    which legs are still in."""
     used_ids = {id(leg) for leg in used}
     rest = [leg for leg in window_legs if id(leg) not in used_ids]
     passing = sorted((leg for leg in rest if not leg.failed), key=lambda leg: leg.score, reverse=True)
