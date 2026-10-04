@@ -22,6 +22,15 @@ def _ctx(player="Drake Maye", market="player_pass_yds", stat="passing_yards", pr
     )
 
 
+@pytest.fixture(autouse=True)
+def per_game_sweep_on(monkeypatch):
+    # The per-game sweep is off in config since the slate-wide search replaced
+    # it (4 Oct); these tests still cover its code path.
+    import acca_report
+
+    monkeypatch.setitem(acca_report.ANALYST_SWEEP, "enabled", True)
+
+
 @pytest.fixture
 def gate_mode(monkeypatch):
     import acca_report

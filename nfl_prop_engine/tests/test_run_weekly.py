@@ -61,3 +61,37 @@ def test_a_shared_name_resolves_to_the_player_in_this_game():
     assert set(rows["player_id"]) == {"LA1"} and len(rows) == 2
     assert set(rows_for_matched_player(df, "Byron Young", {"PHI", "DAL"}, "team")["player_id"]) == {"PHI1"}
     assert len(rows_for_matched_player(df, "Someone Else", {"NE"}, "team")) == 1
+
+
+def test_window_games_and_their_players_feed_the_analyst_search(monkeypatch):
+    from run_weekly import players_on_teams, run_analyst_search, window_team_games
+
+    games = pd.DataFrame([
+        {"home_team": "PHI", "away_team": "LA", "weekday": "Sunday", "gametime": "13:00"},
+        {"home_team": "CAR", "away_team": "DET", "weekday": "Sunday", "gametime": "20:20"},
+    ])
+    team_games = window_team_games(games, {"PHI": "early", "LA": "early", "CAR": None, "DET": None})
+    assert set(team_games) == {"PHI", "LA"}
+    assert team_games["LA"].description == "Los Angeles Rams at Philadelphia Eagles"
+    offense = pd.DataFrame([
+        {"player_id": "1", "player_display_name": "Kyren Williams", "recent_team": "LA", "season": 2026, "week": 3},
+        {"player_id": "2", "player_display_name": "Moved Away", "recent_team": "LA", "season": 2025, "week": 9},
+        {"player_id": "2", "player_display_name": "Moved Away", "recent_team": "DET", "season": 2026, "week": 3},
+    ])
+    assert [p.name for p in players_on_teams({"LA", "PHI"}, offense)] == ["Kyren Williams"]
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    picks, info, by_game = run_analyst_search(games, {"PHI": "early", "LA": "early"}, 4, 2026, offense)
+    assert (picks, by_game, info["ran"]) == ([], None, False)
+    assert "ANTHROPIC_API_KEY" in info["note"]
+
+
+def test_a_failing_analyst_search_never_stops_the_run(monkeypatch):
+    import run_weekly
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr(run_weekly, "fetch_slate_picks", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("down")))
+    games = pd.DataFrame([{"home_team": "PHI", "away_team": "LA", "weekday": "Sunday", "gametime": "13:00"}])
+    picks, info, by_game = run_weekly.run_analyst_search(games, {"PHI": "early", "LA": "early"}, 4, 2026)
+    assert (picks, by_game, info["ran"]) == ([], None, False)
+    assert "failed (RuntimeError)" in info["note"]

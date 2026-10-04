@@ -485,12 +485,26 @@ For each over:
    - `FILL_WITH_NEAR_MISSES = False` restores the never-pad rule.
    - The page shows fair combined odds; bet365's acca price must beat them
      to be value.
-5. **Analyst sweep**, up to `ANALYST_SWEEP["max_games"]` games (3, since the
-   first live run cost $0.84 for one game), four at a time. It covers the
-   games of the suggested legs first, alternating between the early and late
-   windows, then other games with legs that survived the gates. Each leg shows who backs the over and who's against.
-   Any analyst on the under marks the leg contested, and 4+ outlets marks it
-   crowded.
+5. **Analyst picks, from one search over the whole slate** (`analyst_picks.py`,
+   `ANALYST_PICKS`, since 4 Oct). The per-game sweep it replaced
+   (`ANALYST_SWEEP["enabled"] = False`) cost ~$0.84 a game, covered 3
+   games, and found no backers for any slip leg on its first live Sunday.
+   Now one Claude web search (at most `max_searches`, about $1-2 a run)
+   collects the outlets' published prop picks for the early and late games.
+   Each pick is matched to a player, game and engine market; picks on other
+   markets (anytime TD, combos), with no line, or that can't be matched are
+   counted and skipped.
+   - Every leg in the windows gets its analyst backing from these picks at
+     no extra cost. An analyst's line counts as the same bet within 5% of a
+     yardage line (min 2.5 yards) or 1 on counts of 2+; lines under 2 must
+     match exactly.
+   - The page has its own **What analysts are tipping** panel: picks on
+     your slips first (agreeing or against, with the slip's line), then
+     every pick by game, each tagged with whether the engine agrees.
+   - Picks are logged to `analyst_picks` and graded on Tuesday at the
+     analyst's own line and side; `grade_results.py` reports hit rates for
+     overs, unders, engine agreeing/disagreeing and each outlet with 5+
+     picks. They're never used to pick legs.
 
 **Analysts are a signal, not a gate (since 1 Oct).** The spec required 2+
 independent analysts per leg. That's now off (`ANALYST_SWEEP["sources_gate"]
@@ -632,7 +646,8 @@ Not built yet:
 | `leg_gates.py` | the 8 leg-quality gates (Line/Price/Movement/Form/Outlier/Matchup/Game script/Injury/Sources) |
 | `accumulator.py` | no-padding accumulator builder, overs-only enforcement |
 | `prop_bets_log.py` | separate `prop_bets` log: settlement, void handling, closing line value |
-| `analyst_sweep.py` | Claude API + web search, once per game -- independent analyst picks, deduped and aggregated |
+| `analyst_sweep.py` | Claude API + web search call, pick parsing and matching; its per-game sweep is off since 4 Oct |
+| `analyst_picks.py` | One web search over the Sunday slate: analyst picks matched to players and games, the page panel, logged and graded |
 | `acca_report.py` | the weekly accumulator report: US consensus, bet365 targets, gates, analyst sweep, builder |
 | `bet_slips.py` | reads bet-slip screenshots (Claude API), checks them, renders the draft for confirmation |
 | `bet_slip_bot.py` | GitHub side of bet-slip issues, run by `.github/workflows/bet-slip.yml` |

@@ -64,13 +64,13 @@ def test_match_picks_to_candidate_rejects_abbreviated_initial():
 
 
 def test_match_picks_to_candidate_within_line_tolerance():
-    picks = [_pick(line=213.0)]  # 1.5 off the candidate's 214.5, within default 2.0 tolerance
+    picks = [_pick(line=206.5)]  # 8 off the candidate's 214.5, within 5% of a yardage line
     matched = match_picks_to_candidate(picks, "Drake Maye", "player_pass_yds", 214.5)
     assert len(matched) == 1
 
 
 def test_match_picks_to_candidate_rejects_line_outside_tolerance():
-    picks = [_pick(line=205.0)]
+    picks = [_pick(line=200.5)]
     matched = match_picks_to_candidate(picks, "Drake Maye", "player_pass_yds", 214.5)
     assert matched == []
 
@@ -298,3 +298,12 @@ def test_parse_picks_json_prefers_the_last_fenced_block():
 
 def test_parse_picks_json_still_rejects_text_with_no_json():
     assert parse_picks_json("I couldn't find any picks for this game.") == []
+
+
+@pytest.mark.parametrize("market, line, tolerance", [
+    ("player_pass_yds", 214.5, 10.725), ("player_reception_yds", 19.5, 2.5),
+    ("player_receptions", 4.5, 1.0), ("player_pass_tds", 1.5, 0.0), ("player_pass_tds", 0.5, 0.0),
+])
+def test_line_tolerance_scales_with_yardage_lines(market, line, tolerance):
+    from analyst_sweep import line_tolerance_for
+    assert line_tolerance_for(market, line) == pytest.approx(tolerance)

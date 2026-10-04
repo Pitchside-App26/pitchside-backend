@@ -436,12 +436,16 @@ def build_acca_report(
     api_key_present: bool | None = None,
     log_rows=None,
     window_kickoffs: dict[str, str] | None = None,
+    slate_picks: dict[str, list[dict]] | None = None,
 ) -> dict:
     """One accumulator per window in config.ACCA_WINDOWS. sweep(game_descriptions,
     week, max_workers) -> ({game: picks}, usage) defaults to
     analyst_sweep.sweep_games; injected so tests never call the Claude API.
     log_rows(rows), if given, receives one row per evaluated leg for
-    results_log.log_acca_legs. window_kickoffs: {window: "18:00"} in UK time."""
+    results_log.log_acca_legs. window_kickoffs: {window: "18:00"} in UK time.
+    slate_picks: {game description: picks} from analyst_picks.py's one
+    search over the slate; when given, it replaces the per-game sweep and
+    every leg in the windows gets its analyst backing from it at no cost."""
     as_gate = ANALYST_SWEEP["sources_gate"]
     window_kickoffs = window_kickoffs or {}
     consensus = consensus_by_prop(per_book_rows)
@@ -481,8 +485,15 @@ def build_acca_report(
         api_key_present = bool(os.environ.get("ANTHROPIC_API_KEY"))
     sweep_info = {"ran": False, "games": [], "usage": None, "note": ""}
     picks_by_game = None
-    if not ANALYST_SWEEP["enabled"]:
-        sweep_info["note"] = "analyst sweep is turned off in config"
+    if slate_picks is not None:
+        picks_by_game = slate_picks
+        n_picks = sum(len(p) for p in slate_picks.values())
+        sweep_info.update(
+            ran=True, games=sorted(g for g, p in slate_picks.items() if p),
+            note=f"{n_picks} analyst pick(s) on these games from the slate-wide search",
+        )
+    elif not ANALYST_SWEEP["enabled"]:
+        sweep_info["note"] = "the analyst search didn't run this time"
     elif not api_key_present:
         sweep_info["note"] = "no ANTHROPIC_API_KEY in this run, so the analyst sweep didn't run"
     elif to_sweep:
@@ -503,7 +514,7 @@ def build_acca_report(
     if not sweep_info["ran"]:
         skipped.update({g: sweep_info["note"] for g in ranked_games})
     extra = [leg for _, fillers, spares in selections.values() for leg in fillers + spares if leg.failed]
-    apply_sources(surviving + extra, picks_by_game, skipped, as_gate)
+    apply_sources(in_window if slate_picks is not None else surviving + extra, picks_by_game, skipped, as_gate)
 
     if as_gate:
         selections = {w: select_window(window_legs) for w, window_legs in by_window.items()}
