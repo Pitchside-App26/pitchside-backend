@@ -7,8 +7,12 @@ two accumulators that lost), and no unders anywhere in the output (two
 of the real Week 3 legs -- Mayfield, Javonte Williams -- were exactly the
 "under leg that depended on game script" failure mode named in the
 spec's own postmortem).
+
+Since 6 Oct the slips take unders too (Dan's call: mixed slips), judged by
+their own mirrored gates, so the overs-only half of this replay now runs
+with sides=["over"] -- the setting to go back to.
 """
-from accumulator import Candidate, build_accumulator
+from accumulator import Candidate, build_accumulator, filter_by_side
 from leg_gates import line_gate, price_gate
 
 
@@ -89,7 +93,7 @@ def test_week3_replay_end_to_end_excludes_bad_legs_and_unders():
         ),
     ]
 
-    result = build_accumulator(candidates)
+    result = build_accumulator(filter_by_side(candidates, ["over"]))
 
     included_players = {c.player for c in result.legs}
     assert "Drake Maye" not in included_players

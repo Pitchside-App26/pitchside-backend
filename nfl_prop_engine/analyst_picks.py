@@ -153,14 +153,14 @@ ENGINE_LABELS = {
 }
 
 
-def engine_view(pick: dict, slip_lines: dict[tuple[str, str], float], ranked: dict[tuple[str, str], dict]) -> dict:
-    """How the pick sits against the slips (overs only, with the slip's max
-    line, since an analyst's line can differ) and the engine's own
+def engine_view(pick: dict, slip_legs: dict[tuple[str, str], tuple[str, float]], ranked: dict[tuple[str, str], dict]) -> dict:
+    """How the pick sits against the slips (with the slip leg's side and
+    target line, since an analyst's line can differ) and the engine's own
     projection for the same player and stat."""
     view = ranked.get((pick["player_id"], pick["stat_col"]))
-    slip_line = slip_lines.get((pick["player"], pick["stat_col"]))
-    if (pick["player"], pick["stat_col"]) in slip_lines:
-        status = "slip_agree" if pick["side"] == "over" else "slip_against"
+    slip_side, slip_line = slip_legs.get((pick["player"], pick["stat_col"]), (None, None))
+    if slip_side is not None:
+        status = "slip_agree" if pick["side"] == slip_side else "slip_against"
     elif view is None:
         status = "unrated"
     else:
@@ -171,6 +171,7 @@ def engine_view(pick: dict, slip_lines: dict[tuple[str, str], float], ranked: di
         "projection": round(view["projection"], 1) if view else None,
         "engine_line": view["line"] if view else None,
         "slip_line": slip_line,
+        "slip_side": slip_side,
     }
 
 
@@ -179,10 +180,11 @@ def build_feed(
 ) -> dict:
     """The page's analyst_picks section. ranked: {(player_id, stat_col):
     {projection, line, direction}} from the weekly ranking."""
-    slip_lines = {}
+    slip_legs = {}
     for acca in (accumulator or {}).get("accumulators", []):
-        slip_lines |= {(leg["player"], leg["stat"]): leg.get("max_line") for leg in acca.get("legs", [])}
-    records = [{**{k: v for k, v in p.items() if k != "game_description"}, "engine": engine_view(p, slip_lines, ranked)}
+        slip_legs |= {(leg["player"], leg["stat"]): (leg.get("side", "over"), leg.get("target_line", leg.get("max_line")))
+                      for leg in acca.get("legs", [])}
+    records = [{**{k: v for k, v in p.items() if k != "game_description"}, "engine": engine_view(p, slip_legs, ranked)}
                for p in picks]
     order = {"slip_agree": 0, "slip_against": 0, "engine_disagree": 1, "engine_agree": 2, "unrated": 3}
     records.sort(key=lambda r: (r["window"] != "early", r["game"], order[r["engine"]["status"]], r["player"]))

@@ -306,7 +306,8 @@ def test_every_evaluated_leg_is_logged_for_grading():
     logged = []
     build_acca_report(contexts, rows, week=4, season=2026, api_key_present=True, log_rows=logged.extend,
                       sweep=FakeSweep({"New England Patriots at New York Jets": _two_analysts("Drake Maye", "Passing Yards", 214.5)}))
-    by_player = {r["player_name"]: r for r in logged}
+    assert len(logged) == 8  # both sides of four props
+    by_player = {r["player_name"]: r for r in logged if r["side"] == "over"}
     assert set(by_player) == {"Drake Maye", "Garrett Wilson", "Tony Pollard", "Cold Streak"}
     maye, cold = by_player["Drake Maye"], by_player["Cold Streak"]
     assert (maye["passed_gates"], maye["selected"], maye["sources_checked"], maye["n_over_sources"]) == (True, True, True, 2)
@@ -397,7 +398,7 @@ def test_fillers_are_logged_as_selected_fillers():
     contexts, rows = _window_slate(specs)
     logged = []
     build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False, log_rows=logged.extend)
-    by_player = {r["player_name"]: r for r in logged}
+    by_player = {r["player_name"]: r for r in logged if r["side"] == "over"}
     assert (by_player["Fill"]["selected"], by_player["Fill"]["filler"], by_player["Fill"]["window"]) == (True, True, "early")
     assert (by_player["Pass A"]["selected"], by_player["Pass A"]["filler"]) == (True, False)
 
@@ -427,7 +428,7 @@ def test_spares_list_unused_passing_legs_before_one_gate_failures():
     assert [leg["player"] for leg in acca["spares"]] == ["Pass 1", "Pass 0", "Near Big", "Near Small"]
     assert [leg["filler"] for leg in acca["spares"]] == [False, False, True, True]
     spare = acca["spares"][0]
-    assert spare["key"] == "Pass 1|rushing_yards"
+    assert spare["key"] == "Pass 1|rushing_yards|over"
     assert spare["recent"] == [60, 62, 58, 70, 65, 61]
     assert spare["max_line"] == 52.5
 
@@ -541,7 +542,7 @@ def test_book_spellings_of_one_player_share_a_consensus_and_make_one_leg():
     ctxs[0].odds_player_name = "Kenneth Walker III"
     logged = []
     report = build_acca_report(ctxs, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False, log_rows=logged.extend)
-    assert len(logged) == 1
+    assert len(logged) == 2  # one prop, both sides
     assert _acca(report)["legs"][0]["n_books"] == 2
 
 
@@ -567,3 +568,34 @@ def test_a_slip_takes_at_most_two_legs_of_one_stat_including_fillers(monkeypatch
     acca = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
     assert [leg["player"] for leg in acca["legs"]] == ["Pass 0", "Pass 1"]
     assert acca["mode"] == "singles"
+
+
+# --- mixed slips: unders compete with overs (since 6 Oct) ---------------------
+
+def test_an_under_gets_its_own_target_odds_and_gates():
+    # Consensus 60.5 rushing yards, over priced -130/+110 (under is the cheaper side).
+    rows = [_book("draftkings", 60.5, over=-130, under=110, market="player_rush_yds"),
+            _book("fanduel", 60.5, over=-130, under=110, market="player_rush_yds")]
+    ctx = _ctx(market="player_rush_yds", stat="rushing_yards", projection=45, recent=(40, 52, 38, 61, 44, 47),
+               opp=0.9, spread=-6.5, total=41.5)
+    consensus = consensus_by_prop(rows)[("e1", "player_rush_yds", "drake maye")]
+    under = evaluate_leg(ctx, consensus, "under")
+    over = evaluate_leg(ctx, consensus, "over")
+    assert under.target_line == 58.5 and over.target_line == 62.5  # under: bet365 line must be 58.5 or higher
+    assert under.fair_prob == pytest.approx(1 - over.fair_prob)
+    assert under.failed == []
+    assert {g.gate for g in over.failed} >= {"model", "form", "matchup", "game_script"}
+    assert under.score > 0 > over.score
+
+
+def test_a_mixed_slip_holds_overs_and_unders_but_never_both_sides_of_one_player():
+    contexts, rows = _window_slate([("Over Guy", "e1", "NE", "BUF", "early", 1.1, 70)])
+    rows += [_book("draftkings", 60.5, event="e2", market="player_rush_yds", player="Under Guy"),
+             _book("fanduel", 60.5, event="e2", market="player_rush_yds", player="Under Guy")]
+    contexts.append(_ctx(player="Under Guy", market="player_rush_yds", stat="rushing_yards", projection=40, event="e2",
+                         home="CHI", away="NYJ", recent=(40, 45, 38, 50, 42, 44), opp=0.9, spread=-6.5, total=41.5))
+    acca = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    sides = {leg["player"]: leg["side"] for leg in acca["legs"]}
+    assert sides == {"Over Guy": "over", "Under Guy": "under"}
+    under = next(leg for leg in acca["legs"] if leg["side"] == "under")
+    assert (under["key"], under["target_line"]) == ("Under Guy|rushing_yards|under", 58.5)

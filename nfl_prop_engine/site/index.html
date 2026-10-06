@@ -827,6 +827,14 @@
     }).join("; ");
   }
 
+  // Each leg is an over or an under (mixed slips since 6 Oct). Its target
+  // line is the worst bet365 line to accept: a max for an over, a min for
+  // an under. Older data.json files have only max_line and no side.
+  function sideOf(leg) { return leg.side || "over"; }
+  function targetOf(leg) { return leg.target_line ?? leg.max_line; }
+  function targetText(leg) { return `${sideOf(leg)} ${sideOf(leg) === "under" ? "≥" : "≤"} ${fmtLine(targetOf(leg))}`; }
+  function beatsTarget(leg, v) { return sideOf(leg) === "under" ? v < targetOf(leg) : v > targetOf(leg); }
+
   function legCard(leg, opts = {}) {
     const passed = leg.gates.filter(g => g.passed).length;
     const failed = leg.gates.filter(g => !g.passed);
@@ -835,17 +843,18 @@
       leg.bet_builder ? `<span class="pill">Same game: bet365 prices these as a bet builder</span>` : "",
       ...leg.flags.map(f => `<span class="pill warn">${esc(f)}</span>`),
     ].join("");
-    const over = leg.sources?.over || [];
-    const under = leg.sources?.under || [];
-    const target = leg.max_line !== null && leg.max_line !== undefined
-      ? `<div class="target">Bet only if bet365's line is <span class="big">${esc(fmtLine(leg.max_line))} or lower</span>,
+    const side = sideOf(leg);
+    const backers = leg.sources?.[side] || [];
+    const against = leg.sources?.[side === "over" ? "under" : "over"] || [];
+    const target = targetOf(leg) !== null && targetOf(leg) !== undefined
+      ? `<div class="target">Bet the ${side} only if bet365's line is <span class="big">${esc(fmtLine(targetOf(leg)))} or ${side === "under" ? "higher" : "lower"}</span>,
            at <span class="big">${esc(leg.min_price_fractional)}</span> (${esc(money(leg.min_price_decimal))}) or bigger.</div>`
       : "";
     return `
       <div class="leg">
         <div class="player-row">
           <span class="player">${esc(leg.player)}</span>
-          <span class="stat-label">${esc(leg.stat_label)} over</span>
+          <span class="stat-label">${esc(leg.stat_label)} ${esc(side)}</span>
         </div>
         <div class="sub">${esc([leg.game, leg.kickoff].filter(Boolean).join(" · "))}</div>
         ${opts.failedOnly || leg.filler ? `<div class="leg-facts">Failed: ${failed.map(g => `<strong>${esc(gateName(g.gate))}</strong>, ${esc(g.reason)}`).join("; ")}</div>` : ""}
@@ -853,10 +862,10 @@
         <div class="leg-facts">US consensus ${esc(fmtLine(leg.consensus_line))} (${esc(leg.n_books)} books) · projection ${esc(fmtLine(leg.projection))} · fair chance ${pct(leg.fair_prob)}</div>
         ${opts.chart ? chartSvg(leg) : ""}
         ${pills ? `<div class="pills">${pills}</div>` : ""}
-        ${over.length ? `<div class="sources">Backed by: ${sourceLinks(over)}</div>` : ""}
-        ${under.length ? `<div class="sources against">Against: ${sourceLinks(under)}</div>` : ""}
+        ${backers.length ? `<div class="sources">Backed by: ${sourceLinks(backers)}</div>` : ""}
+        ${against.length ? `<div class="sources against">Against: ${sourceLinks(against)}</div>` : ""}
         ${leg.sources_checked === false ? `<div class="sources">Analysts: ${esc(leg.sources_note)}.</div>` : ""}
-        ${leg.sources_checked && !over.length && !under.length ? `<div class="sources">Analysts: none found backing this over.</div>` : ""}
+        ${leg.sources_checked && !backers.length && !against.length ? `<div class="sources">Analysts: none found backing this ${esc(side)}.</div>` : ""}
         <details class="gates">
           <summary>${passed} of ${leg.gates.length} gates passed</summary>
           ${gateList(leg.gates)}
@@ -900,7 +909,8 @@
     const min = leg.min_price_decimal;
     if (!saved.line && !saved.price) return { state: "todo", saved };
     if (!Number.isFinite(line) || price === null) return { state: "todo", saved, msg: "Enter both bet365's line and price." };
-    if (line > leg.max_line) return { state: "no", saved, price, msg: `Don't bet: bet365's line ${line} is above your max ${fmtLine(leg.max_line)}.` };
+    if (sideOf(leg) === "under" && line < targetOf(leg)) return { state: "no", saved, price, msg: `Don't bet: bet365's line ${line} is below your min ${fmtLine(targetOf(leg))}.` };
+    if (sideOf(leg) === "over" && line > targetOf(leg)) return { state: "no", saved, price, msg: `Don't bet: bet365's line ${line} is above your max ${fmtLine(targetOf(leg))}.` };
     if (price < min) return { state: "no", saved, price, msg: `Don't bet: ${saved.price} is shorter than ${leg.min_price_fractional}.` };
     return { state: "ok", saved, price, msg: `OK to bet: ${line} at ${saved.price} meets the target.` };
   }
@@ -935,28 +945,30 @@
 
   function chartSvg(leg) {
     const vals = leg.recent || [];
-    if (!vals.length || leg.max_line === null || leg.max_line === undefined) return "";
+    const t = targetOf(leg);
+    if (!vals.length || t === null || t === undefined) return "";
     const W = 300, H = 74, top = 14, base = 58, n = vals.length;
-    const scaleMax = Math.max(...vals, leg.max_line) * 1.12 || 1;
+    const scaleMax = Math.max(...vals, t) * 1.12 || 1;
     const y = v => base - (v / scaleMax) * (base - top);
     const slot = W / n, bw = slot * 0.56;
     const bars = vals.map((v, i) => {
-      const x = i * slot + (slot - bw) / 2, over = v > leg.max_line, h = base - y(v);
-      const inside = !over && h >= 14;
-      return `<rect x="${x.toFixed(1)}" y="${y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${over ? "var(--over)" : "var(--bar-miss)"}"></rect>
+      const x = i * slot + (slot - bw) / 2, hit = beatsTarget(leg, v), h = base - y(v);
+      const inside = !hit && h >= 14;
+      return `<rect x="${x.toFixed(1)}" y="${y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${hit ? "var(--over)" : "var(--bar-miss)"}"></rect>
         <text x="${(x + bw / 2).toFixed(1)}" y="${(inside ? y(v) + 11 : y(v) - 3).toFixed(1)}" text-anchor="middle" font-size="9" fill="${inside ? "var(--text)" : "var(--sub)"}">${esc(fmtLine(v))}</text>`;
     }).join("");
-    const ly = y(leg.max_line).toFixed(1);
-    const hits = vals.filter(v => v > leg.max_line).length;
+    const ly = y(t).toFixed(1);
+    const hits = vals.filter(v => beatsTarget(leg, v)).length;
+    const lineName = sideOf(leg) === "under" ? "min line" : "max line";
     return `<div class="chart">
-      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Last ${n} games: ${hits} over the max line ${esc(fmtLine(leg.max_line))}">
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Last ${n} games: ${hits} ${esc(sideOf(leg))} the ${lineName} ${esc(fmtLine(t))}">
         ${bars}
         <line x1="0" x2="${W}" y1="${ly}" y2="${ly}" stroke="var(--text)" stroke-width="1.2" stroke-dasharray="4 3"></line>
         <line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="var(--rule)" stroke-width="1"></line>
         <text x="0" y="${H - 3}" font-size="9" fill="var(--sub)">${n} games ago</text>
         <text x="${W}" y="${H - 3}" text-anchor="end" font-size="9" fill="var(--sub)">latest →</text>
       </svg>
-      <div class="chart-cap"><strong>${hits} of ${n}</strong> recent games over your max line (${esc(fmtLine(leg.max_line))}, dashed)</div>
+      <div class="chart-cap"><strong>${hits} of ${n}</strong> recent games ${esc(sideOf(leg))} your ${lineName} (${esc(fmtLine(t))}, dashed)</div>
     </div>`;
   }
 
@@ -980,7 +992,7 @@
     const spare = c.state === "no" ? nextSpare(w, rows, leg) : null;
     const swapHtml = c.state === "no"
       ? (spare
-        ? `<div class="swap-offer">Swap in the next best leg: <strong>${esc(spare.player)}</strong>, ${esc(spare.stat_label)} over ≤ ${esc(fmtLine(spare.max_line))}${spare.filler ? " (filler)" : ""}
+        ? `<div class="swap-offer">Swap in the next best leg: <strong>${esc(spare.player)}</strong>, ${esc(spare.stat_label)} ${esc(targetText(spare))}${spare.filler ? " (filler)" : ""}
              <button class="swap-btn" type="button" data-swap="${esc(leg.key)}" data-spare="${esc(spare.key)}" data-window="${esc(w.window)}">Swap in</button></div>`
         : `<div class="swap-offer">No replacement available that keeps to 2 legs per game, 2 per stat and 1 per player.</div>`)
       : "";
@@ -989,14 +1001,14 @@
         <span class="status ${c.state}" aria-label="${c.state === "ok" ? "checked, OK to bet" : c.state === "no" ? "checked, don't bet" : "not checked yet"}">${c.state === "ok" ? "✓" : c.state === "no" ? "✕" : ""}</span>
         <span class="slip-who">
           <span class="slip-name">${esc(leg.player)}</span>
-          <span class="slip-market">${esc(leg.stat_label)} over · ${esc(leg.game)}${tags ? ` · ${tags}` : ""}</span>
+          <span class="slip-market">${esc(leg.stat_label)} ${esc(sideOf(leg))} · ${esc(leg.game)}${tags ? ` · ${tags}` : ""}</span>
         </span>
-        <span class="slip-target"><strong>≤ ${esc(fmtLine(leg.max_line))}</strong><br>at ${esc(leg.min_price_fractional)}+</span>
+        <span class="slip-target"><strong>${sideOf(leg) === "under" ? "≥" : "≤"} ${esc(fmtLine(targetOf(leg)))}</strong><br>at ${esc(leg.min_price_fractional)}+</span>
       </button>
       ${open ? `<div class="chk">
         <div class="chk-fields">
           <div class="chk-field"><label for="line-${id}">bet365 line</label>
-            <input class="chk-input" id="line-${id}" inputmode="decimal" autocomplete="off" placeholder="${esc(fmtLine(leg.max_line))}" value="${esc(c.saved.line || "")}" data-field="line" data-key="${esc(leg.key)}"></div>
+            <input class="chk-input" id="line-${id}" inputmode="decimal" autocomplete="off" placeholder="${esc(fmtLine(targetOf(leg)))}" value="${esc(c.saved.line || "")}" data-field="line" data-key="${esc(leg.key)}"></div>
           <div class="chk-field"><label for="price-${id}">bet365 price</label>
             <input class="chk-input" id="price-${id}" autocomplete="off" placeholder="e.g. 5/6" value="${esc(c.saved.price || "")}" data-field="price" data-key="${esc(leg.key)}"></div>
         </div>
@@ -1062,7 +1074,7 @@
     const head = `
       <div class="section-head">
         <h2 id="acca-title">This week's accumulators</h2>
-        <span class="kicker">Overs only · Week 4 spec gates</span>
+        <span class="kicker">Overs and unders · Week 4 spec gates</span>
       </div>`;
     if (a.error) {
       el.innerHTML = head + `<div class="acca-empty">The accumulator report failed on this run (${esc(a.error)}). The rankings below are unaffected.</div>`;
@@ -1084,10 +1096,10 @@
     const excluded = a.excluded || [];
     const exclHtml = excluded.length ? `
       <details class="more">
-        <summary>Every excluded over, and why (${excluded.length})</summary>
+        <summary>Every excluded leg, and why (${excluded.length})</summary>
         ${excluded.map(e => `
           <div class="excl-row">
-            <span class="who">${esc(e.player)}</span> · ${esc(e.stat_label)} · ${esc(e.game)}
+            <span class="who">${esc(e.player)}</span> · ${esc(e.stat_label)} ${esc(e.side || "over")} · ${esc(e.game)}
             <div class="why">${e.failed.map(f => `<strong>${esc(gateName(f.gate))}</strong>: ${esc(f.reason)}`).join("<br>")}</div>
           </div>`).join("")}
       </details>` : "";
@@ -1103,7 +1115,7 @@
       : `bet365 isn't in the odds feed (books seen: ${esc((a.bookmakers_seen || []).join(", ") || "none")}).`;
 
     const outsideNote = a.n_outside_windows
-      ? `${esc(a.n_outside_windows)} overs from games outside the two windows aren't used.` : "";
+      ? `${esc(a.n_outside_windows)} props from games outside the two windows aren't used.` : "";
     const modeNote = a.sources_mode === "signal"
       ? "Analyst picks are shown as a signal, not a gate: a leg doesn't need analysts behind it to be suggested. Each leg's backing is logged so the weekly grading can show whether backed legs actually hit more."
       : "";
@@ -1120,7 +1132,7 @@
   function tipHtml(t) {
     const e = t.engine || {};
     const engineDetail = e.slip_line !== null && e.slip_line !== undefined
-      ? ` (slip: over ≤ ${esc(fmtLine(e.slip_line))})`
+      ? ` (slip: ${esc(e.slip_side || "over")} ${(e.slip_side || "over") === "under" ? "≥" : "≤"} ${esc(fmtLine(e.slip_line))})`
       : e.projection !== null && e.projection !== undefined
       ? ` (projects ${esc(fmtLine(e.projection))} vs ${esc(fmtLine(e.engine_line))})` : "";
     const who = [t.outlet, t.analyst].filter(Boolean).join(", ") || "unnamed source";

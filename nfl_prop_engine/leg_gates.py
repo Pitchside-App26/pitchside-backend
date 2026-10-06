@@ -83,31 +83,42 @@ def movement_flag(opener_line: float | None, consensus_line: float | None, stat_
 
 # --- Requirement 4: leg quality gates ---------------------------------------
 
-def form_gate(recent_values: list[float], line: float) -> GateResult:
+def form_gate(recent_values: list[float], line: float, side: str = "over") -> GateResult:
     """Last FORM_WINDOW games (reaching into the prior season if needed --
     the caller assembles that combined, most-recent-first list before
     calling). Passes only if BOTH the hit rate and the median clear the
     line -- either one failing means recent form doesn't support the over.
     Exact ties don't count as a hit, same convention as compute_hit_rate()
-    in rank_props.py (a push isn't a win)."""
+    in rank_props.py (a push isn't a win). For an under, the same test
+    from below: most recent games under the line, median at or below it."""
     if not recent_values:
         return GateResult("form", False, "no game history available")
     decisive = [v for v in recent_values if v != line]
-    hit_rate = sum(1 for v in decisive if v > line) / len(decisive) if decisive else 0.0
+    hits = sum(1 for v in decisive if (v > line if side == "over" else v < line))
+    hit_rate = hits / len(decisive) if decisive else 0.0
     median = statistics.median(recent_values)
-    if hit_rate >= 0.5 and median >= line:
+    median_ok = median >= line if side == "over" else median <= line
+    if hit_rate >= 0.5 and median_ok:
         return GateResult("form", True, f"hit rate {hit_rate:.0%}, median {median:g} vs. line {line:g} over {len(recent_values)} games")
     return GateResult("form", False, f"hit rate {hit_rate:.0%}, median {median:g} vs. line {line:g} over {len(recent_values)} games")
 
 
-def outlier_gate(recent_values: list[float], line: float) -> GateResult:
+def outlier_gate(recent_values: list[float], line: float, side: str = "over") -> GateResult:
     """The Jahmyr Gibbs check: 104 yards/game from one 156-yard game and one
     52-yard game is not a trend. Drops the single best game from the
     window and requires the REMAINING average to still clear
     OUTLIER_MIN_PCT_OF_LINE of the line -- needs at least 2 games (one to
-    drop, one to judge on)."""
+    drop, one to judge on). For an under, the mirror image: drop the single
+    WORST game (a one-off dud isn't a trend either) and require the rest to
+    average no more than the line / OUTLIER_MIN_PCT_OF_LINE."""
     if len(recent_values) < 2:
         return GateResult("outlier", False, "fewer than 2 games -- can't drop an outlier and still judge the rest")
+    if side == "under":
+        remaining_avg = statistics.mean(sorted(recent_values)[1:])  # drop the single lowest value
+        ceiling = line / OUTLIER_MIN_PCT_OF_LINE
+        if remaining_avg <= ceiling:
+            return GateResult("outlier", True, f"excl. worst game, remaining avg {remaining_avg:.1f} stays under {ceiling:.1f}")
+        return GateResult("outlier", False, f"excl. worst game, remaining avg {remaining_avg:.1f} is above {ceiling:.1f} -- the under leans on one quiet game")
     remaining = sorted(recent_values)[:-1]  # drop the single highest value
     remaining_avg = statistics.mean(remaining)
     threshold = OUTLIER_MIN_PCT_OF_LINE * line
@@ -132,7 +143,7 @@ def role_change_flag(current_share_pct: float | None, prior_share_pct: float | N
     return GateResult("role", True, f"FLAGGED: role share moved {direction} {abs(delta):.0f}pts ({prior_share_pct:.0f}% -> {current_share_pct:.0f}%) -- manual review")
 
 
-def matchup_gate(opp_factor: float) -> GateResult:
+def matchup_gate(opp_factor: float, side: str = "over") -> GateResult:
     """Reuses opponent_stats.blended_opponent_factor()'s own output --
     >1.0 means the opponent allows more than league average at this stat,
     which is what an over needs. Same number the projection engine's own
@@ -141,20 +152,31 @@ def matchup_gate(opp_factor: float) -> GateResult:
     real Week 4 run had a defence at 0.9998x failing as "better than
     average" while displaying 1.00x."""
     shown = round(opp_factor, 2)
+    if side == "under":
+        if shown <= 1.0:
+            return GateResult("matchup", True, f"opponent allows {shown:.2f}x league average -- at or better than average")
+        return GateResult("matchup", False, f"opponent allows {shown:.2f}x league average -- worse than average, working against the under")
     if shown >= 1.0:
         return GateResult("matchup", True, f"opponent allows {shown:.2f}x league average -- at or worse than average")
     return GateResult("matchup", False, f"opponent allows {shown:.2f}x league average -- better than average, working against the over")
 
 
-def game_script_gate(stat_col: str, team_spread_value: float | None, total_line: float | None) -> GateResult:
+def game_script_gate(stat_col: str, team_spread_value: float | None, total_line: float | None, side: str = "over") -> GateResult:
     """Rushing overs need the team favored or a dog by no more than
     GAME_SCRIPT_RUSHING_MAX_DOG; passing/receiving overs need the team to
     be an underdog OR a high enough total. Stats outside both volume sets
     (defensive props) aren't covered by this gate -- passes through
     neutrally rather than guessing at a rule the spec doesn't define for
-    them."""
+    them. An under passes exactly when the over's script fails: the game
+    script works against this team's volume for the stat."""
     if team_spread_value is None:
         return GateResult("game_script", False, "no spread data available")
+    if side == "under":
+        over = game_script_gate(stat_col, team_spread_value, total_line)
+        if over.reason == "game-script gate not defined for this stat":
+            return over
+        verdict = "good for the under" if not over.passed else "bad for the under"
+        return GateResult("game_script", not over.passed, f"{verdict}: {over.reason}")
     if stat_col in RUSH_VOLUME_STATS:
         if team_spread_value >= -GAME_SCRIPT_RUSHING_MAX_DOG:
             return GateResult("game_script", True, f"team spread {team_spread_value:+.1f} -- favored or a small enough dog for rushing volume")

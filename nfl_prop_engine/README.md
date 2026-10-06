@@ -455,7 +455,21 @@ real-money multi-leg bet has less tolerance for risk than a general
 Every weekly run (`run_weekly.py`) now ends with `acca_report.py`. It uses
 data the run has already fetched, so it costs no extra Odds API credits.
 
-For each over:
+**Overs and unders since 6 Oct (Dan's call: mixed slips).** Both sides of
+every prop are evaluated; a slip leg is whichever side passes the gates
+with the better edge, and the one-leg-per-player rule means a slip never
+holds both. Graded weeks 1, 2 and 4 had unders hitting 55-59% against
+overs' 41-45%, but nothing yet shows that beats the prices (unders are
+often priced shorter); the price logging from 11 Oct is the test.
+`SIDES = ["over"]` in config goes back to overs only. An under mirrors
+every check: its target is bet365's line at or ABOVE consensus - 2
+(yards) / - 0 (counts); Model needs the projection below that; Form needs
+most recent games under it; Outlier drops the single worst game instead of
+the best; Matchup wants a defence at or better than average; Game script
+passes exactly when the over's would fail; Odds uses the under's own fair
+chance. Every prop is logged on both sides, each graded on its own side.
+
+For each leg (described for an over; an under mirrors it):
 1. **US consensus.** The median line across US books, from every book's own
    line before the ranking collapses them to one. Fair probability is each
    book's over/under pair de-vigged, then averaged. Fewer than 2 books fails

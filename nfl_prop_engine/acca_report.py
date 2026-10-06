@@ -31,6 +31,7 @@ from config import (
     MAX_US_FAIR_PROB,
     MIN_PRICE_DECIMAL,
     ODDS_API_TEAM_NAME_TO_ABBR,
+    SIDES,
     STAKE_GBP,
     STAT_LABELS,
     market_kind_for,
@@ -95,13 +96,17 @@ class LegContext:
 
 @dataclass
 class Leg:
+    """One side of one prop. target_line is the worst bet365 line to accept:
+    a maximum for an over (consensus + LINE_THRESHOLD), a minimum for an
+    under (consensus - LINE_THRESHOLD). fair_prob is this side's."""
     ctx: LegContext
     consensus_line: float | None
     n_books: int
     fair_prob: float | None
-    max_line: float | None
+    target_line: float | None
     gates: list[GateResult]
     flags: list[str]
+    side: str = "over"
     sources: dict = field(default_factory=lambda: {"over": [], "under": []})
     sources_checked: bool = False
     sources_note: str = "not checked: this leg had already failed another gate"
@@ -113,18 +118,28 @@ class Leg:
         return [g for g in self.gates if not g.passed]
 
     @property
+    def max_line(self) -> float | None:  # the name before unders; same value
+        return self.target_line
+
+    @property
+    def other_side(self) -> str:
+        return "under" if self.side == "over" else "over"
+
+    @property
     def score(self) -> float:
         """How many of this player's usual game-to-game swings the projection
-        clears the max line by -- the same standardised edge rank_props uses.
+        clears the target line by (on this leg's side) -- the same
+        standardised edge rank_props uses.
         Dividing by the line instead made every 0.5 line (pass TDs, INTs)
         outrank every yardage leg, however thin its real edge."""
         spread = self.ctx.season_std
         if not spread or spread <= 0:
             recent = self.ctx.recent_values
             spread = statistics.stdev(recent) if len(recent) >= 2 else 0
-        if self.max_line is None or not spread:
+        if self.target_line is None or not spread:
             return float("-inf")
-        return (self.ctx.projection - self.max_line) / spread
+        margin = self.ctx.projection - self.target_line
+        return (margin if self.side == "over" else -margin) / spread
 
 
 _SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "v"}
@@ -178,38 +193,45 @@ def _odds_gate(fair_prob: float, stat_col: str) -> GateResult:
     )
 
 
-def _model_gate(projection: float, max_line: float) -> GateResult:
-    if projection > max_line:
-        return GateResult("model", True, f"projection {projection:.1f} is above the max line {max_line:g}")
-    return GateResult("model", False, f"projection {projection:.1f} doesn't clear the max line {max_line:g}")
+def _model_gate(projection: float, target_line: float, side: str = "over") -> GateResult:
+    if side == "under":
+        if projection < target_line:
+            return GateResult("model", True, f"projection {projection:.1f} is below the min line {target_line:g}")
+        return GateResult("model", False, f"projection {projection:.1f} isn't below the min line {target_line:g}")
+    if projection > target_line:
+        return GateResult("model", True, f"projection {projection:.1f} is above the max line {target_line:g}")
+    return GateResult("model", False, f"projection {projection:.1f} doesn't clear the max line {target_line:g}")
 
 
-def evaluate_leg(ctx: LegContext, consensus: dict | None) -> Leg:
-    """Every gate that can run before the analyst sweep, at the worst line
-    Dan would be told to accept."""
+def evaluate_leg(ctx: LegContext, consensus: dict | None, side: str = "over") -> Leg:
+    """Every gate that can run before the analyst sweep, for one side, at
+    the worst line Dan would be told to accept on that side."""
     consensus = consensus or {"line": None, "fair_prob": None, "n_books": 0}
     line = consensus["line"]
-    gates = [_market_gate(line, consensus["n_books"], consensus["fair_prob"])]
-    max_line = None
+    over_prob = consensus["fair_prob"]
+    fair_prob = over_prob if side == "over" or over_prob is None else 1 - over_prob
+    gates = [_market_gate(line, consensus["n_books"], over_prob)]
+    target_line = None
     if gates[0].passed:
-        max_line = line + LINE_THRESHOLD[market_kind_for(ctx.stat_col)]
+        threshold = LINE_THRESHOLD[market_kind_for(ctx.stat_col)]
+        target_line = line + threshold if side == "over" else line - threshold
         gates += [
-            _odds_gate(consensus["fair_prob"], ctx.stat_col),
-            _model_gate(ctx.projection, max_line),
-            form_gate(ctx.recent_values, max_line),
-            outlier_gate(ctx.recent_values, max_line),
+            _odds_gate(fair_prob, ctx.stat_col),
+            _model_gate(ctx.projection, target_line, side),
+            form_gate(ctx.recent_values, target_line, side),
+            outlier_gate(ctx.recent_values, target_line, side),
         ]
     gates += [
-        matchup_gate(ctx.opp_factor) if ctx.opp_factor is not None
+        matchup_gate(ctx.opp_factor, side) if ctx.opp_factor is not None
         else GateResult("matchup", False, "no opponent data for this projection"),
-        game_script_gate(ctx.stat_col, ctx.team_spread, ctx.total_line),
+        game_script_gate(ctx.stat_col, ctx.team_spread, ctx.total_line, side),
         injury_gate(ctx.injury_status),
     ]
     flags = []
     teammates = teammate_injury_flag(ctx.teammates_out)
     if teammates.reason.startswith("FLAGGED"):
         flags.append(teammates.reason.removeprefix("FLAGGED: "))
-    return Leg(ctx, line, consensus["n_books"], consensus["fair_prob"], max_line, gates, flags)
+    return Leg(ctx, line, consensus["n_books"], fair_prob, target_line, gates, flags, side)
 
 
 def _safe_source(pick: dict) -> dict:
@@ -243,23 +265,22 @@ def apply_sources(
             continue
         matched = match_picks_to_candidate(picks_by_game[game], leg.ctx.player, leg.ctx.market, leg.consensus_line)
         consensus = summarize_sources(matched)
+        by_side = {"over": consensus.over_sources, "under": consensus.under_sources}
+        backers, against = by_side[leg.side], by_side[leg.other_side]
         leg.sources_checked = True
         if as_gate:
-            gate = sources_gate(consensus.n_over_sources)
+            gate = sources_gate(len(backers))
             leg.sources_note = gate.reason
             leg.gates.append(gate)
         else:
-            leg.sources_note = f"{consensus.n_over_sources} independent analyst(s) backing the over"
-        leg.sources = {
-            "over": [_safe_source(p) for p in consensus.over_sources],
-            "under": [_safe_source(p) for p in consensus.under_sources],
-        }
-        leg.contested = consensus.contested
-        leg.crowded = consensus.crowded
-        if consensus.contested:
-            leg.flags.append("Contested: an analyst backs the under. Review before betting.")
-        if consensus.crowded:
-            leg.flags.append("Crowded: 4+ outlets back this over, so the line may already have moved.")
+            leg.sources_note = f"{len(backers)} independent analyst(s) backing the {leg.side}"
+        leg.sources = {side: [_safe_source(p) for p in picks] for side, picks in by_side.items()}
+        leg.contested = bool(against)
+        leg.crowded = len({p["outlet"] for p in backers if p.get("outlet")}) >= ANALYST_SWEEP["crowding_flag_outlets"]
+        if leg.contested:
+            leg.flags.append(f"Contested: an analyst backs the {leg.other_side}. Review before betting.")
+        if leg.crowded:
+            leg.flags.append(f"Crowded: 4+ outlets back this {leg.side}, so the line may already have moved.")
 
 
 def _fractional(decimal_odds: float) -> str:
@@ -270,7 +291,7 @@ def _fractional(decimal_odds: float) -> str:
 def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None, filler: bool = False) -> dict:
     ctx = leg.ctx
     return {
-        "key": f"{ctx.player}|{ctx.stat_col}",
+        "key": f"{ctx.player}|{ctx.stat_col}|{leg.side}",
         "player": ctx.player,
         "team": ctx.team,
         "opponent": ctx.opponent,
@@ -278,10 +299,11 @@ def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None, filler: boo
         "kickoff": ctx.kickoff,
         "stat": ctx.stat_col,
         "stat_label": STAT_LABELS.get(ctx.stat_col, ctx.stat_col),
-        "side": "over",
+        "side": leg.side,
         "consensus_line": leg.consensus_line,
         "n_books": leg.n_books,
-        "max_line": leg.max_line,
+        "target_line": leg.target_line,
+        "max_line": leg.target_line,  # kept for older readers; same as target_line
         "min_price_decimal": MIN_PRICE_DECIMAL,
         "min_price_fractional": _fractional(MIN_PRICE_DECIMAL),
         "fair_prob": round(leg.fair_prob, 3) if leg.fair_prob is not None else None,
@@ -305,8 +327,9 @@ def _log_row(leg: Leg, selected: bool, filler: bool) -> dict:
         "market": leg.ctx.market,
         "game": leg.ctx.game,
         "window": leg.ctx.window,
+        "side": leg.side,
         "consensus_line": leg.consensus_line,
-        "max_line": leg.max_line,
+        "max_line": leg.target_line,  # the target line on this leg's side
         "projection": leg.ctx.projection,
         "fair_prob": leg.fair_prob,
         "passed_gates": not leg.failed,
@@ -341,8 +364,8 @@ def _build(surviving: list[Leg]) -> list[Leg]:
     candidates, by_candidate = [], {}
     for leg in surviving:
         candidate = Candidate(
-            player=leg.ctx.player, game=leg.ctx.game, market=leg.ctx.market, side="over",
-            line=leg.max_line, price_decimal=1 / leg.fair_prob, fair_prob=leg.fair_prob,
+            player=leg.ctx.player, game=leg.ctx.game, market=leg.ctx.market, side=leg.side,
+            line=leg.target_line, price_decimal=1 / leg.fair_prob, fair_prob=leg.fair_prob,
             gates=leg.gates, score=leg.score,
         )
         candidates.append(candidate)
@@ -459,9 +482,12 @@ def build_acca_report(
     unique: dict[tuple, LegContext] = {}
     for ctx in contexts:
         unique.setdefault((ctx.event_id, ctx.market, ctx.player), ctx)
+    # Both sides of every prop compete (config.SIDES); the one-leg-per-player
+    # rule keeps a slip from holding both.
     legs = [
-        evaluate_leg(ctx, consensus.get((ctx.event_id, ctx.market, name_key(ctx.odds_player_name))))
+        evaluate_leg(ctx, consensus.get((ctx.event_id, ctx.market, name_key(ctx.odds_player_name))), side)
         for ctx in unique.values()
+        for side in SIDES
     ]
     in_window = [leg for leg in legs if leg.ctx.window in ACCA_WINDOWS]
     by_window = {w: [leg for leg in in_window if leg.ctx.window == w] for w in ACCA_WINDOWS}
@@ -543,17 +569,18 @@ def build_acca_report(
         "sources_mode": "gate" if as_gate else "signal",
         "stake_gbp": STAKE_GBP,
         "n_candidates": len(in_window),
-        "n_outside_windows": len(legs) - len(in_window),
+        "n_outside_windows": len({id(leg.ctx) for leg in legs if leg.ctx.window not in ACCA_WINDOWS}),
         "near_misses": [_leg_record(leg) for leg in near_misses],
         "excluded": [
             {
                 "player": leg.ctx.player,
                 "stat_label": STAT_LABELS.get(leg.ctx.stat_col, leg.ctx.stat_col),
+                "side": leg.side,
                 "game": leg.ctx.game,
                 "consensus_line": leg.consensus_line,
                 "failed": [{"gate": g.gate, "reason": g.reason} for g in leg.failed],
             }
-            for leg in sorted(unused_failures, key=lambda leg: (leg.ctx.player, leg.ctx.stat_col))
+            for leg in sorted(unused_failures, key=lambda leg: (leg.ctx.player, leg.ctx.stat_col, leg.side))
         ],
         "gate_failure_counts": dict(sorted(failure_counts.items(), key=lambda kv: kv[1], reverse=True)),
         "analyst_sweep": sweep_info,

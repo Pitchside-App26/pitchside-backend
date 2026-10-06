@@ -83,9 +83,18 @@ def test_feed_says_how_each_pick_sits_against_the_slips_and_the_engine():
     assert by[("Kyren Williams", "rushing_yards", "over")]["slip_line"] == 63.5
     assert by[("Kyren Williams", "rushing_yards", "under")]["status"] == "slip_against"
     assert by[("A.J. Brown", "receptions", "over")] == {
-        "status": "engine_disagree", "label": "Engine disagrees", "projection": 4.8, "engine_line": 5.5, "slip_line": None}
+        "status": "engine_disagree", "label": "Engine disagrees", "projection": 4.8, "engine_line": 5.5, "slip_line": None,
+        "slip_side": None}
     assert by[("A.J. Brown", "receiving_yards", "over")]["status"] == "unrated"
     assert feed["ran"] is True and "game_description" not in feed["picks"][0]
+
+
+def test_an_analyst_under_agrees_with_an_under_in_the_slip():
+    resolved, _ = resolve_picks([_raw(side="Under")], PLAYERS, TEAM_GAMES)
+    accumulator = {"accumulators": [{"legs": [{"player": "Kyren Williams", "stat": "rushing_yards", "side": "under",
+                                               "target_line": 59.5}]}]}
+    engine = build_feed(resolved, accumulator, {}, {})["picks"][0]["engine"]
+    assert (engine["status"], engine["slip_side"], engine["slip_line"]) == ("slip_agree", "under", 59.5)
 
 
 def test_feed_survives_a_failed_accumulator():

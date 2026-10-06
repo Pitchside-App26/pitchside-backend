@@ -254,14 +254,19 @@ def print_report(db_path: str = RESULTS_DB_PATH) -> None:
 
 
 def acca_groups(df: pd.DataFrame) -> list[tuple[str, pd.DataFrame]]:
-    """Graded accumulator-report legs, each judged as an over at its max
-    acceptable bet365 line, grouped to answer two questions: do the gates
+    """Graded accumulator-report legs, each judged on its own side at its
+    target bet365 line (max for an over, min for an under), grouped to answer two questions: do the gates
     pick better overs, and (among legs that passed) do analyst-backed ones
     hit more? A leg logged by several runs in one week counts once, from
     its latest run."""
-    df = df[df["max_line"].notna()].sort_values("logged_at")
-    df = df.drop_duplicates(["season", "week", "player_id", "stat_col"], keep="last").copy()
-    df["outcome"] = [_direction_hit("over", line, actual) for line, actual in zip(df["max_line"], df["actual_value"])]
+    df = df[df["max_line"].notna()].copy()
+    # Rows from before unders joined the slips (6 Oct) have no side: overs.
+    df["side"] = df["side"].fillna("over") if "side" in df.columns else "over"
+    df = df.sort_values("logged_at").drop_duplicates(["season", "week", "player_id", "stat_col", "side"], keep="last").copy()
+    df["outcome"] = [_direction_hit(side, line, actual) for side, line, actual in zip(df["side"], df["max_line"], df["actual_value"])]
+    over = df["side"] == "over"
+    df["n_backers"] = df["n_over_sources"].where(over, df["n_under_sources"])
+    df["n_against"] = df["n_under_sources"].where(over, df["n_over_sources"])
     passed = df[df["passed_gates"] == 1]
     checked = passed[passed["sources_checked"] == 1]
     return [
@@ -269,10 +274,12 @@ def acca_groups(df: pd.DataFrame) -> list[tuple[str, pd.DataFrame]]:
         ("failed a gate", df[df["passed_gates"] == 0]),
         ("selected, passed every gate", df[(df["selected"] == 1) & (df["filler"] == 0)]),
         ("selected as a filler", df[df["filler"] == 1]),
-        ("passed, 2+ analysts", checked[checked["n_over_sources"] >= 2]),
-        ("passed, 1 analyst", checked[checked["n_over_sources"] == 1]),
-        ("passed, 0 analysts", checked[checked["n_over_sources"] == 0]),
-        ("passed, analyst against", checked[checked["n_under_sources"] > 0]),
+        ("passed, overs", passed[passed["side"] == "over"]),
+        ("passed, unders", passed[passed["side"] == "under"]),
+        ("passed, 2+ analysts", checked[checked["n_backers"] >= 2]),
+        ("passed, 1 analyst", checked[checked["n_backers"] == 1]),
+        ("passed, 0 analysts", checked[checked["n_backers"] == 0]),
+        ("passed, analyst against", checked[checked["n_against"] > 0]),
         ("passed, not checked", passed[passed["sources_checked"] == 0]),
     ]
 
