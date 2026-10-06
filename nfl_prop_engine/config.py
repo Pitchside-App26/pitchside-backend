@@ -209,8 +209,12 @@ RESULTS_DB_PATH = os.path.join(os.path.dirname(__file__), "results_log.sqlite3")
 # and picks leaning on a single analyst. This section's settings exist to
 # make each of those a gate a leg can fail, not a judgment call made in the
 # moment.
-SIDES = ["over"]  # config, not a constant someone forgot to make configurable -- flip deliberately, not by accident
-UNDERS_WATCHLIST = False  # True -> unders get their own report section, never the accumulator builder
+# Both sides since 6 Oct (Dan's call: mixed slips). Graded weeks 1, 2 and 4
+# had unders hitting 55-59% and overs 41-45%; whether that beats the prices
+# is what the price logging from 11 Oct will show. Each leg is an over or an
+# under, whichever passes the gates with the better edge; never both.
+SIDES = ["over", "under"]
+UNDERS_WATCHLIST = False  # unused since unders joined the slips (6 Oct)
 ONE_PLAY_MARKETS = False  # longest rush/reception, anytime TD -- excluded from accumulators; one play decides them
 
 LINE_THRESHOLD = {"yards": 2.0, "counts": 0.0}  # bet365 line must be <= US consensus + this, or the leg fails

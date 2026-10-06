@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS analyst_picks (
 
 # Columns added after acca_legs first shipped, so a database created by an
 # earlier run gets them too (CREATE TABLE IF NOT EXISTS won't add them).
-ACCA_ADDED_COLUMNS = {"window": "TEXT", "filler": "INTEGER NOT NULL DEFAULT 0"}
+ACCA_ADDED_COLUMNS = {"window": "TEXT", "filler": "INTEGER NOT NULL DEFAULT 0", "side": "TEXT"}
 # Prices logged since 4 Oct: both sides at the logged line, the book, and the
 # no-vig chance of the over. Before that only the line was kept, so earlier
 # weeks can be judged on hit rate but not on profit.
@@ -131,14 +131,14 @@ def log_acca_legs(rows: list[dict], season: int, week: int, db_path: str = RESUL
             """INSERT INTO acca_legs
                (logged_at, season, week, player_id, player_name, stat_col, market, game, window, consensus_line,
                 max_line, projection, fair_prob, passed_gates, failed_gates, selected, filler, sources_checked,
-                n_over_sources, n_under_sources)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                n_over_sources, n_under_sources, side)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             [
                 (
                     logged_at, season, week, r["player_id"], r["player_name"], r["stat_col"], r["market"],
                     r["game"], r.get("window"), r["consensus_line"], r["max_line"], r["projection"], r["fair_prob"],
                     int(r["passed_gates"]), r["failed_gates"], int(r["selected"]), int(r.get("filler", False)),
-                    int(r["sources_checked"]), r["n_over_sources"], r["n_under_sources"],
+                    int(r["sources_checked"]), r["n_over_sources"], r["n_under_sources"], r.get("side", "over"),
                 )
                 for r in rows
             ],

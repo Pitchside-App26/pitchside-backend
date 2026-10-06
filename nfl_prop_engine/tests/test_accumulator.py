@@ -92,23 +92,20 @@ def test_stake_never_escalates_and_is_flat_from_config():
     assert result.stake_gbp == 5.0
 
 
-def test_filter_by_side_drops_unders_by_default():
+def test_filter_by_side_keeps_both_sides_by_default_and_can_go_back_to_overs_only():
     candidates = [_candidate("A", "G1", side="over"), _candidate("B", "G2", side="under")]
-    assert [c.player for c in filter_by_side(candidates)] == ["A"]
+    assert [c.player for c in filter_by_side(candidates)] == ["A", "B"]
+    assert [c.player for c in filter_by_side(candidates, ["over"])] == ["A"]
 
 
-def test_build_accumulator_never_includes_an_under_leg():
-    # Requirement 1: overs only, even if an under leg would otherwise pass
-    # every gate and have a great fair probability.
+def test_mixed_slips_take_an_under_that_passed_its_gates():
     candidates = [
         _candidate("OverA", "G1", side="over", fair_prob=0.5),
-        _candidate("UnderB", "G2", side="under", fair_prob=0.9),  # best fair_prob, but wrong side
+        _candidate("UnderB", "G2", side="under", fair_prob=0.9),
         _candidate("OverC", "G3", side="over", fair_prob=0.55),
-        _candidate("OverD", "G4", side="over", fair_prob=0.52),
     ]
     result = build_accumulator(candidates)
-    assert all(c.side == "over" for c in result.legs)
-    assert "UnderB" not in {c.player for c in result.legs}
+    assert {c.player: c.side for c in result.legs} == {"UnderB": "under", "OverC": "over", "OverA": "over"}
 
 
 def test_one_leg_per_player():

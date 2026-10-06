@@ -202,3 +202,35 @@ def test_sources_gate_default_minimum_is_two():
     assert sources_gate(2).passed is True
     assert sources_gate(1).passed is False
     assert sources_gate(0).passed is False
+
+
+# --- unders: each gate's mirror image -----------------------------------------
+
+def test_form_gate_for_an_under_needs_most_games_below_the_line():
+    assert form_gate([40, 45, 70, 38, 50, 42], 52.5, side="under").passed
+    assert not form_gate([60, 65, 70, 38, 50, 58], 52.5, side="under").passed
+
+
+def test_outlier_gate_for_an_under_drops_the_worst_game():
+    # 4, 40, 42, 44: the 4 is a one-off dud; the rest average 42, under 52.5 / 0.9.
+    assert outlier_gate([4, 40, 42, 44], 52.5, side="under").passed
+    # Without the dud the rest average 62 -- the under leaned on one quiet game.
+    assert not outlier_gate([4, 60, 62, 64], 52.5, side="under").passed
+
+
+def test_matchup_gate_for_an_under_wants_a_tough_defence():
+    assert matchup_gate(0.85, side="under").passed
+    assert matchup_gate(1.0, side="under").passed
+    assert not matchup_gate(1.12, side="under").passed
+
+
+def test_game_script_for_an_under_is_the_overs_opposite():
+    # A rushing over needs the team favored or a small dog; a 7-point dog suits the rushing under.
+    assert game_script_gate("rushing_yards", -7.0, 44.0, side="under").passed
+    assert not game_script_gate("rushing_yards", 3.0, 44.0, side="under").passed
+    # Favored with a low total works against passing volume, so suits a passing under.
+    assert game_script_gate("passing_yards", 4.0, 40.5, side="under").passed
+    assert not game_script_gate("passing_yards", -3.0, 40.5, side="under").passed
+    # Undefined for defensive stats either way.
+    assert game_script_gate("def_tackles", 3.0, 40.5, side="under").passed
+    assert not game_script_gate("rushing_yards", None, 44.0, side="under").passed
