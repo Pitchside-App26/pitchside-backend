@@ -10,6 +10,7 @@ evaluated at that worst acceptable line, so any line Dan takes within the
 target has passed them.
 """
 import logging
+import math
 import os
 import re
 import statistics
@@ -21,6 +22,7 @@ from urllib.parse import urlparse
 
 from accumulator import Candidate, build_accumulator
 from config import (
+    ACCEPT_EDGE,
     ACCA_WINDOWS,
     ANALYST_SWEEP,
     FILL_WITH_NEAR_MISSES,
@@ -28,10 +30,14 @@ from config import (
     MAX_LEGS,
     MAX_LEGS_PER_GAME,
     MAX_LEGS_PER_STAT,
+    MAX_MODEL_MARKET_GAP,
     MAX_US_FAIR_PROB,
     MIN_PRICE_DECIMAL,
     ODDS_API_TEAM_NAME_TO_ABBR,
     SIDES,
+    VALUE_EDGE,
+    WIND_FADE_MPH,
+    WIND_STATS,
     STAKE_GBP,
     STAT_LABELS,
     market_kind_for,
@@ -52,10 +58,10 @@ logger = logging.getLogger(__name__)
 
 ABBR_TO_TEAM_NAME = {abbr: name for name, abbr in ODDS_API_TEAM_NAME_TO_ABBR.items()}
 NOT_CHECKED = [
-    "bet365 line and price: check each leg's target on bet365 before betting.",
+    "bet365 line and price: enter them on each leg; the page works out the fair price at bet365's own line.",
     "Line movement: needs an earlier snapshot of the line, which isn't recorded yet.",
     "Role change: snap and route share data isn't wired in yet.",
-    "Weather: not built yet (phase 2 of the spec).",
+    "Weather beyond wind (rain, snow, cold): wind is checked, the rest isn't.",
 ]
 
 
@@ -82,6 +88,8 @@ class LegContext:
     player_id: str = ""
     window: str | None = None  # key into config.ACCA_WINDOWS, None outside both
     season_std: float | None = None  # the projection's game-to-game spread for this stat
+    wind_mph: float | None = None  # strongest forecast hour from kickoff; None = no forecast
+    indoors: bool = False
 
     @property
     def game(self) -> str:
@@ -92,6 +100,20 @@ class LegContext:
         away = ABBR_TO_TEAM_NAME.get(self.away_team, self.away_team)
         home = ABBR_TO_TEAM_NAME.get(self.home_team, self.home_team)
         return f"{away} at {home}"
+
+
+def _spread(ctx: "LegContext") -> float:
+    """The stat's game-to-game spread for this player: the projection's own,
+    else the recent games', else 0 (unknown)."""
+    spread = ctx.season_std
+    if not spread or spread <= 0:
+        recent = ctx.recent_values
+        spread = statistics.stdev(recent) if len(recent) >= 2 else 0
+    return spread or 0.0
+
+
+def _normal_cdf(z: float) -> float:
+    return 0.5 * (1 + math.erf(z / math.sqrt(2)))
 
 
 @dataclass
@@ -132,10 +154,7 @@ class Leg:
         standardised edge rank_props uses.
         Dividing by the line instead made every 0.5 line (pass TDs, INTs)
         outrank every yardage leg, however thin its real edge."""
-        spread = self.ctx.season_std
-        if not spread or spread <= 0:
-            recent = self.ctx.recent_values
-            spread = statistics.stdev(recent) if len(recent) >= 2 else 0
+        spread = _spread(self.ctx)
         if self.target_line is None or not spread:
             return float("-inf")
         margin = self.ctx.projection - self.target_line
@@ -203,6 +222,38 @@ def _model_gate(projection: float, target_line: float, side: str = "over") -> Ga
     return GateResult("model", False, f"projection {projection:.1f} doesn't clear the max line {target_line:g}")
 
 
+def _sanity_gate(ctx: LegContext, target_line: float, side: str, fair_prob: float) -> GateResult:
+    """The model's own chance for this side (projection vs the target line,
+    in the player's usual spread) against the market's fair chance. A gap
+    over MAX_MODEL_MARKET_GAP usually means the model is missing something
+    the market knows, not that the market is that wrong."""
+    spread = _spread(ctx)
+    if not spread:
+        return GateResult("sanity", True, "no spread to judge the model against the market")
+    z = (ctx.projection - target_line) / spread
+    model_prob = _normal_cdf(z if side == "over" else -z)
+    gap = model_prob - fair_prob
+    detail = f"model {model_prob:.0%} vs market {fair_prob:.0%} for the {side}"
+    if abs(gap) > MAX_MODEL_MARKET_GAP:
+        return GateResult("sanity", False, f"{detail} -- a gap this big usually means the model is missing news or a role change")
+    return GateResult("sanity", True, detail)
+
+
+def _weather_gate(ctx: LegContext, side: str) -> GateResult:
+    if ctx.stat_col not in WIND_STATS:
+        return GateResult("weather", True, "wind doesn't affect this stat")
+    if ctx.indoors:
+        return GateResult("weather", True, "indoors")
+    if ctx.wind_mph is None:
+        return GateResult("weather", True, "no wind forecast")
+    windy = ctx.wind_mph >= WIND_FADE_MPH
+    if side == "under":
+        return GateResult("weather", True, f"wind {ctx.wind_mph:.0f} mph" + (" -- backs the under" if windy else ""))
+    if windy:
+        return GateResult("weather", False, f"wind {ctx.wind_mph:.0f} mph at kickoff -- passing suffers from {WIND_FADE_MPH:.0f} mph")
+    return GateResult("weather", True, f"wind {ctx.wind_mph:.0f} mph")
+
+
 def evaluate_leg(ctx: LegContext, consensus: dict | None, side: str = "over") -> Leg:
     """Every gate that can run before the analyst sweep, for one side, at
     the worst line Dan would be told to accept on that side."""
@@ -218,6 +269,7 @@ def evaluate_leg(ctx: LegContext, consensus: dict | None, side: str = "over") ->
         gates += [
             _odds_gate(fair_prob, ctx.stat_col),
             _model_gate(ctx.projection, target_line, side),
+            _sanity_gate(ctx, target_line, side, fair_prob),
             form_gate(ctx.recent_values, target_line, side),
             outlier_gate(ctx.recent_values, target_line, side),
         ]
@@ -225,6 +277,7 @@ def evaluate_leg(ctx: LegContext, consensus: dict | None, side: str = "over") ->
         matchup_gate(ctx.opp_factor, side) if ctx.opp_factor is not None
         else GateResult("matchup", False, "no opponent data for this projection"),
         game_script_gate(ctx.stat_col, ctx.team_spread, ctx.total_line, side),
+        _weather_gate(ctx, side),
         injury_gate(ctx.injury_status),
     ]
     flags = []
@@ -307,6 +360,14 @@ def _leg_record(leg: Leg, bet_builder_games: set[str] | None = None, filler: boo
         "min_price_decimal": MIN_PRICE_DECIMAL,
         "min_price_fractional": _fractional(MIN_PRICE_DECIMAL),
         "fair_prob": round(leg.fair_prob, 3) if leg.fair_prob is not None else None,
+        # For the page's value check: fair odds at the consensus line, the
+        # spread used to move that chance to bet365's own line, and the
+        # edges the verdict uses.
+        "fair_odds": round(1 / leg.fair_prob, 3) if leg.fair_prob else None,
+        "required_price": round((1 + ACCEPT_EDGE) / leg.fair_prob, 3) if leg.fair_prob else None,
+        "sd": round(_spread(ctx), 3) or None,
+        "accept_edge": ACCEPT_EDGE,
+        "value_edge": VALUE_EDGE,
         "projection": round(ctx.projection, 1),
         "recent": [round(v, 1) for v in ctx.recent_values],
         "bet_builder": bool(bet_builder_games and ctx.game in bet_builder_games),
@@ -376,8 +437,9 @@ def _build(surviving: list[Leg]) -> list[Leg]:
 SPARES_PER_WINDOW = 10
 # A leg that failed one of these is never a filler or spare: Market means
 # there's no consensus line to set a bet365 target from, Odds means bet365
-# won't realistically offer MIN_PRICE_DECIMAL on it.
-NEVER_FILL_GATES = {"market", "odds"}
+# won't realistically offer MIN_PRICE_DECIMAL on it, Sanity means the model
+# and the market disagree too much to trust the leg.
+NEVER_FILL_GATES = {"market", "odds", "sanity"}
 
 
 def _can_fill(leg: Leg) -> bool:

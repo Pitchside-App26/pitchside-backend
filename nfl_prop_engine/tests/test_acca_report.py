@@ -13,12 +13,12 @@ def _book(book, point, over=-110, under=-110, event="e1", market="player_pass_yd
 
 def _ctx(player="Drake Maye", market="player_pass_yds", stat="passing_yards", projection=240.0, event="e1",
          home="NYJ", away="NE", recent=(230, 250, 260, 210, 245, 255), opp=1.1, spread=3.0, total=46.5,
-         injury=None, teammates_out=(), window="early"):
+         injury=None, teammates_out=(), window="early", season_std=60.0):
     return LegContext(
         event_id=event, odds_player_name=player, market=market, player=player, stat_col=stat,
         team=away, opponent=home, home_team=home, away_team=away, kickoff="Sun 1:00 ET", projection=projection,
         opp_factor=opp, team_spread=spread, total_line=total, injury_status=injury,
-        recent_values=list(recent), teammates_out=list(teammates_out), window=window,
+        recent_values=list(recent), teammates_out=list(teammates_out), window=window, season_std=season_std,
     )
 
 
@@ -38,6 +38,15 @@ def no_stat_cap(monkeypatch):
     import acca_report
 
     monkeypatch.setattr(acca_report, "MAX_LEGS_PER_STAT", 99)
+
+
+@pytest.fixture(autouse=True)
+def no_sanity_cap(monkeypatch):
+    # The window slates here use big projection gaps to create fillers; the
+    # Sanity gate has its own tests below.
+    import acca_report
+
+    monkeypatch.setattr(acca_report, "MAX_MODEL_MARKET_GAP", 1.0)
 
 
 @pytest.fixture
@@ -97,7 +106,7 @@ def test_count_markets_get_no_line_tolerance():
 def test_a_good_leg_passes_every_gate_before_the_sweep():
     leg = evaluate_leg(_ctx(), consensus_by_prop(TWO_BOOKS)[("e1", "player_pass_yds", "drake maye")])
     assert leg.failed == []
-    assert [g.gate for g in leg.gates] == ["market", "odds", "model", "form", "outlier", "matchup", "game_script", "injury"]
+    assert [g.gate for g in leg.gates] == ["market", "odds", "model", "sanity", "form", "outlier", "matchup", "game_script", "weather", "injury"]
 
 
 def test_gates_are_judged_at_the_worst_acceptable_line_not_the_consensus():
@@ -325,7 +334,8 @@ def _window_slate(specs):
         rows += [_book("draftkings", 50.5, event=event, market="player_rush_yds", player=player),
                  _book("fanduel", 50.5, event=event, market="player_rush_yds", player=player)]
         contexts.append(_ctx(player=player, market="player_rush_yds", stat="rushing_yards", projection=projection,
-                             event=event, home=home, away=away, recent=(60, 62, 58, 70, 65, 61), opp=opp, window=window))
+                             event=event, home=home, away=away, recent=(60, 62, 58, 70, 65, 61), opp=opp, window=window,
+                             season_std=25.0))
     return contexts, rows
 
 
@@ -599,3 +609,62 @@ def test_a_mixed_slip_holds_overs_and_unders_but_never_both_sides_of_one_player(
     assert sides == {"Over Guy": "over", "Under Guy": "under"}
     under = next(leg for leg in acca["legs"] if leg["side"] == "under")
     assert (under["key"], under["target_line"]) == ("Under Guy|rushing_yards|under", 58.5)
+
+
+# --- Sanity and Weather gates (7 Oct) ------------------------------------------
+
+def test_sanity_fails_a_leg_the_model_likes_far_more_than_the_market(monkeypatch):
+    import acca_report
+
+    monkeypatch.setattr(acca_report, "MAX_MODEL_MARKET_GAP", 0.30)
+    # Week 4's Ryan Miller: projected 37 yards on a 5.5 line, market ~49%.
+    rows = [_book("draftkings", 5.5, market="player_reception_yds"), _book("fanduel", 5.5, market="player_reception_yds")]
+    ctx = _ctx(market="player_reception_yds", stat="receiving_yards", projection=37, recent=(0, 20, 0, 14, 77, 15),
+               season_std=25.0)
+    leg = evaluate_leg(ctx, consensus_by_prop(rows)[("e1", "player_reception_yds", "drake maye")])
+    sanity = _gate(leg, "sanity")
+    assert not sanity.passed and "missing news" in sanity.reason
+    # A modest disagreement passes.
+    ctx.projection = 12
+    assert _gate(evaluate_leg(ctx, consensus_by_prop(rows)[("e1", "player_reception_yds", "drake maye")]), "sanity").passed
+
+
+def test_a_sanity_failure_is_never_a_filler(monkeypatch):
+    import acca_report
+
+    monkeypatch.setattr(acca_report, "MAX_MODEL_MARKET_GAP", 0.30)
+    contexts, rows = _window_slate([("Pass A", "e1", "NE", "BUF", "early", 1.1, 60)])
+    rows += [_book("draftkings", 50.5, event="e2", market="player_rush_yds", player="Wild"),
+             _book("fanduel", 50.5, event="e2", market="player_rush_yds", player="Wild")]
+    contexts.append(_ctx(player="Wild", market="player_rush_yds", stat="rushing_yards", projection=120, event="e2",
+                         home="CHI", away="NYJ", recent=(60, 62, 58, 70, 65, 61), opp=0.8, season_std=25.0))
+    acca = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))
+    assert [leg["player"] for leg in acca["legs"]] == ["Pass A"]
+    assert all(s["player"] != "Wild" for s in acca["spares"])
+
+
+@pytest.mark.parametrize("wind, indoors, side, stat, passes", [
+    (22.0, False, "over", "passing_yards", False),
+    (22.0, False, "under", "passing_yards", True),
+    (22.0, True, "over", "passing_yards", True),     # indoors: wind irrelevant
+    (22.0, False, "over", "rushing_yards", True),    # rushing isn't affected
+    (9.0, False, "over", "receiving_yards", True),
+    (None, False, "over", "receptions", True),       # no forecast never fails a leg
+])
+def test_weather_gate(wind, indoors, side, stat, passes):
+    rows = [_book("draftkings", 214.5), _book("fanduel", 214.5)]
+    market = {"passing_yards": "player_pass_yds", "rushing_yards": "player_rush_yds",
+              "receiving_yards": "player_reception_yds", "receptions": "player_receptions"}[stat]
+    rows = [{**r, "market": market} for r in rows]
+    ctx = _ctx(market=market, stat=stat)
+    ctx.wind_mph, ctx.indoors = wind, indoors
+    leg = evaluate_leg(ctx, consensus_by_prop(rows)[("e1", market, "drake maye")], side)
+    assert _gate(leg, "weather").passed is passes
+
+
+def test_leg_records_carry_what_the_page_needs_for_the_value_check():
+    contexts, rows = _window_slate([("Pass A", "e1", "NE", "BUF", "early", 1.1, 60)])
+    leg = _acca(build_acca_report(contexts, rows, 4, 2026, sweep=FakeSweep({}), api_key_present=False))["legs"][0]
+    assert leg["fair_odds"] == pytest.approx(2.0, abs=0.01)
+    assert leg["required_price"] == pytest.approx(1.96, abs=0.01)  # within 2% of fair
+    assert (leg["sd"], leg["accept_edge"], leg["value_edge"]) == (25.0, -0.02, 0.02)

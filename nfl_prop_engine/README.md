@@ -469,6 +469,25 @@ the best; Matchup wants a defence at or better than average; Game script
 passes exactly when the over's would fail; Odds uses the under's own fair
 chance. Every prop is logged on both sides, each graded on its own side.
 
+**Added 7 Oct, from a review of mature prop models:**
+- **Value check on the page.** Enter bet365's line and price on a leg and
+  the page works out the US market's fair chance at bet365's own line (the
+  fair chance at the consensus line, moved along a normal curve with the
+  player's game-to-game spread), then the expected value. OK to bet within
+  2% of fair (`ACCEPT_EDGE`), "Value" from +2% (`VALUE_EDGE`); it replaces
+  the fixed 4/5 floor, and the slip total is judged the same way. Prices
+  are shown on bet365's own fraction ladder, and a required price is never
+  rounded down.
+- **Sanity gate.** Fails a leg when the model's chance for its side differs
+  from the market's fair chance by more than 30 points
+  (`MAX_MODEL_MARKET_GAP`, the cut a public model uses). In week 4 the
+  over legs it would have caught hit 33% (15 legs); Ryan Miller was one.
+  Never a filler or spare.
+- **Weather gate.** Wind from the free Open-Meteo forecast (`weather.py`,
+  strongest hour from kickoff, outdoor stadiums only): 15 mph or more
+  (`WIND_FADE_MPH`) fails passing and receiving overs and backs their
+  unders. No forecast never fails a leg.
+
 For each leg (described for an over; an under mirrors it):
 1. **US consensus.** The median line across US books, from every book's own
    line before the ranking collapses them to one. Fair probability is each

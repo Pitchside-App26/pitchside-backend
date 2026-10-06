@@ -226,6 +226,23 @@ MIN_PRICE_DECIMAL = 1.80  # bet365 over price must clear this (~4/5) or the leg 
 # +2-yard line allowance (a higher bet365 line lengthens the over's price);
 # both keep a little slack, since the bet365 checklist decides close calls.
 MAX_US_FAIR_PROB = {"yards": 0.58, "counts": 0.56}
+# Sanity gate (7 Oct): fail a leg when the model's own chance for its side
+# differs from the US market's fair chance by more than this. A gap that big
+# usually means the model is missing something the market knows (a depth
+# receiver's one big game, a player returning from injury) -- week 4's Ryan
+# Miller (projected 37 yds on a 5.5 line) caught nothing. A public model
+# (Nicowirz/nfl-props) uses the same 30-point cut.
+MAX_MODEL_MARKET_GAP = 0.30
+# Weather gate (7 Oct): wind at or above this (strongest hour from kickoff,
+# mph) fails passing/receiving overs and backs their unders. Published
+# studies: little effect under 10 mph, noticeable from 15, severe above 20.
+WIND_FADE_MPH = 15.0
+WIND_STATS = {"passing_yards", "completions", "passing_tds", "receiving_yards", "receptions"}
+# Value check on the page (7 Oct): a leg is OK to bet when bet365's price is
+# within this of the fair price at bet365's own line (expected value of at
+# least -2%); +2% or better is shown as value. Replaces the fixed 4/5 floor.
+ACCEPT_EDGE = -0.02
+VALUE_EDGE = 0.02
 LINE_MOVEMENT_FLAG = {"yards": 3.0, "counts": 1.0}  # flag (not fail) if the consensus line moved this much since the opener
 
 FORM_WINDOW = 6  # games of recent form the Form/Outlier gates look at, reaching into the prior season if needed

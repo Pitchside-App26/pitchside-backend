@@ -53,6 +53,7 @@ from output import print_report, write_json
 from projection_engine import Projection, league_fallback_std, project_rookie, project_veteran
 from rank_props import build_ranked_prop, rank
 from results_log import log_acca_legs, log_analyst_picks, log_weekly_output
+from weather import game_winds
 
 SITE_DATA_PATH = "site/data.json"
 
@@ -316,6 +317,8 @@ def run(
         return
 
     out_by_team = players_out_by_team(injury_report, offense_df, defense_df)
+    # Wind forecasts for the acca windows' games only (a request per game).
+    winds = game_winds(games, {t for t, w in window_lookup.items() if w in ACCA_WINDOWS})
     acca_contexts: list[LegContext] = []
     ranked_props = []
     for _, row in matched.iterrows():
@@ -400,6 +403,8 @@ def run(
             player_id=player_id,
             window=window_lookup.get(player_team),
             season_std=proj.season_std,
+            wind_mph=winds.get(player_team, {}).get("wind_mph"),
+            indoors=winds.get(player_team, {}).get("indoors", False),
         ))
 
         ranked_props.append(build_ranked_prop(
