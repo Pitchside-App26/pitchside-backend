@@ -179,7 +179,7 @@ def test_history_frozen_once_games_start(monkeypatch):
 
 # Scottish League One/Two get a second results source for grading.
 def test_livescore_scottish_results_match_our_names(monkeypatch):
-    feed = {"Stages": [{"Snm": "League One", "Cnm": "Scotland", "Events": [
+    feed = {"Stages": [{"Snm": "League 1", "Cnm": "Scotland", "Events": [
         {"T1": [{"Nm": "Queen of the South"}], "T2": [{"Nm": "Cove Rangers"}], "Esd": 20261003140000, "Eps": "FT",
          "Tr1": "2", "Tr2": "1", "Trh1": "1", "Trh2": "0"},
         {"T1": [{"Nm": "Airdrieonians"}], "T2": [{"Nm": "Montrose"}], "Esd": 20261003140000, "Eps": "Postp."}]},

@@ -25,7 +25,7 @@ SETTLE_DAYS = 3
 # our key -> (LiveScore country, LiveScore stage name)
 STAGES = {"north": ("England", "National League: North"), "south": ("England", "National League: South"),
           "national": ("England", "National League"),
-          "sco3": ("Scotland", "League One"), "sco4": ("Scotland", "League Two")}
+          "sco3": ("Scotland", "League 1"), "sco4": ("Scotland", "League 2")}  # names checked against the live feed
 DONE = {"FT", "AET", "AP"}
 
 
