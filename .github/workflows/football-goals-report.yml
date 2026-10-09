@@ -54,6 +54,15 @@ jobs:
         if: steps.gate.outputs.go == 'true'
         run: pip install -r football_goals/requirements.txt
 
+      - name: Grade anything still pending
+        # A safety net: if a weekend's results run was missed (GitHub occasionally
+        # drops scheduled runs), its fixtures get graded here before the new report.
+        if: steps.gate.outputs.go == 'true'
+        continue-on-error: true
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: python -m football_goals.grade_results
+
       - name: Build the report
         if: steps.gate.outputs.go == 'true'
         env:

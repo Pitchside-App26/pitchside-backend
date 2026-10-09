@@ -142,3 +142,50 @@ def test_below_line_reserves_respect_min_price():
     rows = [row(0.9, 1.3) for _ in range(16)] + [row(0.79, 1.05), row(0.78, None), row(0.77, 1.25)]
     a = run_report.build_acca(rows, cfg, "o15", odds_on=True)
     assert [r["o15"]["combined_pct"] for r in a["below_line"]] == [0.77]
+
+
+# Live tables: a club mid-match is one game ahead of the results file - not a data error.
+def test_table_check_tolerates_todays_games():
+    from football_goals.stats import team_stats
+    from football_goals.validate import table_check
+    res = [_m("A", "B", 2, 1), _m("B", "C", 0, 0), _m("C", "A", 1, 1)]
+    st = team_stats(res)
+    live = {"A": {"gp": 3, "gf": 5, "ga": 2}, "B": {"gp": 2, "gf": 1, "ga": 2}, "C": {"gp": 2, "gf": 1, "ga": 1}}
+    probs, _ = table_check(st, live, "ESPN")
+    assert probs                                      # without knowing A plays today, it's a mismatch
+    probs, notes = table_check(st, live, "ESPN", playing=frozenset({"A", "D"}))
+    assert probs == [] and "today's game already in the table" in notes[0]
+    live["A"]["gp"] = 4                               # two games ahead is still a real problem
+    assert table_check(st, live, "ESPN", playing=frozenset({"A"}))[0]
+
+
+def _m(h, a, fh, fa):
+    return {"date": "2026-09-01", "home": h, "away": a, "fthg": fh, "ftag": fa, "hthg": 0, "htag": 0}
+
+
+# After kick-off on the report day, a re-run must not rewrite that day's record.
+def test_history_frozen_once_games_start(monkeypatch):
+    from datetime import datetime, timezone
+    def at(y, mo, d, hh, mm):  # a UK time (BST in October)
+        return datetime(y, mo, d, hh - 1, mm, tzinfo=timezone.utc)
+    monkeypatch.setattr(run_report, "uk_now", lambda: at(2026, 10, 3, 14, 59).astimezone(run_report.ZoneInfo("Europe/London")))
+    assert not run_report.games_started(date(2026, 10, 3), ["15:00", "17:30"])
+    assert run_report.games_started(date(2026, 10, 3), ["12:30", "15:00"])
+    assert run_report.games_started(date(2026, 10, 2), [])
+    assert not run_report.games_started(date(2026, 10, 10), ["15:00"])
+    monkeypatch.setattr(run_report, "uk_now", lambda: at(2026, 10, 3, 15, 7).astimezone(run_report.ZoneInfo("Europe/London")))
+    assert run_report.games_started(date(2026, 10, 3), ["15:00"])
+
+
+# Scottish League One/Two get a second results source for grading.
+def test_livescore_scottish_results_match_our_names(monkeypatch):
+    feed = {"Stages": [{"Snm": "League 1", "Cnm": "Scotland", "Events": [
+        {"T1": [{"Nm": "Queen of the South"}], "T2": [{"Nm": "Cove Rangers"}], "Esd": 20261003140000, "Eps": "FT",
+         "Tr1": "2", "Tr2": "1", "Trh1": "1", "Trh2": "0"},
+        {"T1": [{"Nm": "Airdrieonians"}], "T2": [{"Nm": "Montrose"}], "Esd": 20261003140000, "Eps": "Postp."}]},
+        {"Snm": "League One", "Cnm": "England", "Events": []}]}
+    parsed = livescore._parse(feed)
+    monkeypatch.setattr(livescore, "day", lambda d, today=None, refresh=False: parsed)
+    out = livescore.results_by_name("sco3", date(2026, 10, 3), {"Queen of Sth", "Cove Rangers", "Airdrie Utd", "Montrose"})
+    assert out[("Queen of Sth", "Cove Rangers")] == {"fthg": 2, "ftag": 1, "hthg": 1, "htag": 0}
+    assert out[("Airdrie Utd", "Montrose")] == "void"

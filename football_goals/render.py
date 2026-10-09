@@ -311,6 +311,9 @@ def _info(report):
     out = [f"<h2>This report</h2><div class=card><p style='margin-top:0'>For <b>{report['date'].strftime('%A %d %B %Y')}</b>, "
            f"generated {gen}.</p><p class=sub style='margin-bottom:0'>League matches only, this season. Every figure is "
            f"calculated from match results, not copied from stats sites. <a href='report.csv'>Download the CSV</a>.</p></div>"]
+    if report.get("history_frozen"):
+        out.append("<div class=card><p class=sub style='margin:0'>This run was after the day's first kick-off, so the "
+                   "record kept the accumulators and percentages from the last run before kick-off.</p></div>")
     if report["failed"]:
         out.append("<div class=card><h3>Leagues not loaded</h3><ul>" + "".join(
             f"<li><b>{escape(f['league'].name)}</b>: {escape(f['reason'])}</li>" for f in report["failed"]) + "</ul></div>")

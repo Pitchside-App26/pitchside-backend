@@ -12,6 +12,7 @@ class League:
     odds_key: str | None = None    # The Odds API sport key, if it prices this league
     regional: str | None = None    # "north"/"south" for the National League regional divisions
     bbc_slug: str | None = None    # BBC Sport league page, used only for its published table
+    livescore_stage: str | None = None  # LiveScore stage, a second results source for grading
 
     @property
     def max_meetings(self) -> int:
@@ -30,8 +31,8 @@ LEAGUES = [
     League("ENG6S", "National League South", 24, regional="south", bbc_slug="national-league-south"),
     League("SCO1", "Scottish Premiership", 12, "SC0", "sco.1", "soccer_spl"),
     League("SCO2", "Scottish Championship", 10, "SC1", "sco.2"),
-    League("SCO3", "Scottish League One", 10, "SC2", bbc_slug="scottish-league-one"),
-    League("SCO4", "Scottish League Two", 10, "SC3", bbc_slug="scottish-league-two"),
+    League("SCO3", "Scottish League One", 10, "SC2", bbc_slug="scottish-league-one", livescore_stage="sco3"),
+    League("SCO4", "Scottish League Two", 10, "SC3", bbc_slug="scottish-league-two", livescore_stage="sco4"),
 ]
 
 BY_KEY = {lg.key: lg for lg in LEAGUES}

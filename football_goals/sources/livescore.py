@@ -22,7 +22,10 @@ URL = "https://prod-public-api.livescore.com/v1/api/app/date/soccer/{ymd}/0"  # 
 STORE = Path(__file__).resolve().parent.parent / "data" / "livescore"
 UK = ZoneInfo("Europe/London")
 SETTLE_DAYS = 3
-STAGES = {"north": "National League: North", "south": "National League: South", "national": "National League"}
+# our key -> (LiveScore country, LiveScore stage name)
+STAGES = {"north": ("England", "National League: North"), "south": ("England", "National League: South"),
+          "national": ("England", "National League"),
+          "sco3": ("Scotland", "League 1"), "sco4": ("Scotland", "League 2")}  # names checked against the live feed
 DONE = {"FT", "AET", "AP"}
 
 
@@ -40,12 +43,12 @@ def _parse(feed: dict) -> dict[str, list[dict]]:
     out = {k: [] for k in STAGES}
     wanted = {v: k for k, v in STAGES.items()}
     for st in feed.get("Stages", []):
-        if st.get("Cnm") != "England" or st.get("Snm") not in wanted:
+        if (st.get("Cnm"), st.get("Snm")) not in wanted:
             continue
         for e in st.get("Events", []):
             ko = datetime.strptime(str(e["Esd"]), "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc).astimezone(UK)
             num = lambda k: int(e[k]) if str(e.get(k, "")).strip().isdigit() else None  # noqa: E731
-            out[wanted[st["Snm"]]].append({
+            out[wanted[(st["Cnm"], st["Snm"])]].append({
                 "home": e["T1"][0]["Nm"], "away": e["T2"][0]["Nm"], "status": str(e.get("Eps", "")),
                 "date": ko.date().isoformat(), "kickoff": ko.strftime("%H:%M"),
                 "fthg": num("Tr1"), "ftag": num("Tr2"), "hthg": num("Trh1"), "htag": num("Trh2"),
@@ -87,7 +90,7 @@ def season_start(on: date) -> date:
 def _season(stage: str, on: date) -> list[dict]:
     rows, d = [], season_start(on)
     while d < on:
-        rows += day(d)[stage]  # settled-or-not is judged against the real date, never the report date
+        rows += day(d).get(stage, [])  # settled-or-not is judged against the real date, never the report date
         d += timedelta(days=1)
     return rows
 
@@ -104,21 +107,21 @@ def load_results(region: str, on: date):
     if missing_ht:
         log.warning("%s: %d finished matches lack a half-time score and were skipped", region, missing_ht)
     if not good:
-        raise LiveScoreError(f"LiveScore returned no finished {STAGES[region]} matches this season")
+        raise LiveScoreError(f"LiveScore returned no finished {STAGES[region][1]} matches this season")
     meta = {"source": "LiveScore", "url": URL.split("{")[0], "last_modified": None,
             "latest_result": max(r["date"] for r in good), "rows_without_scores": missing_ht}
     return good, meta
 
 
 def fixtures_on(region: str, on: date):
-    rows = day(on, refresh=True)[region]
+    rows = day(on, refresh=True).get(region, [])
     fx = [{"home": r["home"], "away": r["away"], "kickoff": r["kickoff"]} for r in rows if not _is_off(r["status"])]
     off = [{"home": r["home"], "away": r["away"], "status": r["status"]} for r in rows if _is_off(r["status"])]
     return fx, off
 
 
 def result_on(region: str, on: date, home: str, away: str):
-    for r in day(on, refresh=True)[region]:
+    for r in day(on, refresh=True).get(region, []):
         if r["home"] == home and r["away"] == away:
             if _is_off(r["status"]):
                 return "void"
@@ -148,3 +151,22 @@ def agreement_with(reference: list[dict], on: date) -> tuple[int, int, list[str]
             diffs.append(f"{h} v {a} {r['date']}: LiveScore {mine[0]}-{mine[1]} (HT {mine[2]}-{mine[3]}), "
                          f"football-data {theirs[0]}-{theirs[1]} (HT {theirs[2]}-{theirs[3]})")
     return agree, compared, diffs
+
+
+def results_by_name(stage: str, on: date, clubs) -> dict:
+    """{(our home, our away): result dict or 'void'} for one day, matching LiveScore's
+    club names to ours (e.g. 'Queen of the South' -> 'Queen of Sth'). Used to grade
+    leagues whose main results file can lag (Scottish League One/Two)."""
+    from ..names import best_match
+    out = {}
+    rows = day(on, refresh=True).get(stage, [])
+    for r in rows:
+        h, a = best_match(r["home"], clubs), best_match(r["away"], clubs)
+        if not h or not a:
+            continue
+        if _is_off(r["status"]):
+            out[(h, a)] = "void"
+        elif _complete(r):
+            out[(h, a)] = {k: r[k] for k in ("fthg", "ftag", "hthg", "htag")}
+    log.info("LiveScore %s %s: %d listed, %d matched to our fixtures", STAGES[stage][1], on, len(rows), len(out))
+    return out

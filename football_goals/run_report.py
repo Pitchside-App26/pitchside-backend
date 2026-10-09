@@ -12,6 +12,7 @@ import logging
 import os
 import sys
 from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 import yaml
@@ -26,6 +27,27 @@ from .validate import GP_OUTLIER, internal_checks, table_check
 
 HERE = Path(__file__).parent
 log = logging.getLogger("football_goals")
+
+
+def uk_now() -> datetime:
+    return datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/London"))
+
+
+def uk_today() -> date:
+    return uk_now().date()
+
+
+def games_started(on: date, kickoffs) -> bool:
+    """True once the report day's first match has kicked off (or the day has passed).
+    After that the history must not be rewritten: tables update live and the
+    accumulator legs recorded before kick-off are the ones that were bet."""
+    now = uk_now()
+    if on < now.date():
+        return True
+    if on > now.date():
+        return False
+    times = sorted(k for k in kickoffs if k and len(k) == 5)
+    return now.strftime("%H:%M") >= (times[0] if times else "12:00")
 
 
 def next_saturday(today: date) -> date:
@@ -148,7 +170,8 @@ def analyse_league(league, on, fd_fixtures, cfg):
         if table is None:
             notes.append("no published table available for an independent check")
         else:
-            p, n = table_check(stats, table, source)
+            playing = frozenset(t for f in fixtures for t in (f["home"], f["away"])) if on <= uk_today() else frozenset()
+            p, n = table_check(stats, table, source, playing)
             problems += p
             notes += n
             table_ok = not p
@@ -315,14 +338,19 @@ def run(on: date, cfg: dict) -> dict:
                 "acca": r.get("acca", ""), "gibh_acca": r.get("gibh_acca", ""), "price": (r.get("price") or {}).get("price"),
                 "flags": "; ".join(r["flags"]),
             })
-    history.record_report(hist_rows, on.isoformat(), leagues={res["league"].key for res in loaded})
+    frozen = games_started(on, [r["kickoff"] for r in rows]) and (history.load()["report_date"] == on.isoformat()).any()
+    if frozen:
+        log.warning("%s's games have started and are already recorded: history left as it was, so the legs "
+                    "recorded before kick-off stand", on.isoformat())
+    else:
+        history.record_report(hist_rows, on.isoformat(), leagues={res["league"].key for res in loaded})
 
     hit_rates = history.hit_rates(cfg=cfg)
     return {
         "date": on, "generated": datetime.now(timezone.utc), "loaded": loaded, "failed": failed,
         "o15": o15, "gibh": gibh, "accas": accas, "odds": odds_info, "fixtures_meta": fx_meta,
         "postponed": [dict(p, league=res["league"].name) for res in loaded for p in res["postponed"]],
-        "hit_rates": hit_rates, "config": cfg, "fixtures_total": len(rows),
+        "hit_rates": hit_rates, "config": cfg, "fixtures_total": len(rows), "history_frozen": frozen,
         "results_html": render.results_section(history.load(), hit_rates, cfg),
     }
 
