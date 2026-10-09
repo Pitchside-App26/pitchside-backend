@@ -1,0 +1,30 @@
+{
+"north": [],
+"south": [],
+"national": [
+{
+"home": "Eastleigh",
+"away": "Southend United",
+"status": "FT",
+"date": "2026-09-30",
+"kickoff": "19:45",
+"fthg": 1,
+"ftag": 1,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "Tamworth",
+"away": "Sutton United",
+"status": "FT",
+"date": "2026-09-30",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+}
+],
+"sco3": [],
+"sco4": []
+}
