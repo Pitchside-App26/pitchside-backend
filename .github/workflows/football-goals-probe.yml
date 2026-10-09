@@ -1,0 +1,13 @@
+name: Football Goals - LiveScore Scotland probe (temporary)
+on:
+  push:
+    branches: [ccr-c752a3e8-uikena]
+    paths: [football_goals/tools/probe_ls_scotland.py]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests && python football_goals/tools/probe_ls_scotland.py
