@@ -24,13 +24,13 @@ report_date,league,home,away,league_name,kickoff,o15_combined,o15_venue,o15_leag
 2026-10-03,SCO2,Livingston,Ayr,Scottish Championship,15:00,75.0,75.0,66.7,43.8,37.5,41.0,,,,,graded,1,2,1,2,True,False,2026-10-04T20:33:07+00:00,ESPN
 2026-10-03,SCO2,Morton,Raith Rvs,Scottish Championship,15:00,75.0,50.0,66.7,50.0,50.0,41.0,,,,,graded,1,2,0,1,True,True,2026-10-04T20:33:07+00:00,ESPN
 2026-10-03,SCO2,Partick,Arbroath,Scottish Championship,15:00,45.5,50.0,66.7,32.1,37.5,41.0,,,,,graded,3,0,2,0,True,True,2026-10-04T20:33:07+00:00,ESPN
-2026-10-03,SCO3,Airdrie Utd,Montrose,Scottish League One,15:00,81.2,75.0,74.4,75.0,62.5,53.8,leg,leg,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO3,East Fife,East Kilbride,Scottish League One,15:00,75.0,87.5,74.4,37.5,50.0,53.8,below_line,,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO3,Queen of Sth,Cove Rangers,Scottish League One,15:00,81.2,75.0,74.4,50.0,25.0,53.8,leg,,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO3,Ross County,Alloa,Scottish League One,15:00,74.1,75.0,74.4,60.7,62.5,53.8,,,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO3,Hamilton,Peterhead,Scottish League One,17:30,58.9,62.5,74.4,46.4,50.0,53.8,,,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO4,Annan Athletic,Stirling,Scottish League Two,15:00,81.2,100.0,85.0,68.8,87.5,70.0,leg,reserve,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO4,Dumbarton,Forfar,Scottish League Two,15:00,81.2,87.5,85.0,62.5,62.5,70.0,leg,,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO4,Elgin,Clyde,Scottish League Two,15:00,93.8,87.5,85.0,75.0,62.5,70.0,leg,leg,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO4,Spartans,Kelty Hearts,Scottish League Two,15:00,87.5,87.5,85.0,81.2,75.0,70.0,leg,leg,,data check failed - see top,pending,,,,,,,,
-2026-10-03,SCO4,Stranraer,Edinburgh City,Scottish League Two,15:00,81.2,75.0,85.0,62.5,62.5,70.0,reserve,,,data check failed - see top,pending,,,,,,,,
+2026-10-03,SCO3,Airdrie Utd,Montrose,Scottish League One,15:00,81.2,75.0,74.4,75.0,62.5,53.8,leg,leg,,data check failed - see top,graded,1,0,0,0,False,False,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO3,East Fife,East Kilbride,Scottish League One,15:00,75.0,87.5,74.4,37.5,50.0,53.8,below_line,,,data check failed - see top,graded,0,3,0,1,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO3,Queen of Sth,Cove Rangers,Scottish League One,15:00,81.2,75.0,74.4,50.0,25.0,53.8,leg,,,data check failed - see top,graded,4,3,2,0,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO3,Ross County,Alloa,Scottish League One,15:00,74.1,75.0,74.4,60.7,62.5,53.8,,,,data check failed - see top,graded,4,1,1,0,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO3,Hamilton,Peterhead,Scottish League One,17:30,58.9,62.5,74.4,46.4,50.0,53.8,,,,data check failed - see top,graded,2,1,0,0,True,False,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO4,Annan Athletic,Stirling,Scottish League Two,15:00,81.2,100.0,85.0,68.8,87.5,70.0,leg,reserve,,data check failed - see top,graded,0,1,0,0,False,False,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-03,SCO4,Dumbarton,Forfar,Scottish League Two,15:00,81.2,87.5,85.0,62.5,62.5,70.0,leg,,,data check failed - see top,graded,2,1,0,1,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-03,SCO4,Elgin,Clyde,Scottish League Two,15:00,93.8,87.5,85.0,75.0,62.5,70.0,leg,leg,,data check failed - see top,graded,6,2,0,1,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-03,SCO4,Spartans,Kelty Hearts,Scottish League Two,15:00,87.5,87.5,85.0,81.2,75.0,70.0,leg,leg,,data check failed - see top,graded,0,2,0,1,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-03,SCO4,Stranraer,Edinburgh City,Scottish League Two,15:00,81.2,75.0,85.0,62.5,62.5,70.0,reserve,,,data check failed - see top,graded,0,0,0,0,False,False,2026-10-09T11:01:54+00:00,football-data.co.uk
