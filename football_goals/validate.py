@@ -49,8 +49,12 @@ def internal_checks(league, results, stats, fixtures) -> tuple[list[str], list[s
     return problems, notes
 
 
-def table_check(stats, table: dict[str, dict], source: str) -> tuple[list[str], list[str]]:
-    """Compare our per-club GP/GF/GA with a published table."""
+def table_check(stats, table: dict[str, dict], source: str, playing=frozenset()) -> tuple[list[str], list[str]]:
+    """Compare our per-club GP/GF/GA with a published table.
+
+    `playing` = clubs with a match on the report day. Published tables update
+    live, so during (or just after) that match a club can be exactly one game
+    ahead of the results file; those clubs are matched on what we can check."""
     problems, notes = [], []
     if not table:
         return ["published table came back empty"], notes
@@ -64,9 +68,12 @@ def table_check(stats, table: dict[str, dict], source: str) -> tuple[list[str], 
             mapped[m] = pub_name
     if len(table) != len(ours):
         problems.append(f"{source} table has {len(table)} clubs, results have {len(ours)}")
-    mismatches = []
+    mismatches, live = [], 0
     for ours_name, pub_name in sorted(mapped.items()):
         s, p = stats[ours_name].all, table[pub_name]
+        if ours_name in playing and p["gp"] == s.gp + 1:
+            live += 1  # today's game already counted in the live table
+            continue
         mine = (s.gp, stats[ours_name].gf, stats[ours_name].ga)
         theirs = (p["gp"], p["gf"], p["ga"])
         if mine != theirs:
@@ -75,5 +82,6 @@ def table_check(stats, table: dict[str, dict], source: str) -> tuple[list[str], 
         problems.append(f"{len(mismatches)} club(s) differ from the {source} table: " + "; ".join(mismatches[:6])
                         + (" ..." if len(mismatches) > 6 else ""))
     elif mapped:
-        notes.append(f"all {len(mapped)} clubs match the {source} table (played, scored, conceded)")
+        extra = f" ({live} with today's game already in the table)" if live else ""
+        notes.append(f"all {len(mapped)} clubs match the {source} table (played, scored, conceded){extra}")
     return problems, notes

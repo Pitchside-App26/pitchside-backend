@@ -89,6 +89,15 @@ def _grade_league(df, grp, league, day: date, today: date, counts: dict) -> None
         for k, v in _from_espn(league, day, clubs).items():
             if k not in found:
                 found[k], source[k] = v, "ESPN"
+    if league.livescore_stage and not league.regional:
+        still = [(h, a) for h, a in zip(grp["home"], grp["away"]) if (h, a) not in found]
+        if still:  # e.g. Scottish League One/Two, whose football-data file can lag by days
+            try:
+                for k, v in livescore.results_by_name(league.livescore_stage, day, clubs).items():
+                    if k not in found:
+                        found[k], source[k] = v, "LiveScore"
+            except Exception as e:  # noqa: BLE001
+                log.warning("%s: LiveScore unavailable (%s)", league.name, e)
     if missing and league.regional:
         down = set()  # a source that failed once isn't retried for every remaining fixture
         for h, a in missing:
