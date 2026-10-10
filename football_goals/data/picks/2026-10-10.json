@@ -1,0 +1,187 @@
+{
+ "locked_at": "2026-10-09T11:02+00:00",
+ "o15": {
+  "legs": [
+   [
+    "ENG6N",
+    "King's Lynn Town",
+    "Buxton"
+   ],
+   [
+    "ENG3",
+    "Cambridge",
+    "Blackpool"
+   ],
+   [
+    "ENG6N",
+    "Brackley Town",
+    "Spennymoor Town"
+   ],
+   [
+    "SCO1",
+    "Dundee United",
+    "Hibernian"
+   ],
+   [
+    "SCO4",
+    "Clyde",
+    "Dumbarton"
+   ],
+   [
+    "SCO4",
+    "Stirling",
+    "Kelty Hearts"
+   ],
+   [
+    "SCO4",
+    "Forfar",
+    "Elgin"
+   ],
+   [
+    "ENG4",
+    "Bristol Rvs",
+    "Barnet"
+   ],
+   [
+    "SCO3",
+    "Montrose",
+    "Ross County"
+   ],
+   [
+    "ENG2",
+    "Watford",
+    "Burnley"
+   ],
+   [
+    "ENG5",
+    "Tamworth",
+    "Barrow"
+   ],
+   [
+    "ENG2",
+    "Blackburn",
+    "Cardiff"
+   ],
+   [
+    "ENG2",
+    "Preston",
+    "Millwall"
+   ],
+   [
+    "ENG5",
+    "Worthing",
+    "Solihull"
+   ],
+   [
+    "ENG5",
+    "Wealdstone",
+    "Yeovil"
+   ],
+   [
+    "ENG2",
+    "Derby",
+    "Wrexham"
+   ],
+   [
+    "ENG5",
+    "Fylde",
+    "Scunthorpe"
+   ],
+   [
+    "ENG3",
+    "Wycombe",
+    "Luton"
+   ]
+  ],
+  "reserves": [
+   [
+    "SCO1",
+    "Falkirk",
+    "Dundee"
+   ],
+   [
+    "ENG6N",
+    "Hereford FC",
+    "Hednesford"
+   ],
+   [
+    "ENG6S",
+    "Braintree Town",
+    "Truro City"
+   ],
+   [
+    "SCO3",
+    "Peterhead",
+    "Queen of Sth"
+   ],
+   [
+    "ENG5",
+    "Woking",
+    "Harrogate"
+   ],
+   [
+    "ENG6S",
+    "AFC Totton",
+    "Walton and Hersham"
+   ]
+  ],
+  "below_line": []
+ },
+ "gibh": {
+  "legs": [
+   [
+    "ENG2",
+    "Preston",
+    "Millwall"
+   ],
+   [
+    "SCO3",
+    "Montrose",
+    "Ross County"
+   ],
+   [
+    "ENG2",
+    "Derby",
+    "Wrexham"
+   ],
+   [
+    "SCO1",
+    "Dundee United",
+    "Hibernian"
+   ],
+   [
+    "SCO4",
+    "Stirling",
+    "Kelty Hearts"
+   ],
+   [
+    "SCO4",
+    "Edinburgh City",
+    "Spartans"
+   ],
+   [
+    "ENG5",
+    "Boston Utd",
+    "Southend"
+   ],
+   [
+    "ENG5",
+    "Worthing",
+    "Solihull"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG3",
+    "Cambridge",
+    "Blackpool"
+   ],
+   [
+    "SCO4",
+    "Clyde",
+    "Dumbarton"
+   ]
+  ],
+  "below_line": []
+ }
+}

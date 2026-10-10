@@ -13,6 +13,11 @@ on:
         description: "Match date as YYYY-MM-DD. Leave blank for next Saturday."
         required: false
         default: ""
+      repick:
+        description: "Choose the accumulators afresh, replacing the locked picks (only before you've bet)."
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write  # commit the report and history file back to the repo
@@ -70,7 +75,8 @@ jobs:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           # Via env, so text typed into the date box can't run as shell code.
           REPORT_DATE: ${{ inputs.date }}
-        run: python -m football_goals.run_report --date "$REPORT_DATE"
+          REPICK: ${{ inputs.repick && '--repick' || '' }}
+        run: python -m football_goals.run_report --date "$REPORT_DATE" $REPICK
 
       - name: Keep raw downloads (30 days)
         if: steps.gate.outputs.go == 'true' && always()
