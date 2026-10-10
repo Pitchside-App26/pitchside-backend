@@ -15,9 +15,20 @@ match. Nothing is copied from stats websites.
 
 **Open this on your phone:** https://pitchside-app26.github.io/pitchside-backend/goals/
 
-Bookmark it or add it to your home screen. It updates by itself every Friday
-at about 6pm UK time. The same site still has the NFL page at its main
-address.
+Bookmark it or add it to your home screen, then always open it the same way.
+On an iPhone, the home-screen icon, Safari, and links opened inside other apps
+each keep their own separate copy of your logged bets.
+
+It updates by itself every Friday at about 6pm UK time. The same site still has
+the NFL page at its main address.
+
+**The accumulators lock once they're published** (from the day before the
+games). Later runs, such as a delayed Friday schedule or a tap of ↻ Update now,
+refresh the stats but keep the same legs and reserves in the same order, so the
+list never changes under a bet you've placed. If a locked leg is postponed or
+gets flagged by a data check, the card says so; swap in a reserve. To choose
+afresh (only before you've bet), run the report workflow on GitHub with the
+**repick** box ticked.
 
 The page works like an app. The bar along the bottom has four sections:
 - **Over 1.5** and **GIBH:** that market's suggested accumulator first, then every fixture as a one-line row. Tap a

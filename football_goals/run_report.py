@@ -17,7 +17,7 @@ from pathlib import Path
 
 import yaml
 
-from . import history, render, scope
+from . import history, picks, render, scope
 from .http_cache import FetchError
 from .leagues import LEAGUES
 from .names import best_match
@@ -275,7 +275,7 @@ def build_acca(rows, cfg, market: str, odds_on: bool):
             "note": (a.get("note") or "").strip(), "min_pct": pct}
 
 
-def run(on: date, cfg: dict) -> dict:
+def run(on: date, cfg: dict, repick: bool = False) -> dict:
     log.info("Report for %s", on.isoformat())
     loaded, failed = [], []
     try:
@@ -323,6 +323,17 @@ def run(on: date, cfg: dict) -> dict:
     o15, gibh = market_rows("o15"), market_rows("gibh")
     accas = {"o15": build_acca(o15, cfg, "o15", odds_info["enabled"]),
              "gibh": build_acca(gibh, cfg, "gibh", odds_info["enabled"])}
+    # Once published near the day, the picks stay put: people bet them, and a
+    # later run (a delayed schedule, a tap of Update now) must not swap legs.
+    lock = None if repick else picks.load(on)
+    if lock:
+        for mk, mrows in (("o15", o15), ("gibh", gibh)):
+            if mk in lock:
+                accas[mk] = picks.apply(mrows, mk, ACCA[mk][1], lock[mk], accas[mk], lock["locked_at"])
+        log.info("Accumulators locked since %s: picks kept", lock["locked_at"])
+    elif picks.should_lock(on, uk_today()) and not games_started(on, [r["kickoff"] for r in rows]):
+        if picks.save(on, accas):
+            log.info("Accumulators locked for %s", on.isoformat())
 
     hist_rows = []
     for res in loaded:
@@ -359,9 +370,11 @@ def main(argv=None) -> int:
     setup_logging()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--date", help="YYYY-MM-DD (default: next Saturday, or today if it's Saturday)")
+    ap.add_argument("--repick", action="store_true",
+                    help="choose the accumulators afresh even if this date's picks are locked")
     args = ap.parse_args(argv)
     on = date.fromisoformat(args.date.strip()) if args.date and args.date.strip() else next_saturday(date.today())
-    report = run(on, load_config())
+    report = run(on, load_config(), repick=args.repick)
     site = HERE / "site"
     site.mkdir(exist_ok=True)
     (site / "index.html").write_text(render.html(report), encoding="utf-8")

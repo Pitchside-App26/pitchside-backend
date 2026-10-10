@@ -49,6 +49,10 @@ def internal_checks(league, results, stats, fixtures) -> tuple[list[str], list[s
     return problems, notes
 
 
+def _differs(name, mine, theirs) -> str:
+    return f"{name}: ours P{mine[0]} F{mine[1]} A{mine[2]} v table P{theirs[0]} F{theirs[1]} A{theirs[2]}"
+
+
 def table_check(stats, table: dict[str, dict], source: str, playing=frozenset()) -> tuple[list[str], list[str]]:
     """Compare our per-club GP/GF/GA with a published table.
 
@@ -68,7 +72,7 @@ def table_check(stats, table: dict[str, dict], source: str, playing=frozenset())
             mapped[m] = pub_name
     if len(table) != len(ours):
         problems.append(f"{source} table has {len(table)} clubs, results have {len(ours)}")
-    mismatches, live = [], 0
+    mismatches, live, ahead = [], 0, {}
     for ours_name, pub_name in sorted(mapped.items()):
         s, p = stats[ours_name].all, table[pub_name]
         if ours_name in playing and p["gp"] == s.gp + 1:
@@ -77,11 +81,30 @@ def table_check(stats, table: dict[str, dict], source: str, playing=frozenset())
         mine = (s.gp, stats[ours_name].gf, stats[ours_name].ga)
         theirs = (p["gp"], p["gf"], p["ga"])
         if mine != theirs:
-            mismatches.append(f"{ours_name}: ours P{mine[0]} F{mine[1]} A{mine[2]} v table P{theirs[0]} F{theirs[1]} A{theirs[2]}")
+            if theirs[0] == mine[0] + 1:
+                ahead[ours_name] = (theirs[1] - mine[1], theirs[2] - mine[2], mine, theirs)
+            else:
+                mismatches.append(_differs(ours_name, mine, theirs))
+    # A game played since the results file was updated (e.g. Friday night) puts
+    # both clubs exactly one game ahead, with mirrored goals (2-0 = +2/+0 and
+    # +0/+2). Only clubs that pair up like that are let through.
+    recent = []
+    while ahead:
+        a, (af, aa, *_) = next(iter(ahead.items()))
+        b = next((n for n, (bf, ba, *_) in ahead.items() if n != a and bf == aa and ba == af), None)
+        if b is None:
+            _, _, mine, theirs = ahead.pop(a)
+            mismatches.append(_differs(a, mine, theirs))
+            continue
+        ahead.pop(a), ahead.pop(b)
+        recent.append(f"{a} {af}-{aa} {b}")
     if mismatches:
         problems.append(f"{len(mismatches)} club(s) differ from the {source} table: " + "; ".join(mismatches[:6])
                         + (" ..." if len(mismatches) > 6 else ""))
     elif mapped:
         extra = f" ({live} with today's game already in the table)" if live else ""
         notes.append(f"all {len(mapped)} clubs match the {source} table (played, scored, conceded){extra}")
+    if recent and not mismatches:
+        notes.append(f"{source} table already includes {len(recent)} game(s) the results file doesn't have yet "
+                     f"({'; '.join(recent)}); those clubs' stats are one game behind")
     return problems, notes

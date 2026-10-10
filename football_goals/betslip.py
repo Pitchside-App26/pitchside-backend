@@ -49,8 +49,9 @@ MY_BETS = ("<div id=my-bets><h2 style='margin-top:14px'>My bets</h2><div id=my-b
 BACKUP_CARD = """
 <h2>My bets backup</h2>
 <div class='card setup'>
- <p class=sub style='margin-top:0'>Logged bets are kept in this phone's browser only (the site is public, so they're
- never uploaded). Clearing browser data deletes them, so back up now and then. A backup file also moves them to
+ <p class=sub style='margin-top:0'>Logged bets are kept in this browser only (the site is public, so they're
+ never uploaded). On an iPhone the home-screen icon, Safari and in-app browsers each have their own copy, so
+ always open the page the same way. Clearing browser data deletes them, so back up now and then. A backup file also moves them to
  another phone or browser.</p>
  <div class=row><button class=btn id=bets-backup>Back up</button><button class='btn ghost' id=bets-restore-btn>Restore</button>
  <input type=file id=bets-restore accept='application/json,.json' hidden></div>
@@ -66,6 +67,7 @@ SCRIPT_TEMPLATE = """<script>
   function money(x){return '£'+Number(x).toFixed(2)}
   function bets(){return load(BETS,[])}
   if(!save('goals-slip-probe',1)){return}            // storage blocked: leave the plain list as it is
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}  // ask not to be evicted
   document.documentElement.classList.add('js-slip');
 
   [].forEach.call(document.querySelectorAll('.acca[data-mk]'),function(card){

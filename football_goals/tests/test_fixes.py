@@ -189,3 +189,41 @@ def test_livescore_scottish_results_match_our_names(monkeypatch):
     out = livescore.results_by_name("sco3", date(2026, 10, 3), {"Queen of Sth", "Cove Rangers", "Airdrie Utd", "Montrose"})
     assert out[("Queen of Sth", "Cove Rangers")] == {"fthg": 2, "ftag": 1, "hthg": 1, "htag": 0}
     assert out[("Airdrie Utd", "Montrose")] == "void"
+
+
+# Friday-night games: both clubs one game ahead with mirrored goals is a recent
+# result the file hasn't caught up with (QPR 1-1 West Ham, 9 Oct), not bad data.
+def test_table_check_accepts_a_game_played_since_the_file_updated():
+    from football_goals.stats import team_stats
+    from football_goals.validate import table_check
+    res = [_m("A", "B", 2, 1), _m("B", "C", 0, 0), _m("C", "D", 1, 1), _m("D", "A", 0, 0)]
+    st = team_stats(res)
+    table = {n: {"gp": s.all.gp, "gf": st[n].gf, "ga": st[n].ga} for n, s in st.items()}
+    table["A"] = dict(table["A"], gp=3, gf=table["A"]["gf"] + 2)   # A 2-0 C on Friday night
+    table["C"] = dict(table["C"], gp=3, ga=table["C"]["ga"] + 2)
+    probs, notes = table_check(st, table, "ESPN")
+    assert probs == [] and any("A 2-0 C" in n for n in notes)
+    table["C"]["ga"] -= 1                                            # goals no longer mirror: a real problem
+    assert table_check(st, table, "ESPN")[0]
+
+
+# Published picks stay put: a later run (delayed cron, Update now) keeps the legs.
+def test_locked_picks_survive_a_rerun(tmp_path, monkeypatch):
+    from football_goals import picks
+    monkeypatch.setattr(picks, "DIR", tmp_path)
+    on = date(2026, 10, 10)
+    assert picks.should_lock(on, date(2026, 10, 9)) and not picks.should_lock(on, date(2026, 10, 6))
+    rows = [{"league": "E0", "home": h, "away": "Z", "data_problem": False} for h in "ABCDE"]
+    first = {"legs": rows[:2], "reserves": rows[2:3], "below_line": [], "message": "", "pool": 3}
+    picks.save(on, {"o15": first, "gibh": {"legs": [], "reserves": [], "below_line": []}})
+    lock = picks.load(on)
+    assert "gibh" not in lock and lock["o15"]["legs"] == [["E0", "A", "Z"], ["E0", "B", "Z"]]
+    later = [dict(r) for r in rows[1:]]                              # A postponed, B now flagged
+    later[0]["data_problem"] = True
+    for r in later[2:]:
+        r["acca"] = "leg"                                            # what a fresh pick would have chosen
+    built = {"legs": later[2:], "reserves": [], "below_line": [], "message": "fresh", "pool": 4}
+    a = picks.apply(later, "o15", "acca", lock["o15"], built, lock["locked_at"])
+    assert [r["home"] for r in a["legs"]] == ["B"] and [r["home"] for r in a["reserves"]] == ["C"]
+    assert "A v Z" in a["message"] and "flagged" in a["message"] and a["locked"]
+    assert [r.get("acca") for r in later] == ["leg", "reserve", None, None]

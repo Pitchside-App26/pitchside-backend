@@ -79,6 +79,8 @@ def fake(monkeypatch, tmp_path):
     monkeypatch.setattr(livescore, "agreement_with", lambda ref, on: (130, 132, ["x"]))
     rr._ls_check.clear()
     monkeypatch.setattr(history, "HISTORY", tmp_path / "history.csv")
+    from football_goals import picks
+    monkeypatch.setattr(picks, "DIR", tmp_path / "picks")
     return data
 
 
@@ -203,3 +205,21 @@ def test_accumulator_markup_is_ready_for_a_checklist():
     assert out.count("data-role=leg ") == 16 and out.count("data-role=reserve ") == 1
     assert "data-key='2026-10-03|T0|T0 B'" in out
     assert "SpreadEx acca boost" in out
+
+
+def test_second_run_keeps_the_locked_legs(fake, monkeypatch):
+    monkeypatch.setattr(run_report, "uk_today", lambda: DAY)
+    monkeypatch.setattr(run_report, "games_started", lambda on, k: False)
+    monkeypatch.setattr(run_report, "table_check", lambda *a, **k: ([], []))   # fake data: checks pass
+    cfg = run_report.load_config()
+    cfg["data"]["max_results_age_days"] = 999
+    cfg["accumulator"].update(min_combined_pct=0, require_min_games=False)
+    first = run_report.run(DAY, cfg)
+    legs = [(r["home"], r["away"]) for r in first["accas"]["o15"]["legs"]]
+    assert legs
+    cfg["accumulator"]["min_combined_pct"] = 100         # a re-run that would now pick nothing
+    again = run_report.run(DAY, cfg)
+    assert [(r["home"], r["away"]) for r in again["accas"]["o15"]["legs"]] == legs
+    assert "locked" in render.html(again)
+    fresh = run_report.run(DAY, cfg, repick=True)
+    assert fresh["accas"]["o15"].get("locked") is None and not fresh["accas"]["o15"]["legs"]
