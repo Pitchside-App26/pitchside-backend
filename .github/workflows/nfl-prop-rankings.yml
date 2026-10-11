@@ -47,9 +47,10 @@ jobs:
           since=$(date -u -d '12 hours ago' +%Y-%m-%dT%H:%M:%SZ)
           ids=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/nfl-prop-rankings.yml/runs" \
                   -f created=">=$since" -f per_page=20 \
-                  --jq ".workflow_runs[] | select(.id != $GITHUB_RUN_ID and .conclusion != \"cancelled\") | .id")
+                  --jq ".workflow_runs[] | select(.id < $GITHUB_RUN_ID and .conclusion != \"cancelled\") | .id")
           n=0
           for id in $ids; do
+            # Only runs that started earlier count, so two slots checking at once can't both skip.
             # The run job's state; a run still in its check job has none yet and counts.
             state=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs" \
                       --jq '[.jobs[] | select(.name == "run") | (.conclusion // .status)][0] // "pending"')
