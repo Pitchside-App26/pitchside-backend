@@ -1,0 +1,51 @@
+name: Publish site (no new data)
+
+# Re-publishes the GitHub Pages site from the repo's current pages, keeping
+# the live NFL data.json (which only exists on the published site). For
+# shipping a page change mid-week without a new NFL run, which would spend
+# ~150 Odds API credits. Fails rather than publish if the live data can't be
+# read, so the NFL page is never rolled back to the repo's stale copy.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble the site with the live NFL data
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          REPO="${GITHUB_REPOSITORY#*/}"
+          mkdir -p _site/goals
+          cp -r nfl_prop_engine/site/. _site/
+          if [ -d football_goals/site ]; then cp -r football_goals/site/. _site/goals/; fi
+          curl -fsSL --retry 3 "https://${OWNER,,}.github.io/${REPO}/data.json" -o /tmp/nfl-data.json
+          python -c "import json; json.load(open('/tmp/nfl-data.json'))"
+          cp /tmp/nfl-data.json _site/data.json
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
