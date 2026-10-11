@@ -578,6 +578,15 @@
   .slip-target strong { font-family: "Fraunces", Georgia, serif; font-size: 0.98rem; }
   .chk { padding: 0 12px 12px 42px; }
   .chk-fields { display: flex; gap: 8px; flex-wrap: wrap; }
+  select.chk-input { background: var(--panel); color: var(--text); }
+  .mode-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 10px 0 4px; }
+  .mode-btn {
+    font: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 2px;
+    border: 1px solid var(--rule-strong); background: var(--panel); color: var(--text); cursor: pointer;
+  }
+  .mode-btn.on { background: var(--rule-strong); color: var(--panel); }
+  .mode-btn:focus-visible { outline: 2px solid var(--over); outline-offset: 2px; }
+  .mode-note { flex: 1 1 100%; font-size: 0.78rem; color: var(--sub); line-height: 1.4; }
   .chk-field { display: flex; flex-direction: column; gap: 3px; flex: 1 1 110px; min-width: 0; }
   .chk-field label { font-size: 0.7rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.04em; }
   .chk-input {
@@ -892,7 +901,7 @@
     const against = leg.sources?.[side === "over" ? "under" : "over"] || [];
     const target = targetOf(leg) !== null && targetOf(leg) !== undefined
       ? `<div class="target">Bet the ${side} only if bet365's line is <span class="big">${esc(fmtLine(targetOf(leg)))} or ${side === "under" ? "higher" : "lower"}</span>,
-           at <span class="big">${esc(leg.required_price ? toFraction(leg.required_price, true) : leg.min_price_fractional)}</span> (${esc(money(leg.required_price || leg.min_price_decimal))}) or bigger${leg.required_price ? ` -- within 2% of the fair price at the consensus line; the check works out the fair price at bet365's own line` : ""}.</div>`
+           at <span class="big">${esc(neededPrice(leg) ? toFraction(neededPrice(leg), true) : leg.min_price_fractional)}</span> (${esc(money(neededPrice(leg) || leg.min_price_decimal))}) or bigger${neededPrice(leg) ? ` -- in ${accaMode() === "fun" ? "Fun acca" : "Value bets"} mode, at the consensus line; the check works out the fair price at your book's own line` : ""}.</div>`
       : "";
     return `
       <div class="leg">
@@ -946,25 +955,43 @@
     return Number.isFinite(d) && d > 1 ? d : null;
   }
 
+  // Two ways to judge a price (Dan's call, 11 Oct). "Fun acca": OK within
+  // FUN_EDGE (6%) of fair -- you knowingly pay the bookmaker's usual margin and
+  // just dodge the worst-priced legs. "Value bets": OK only within 2% of fair
+  // (the leg's accept_edge), for singles found by shopping the same leg
+  // across books. Remembered on this phone.
+  const FUN_EDGE = -0.06;
+  const BOOKS = ["bet365", "Sky Bet", "Betfred", "BoyleSports", "Spreadex", "Other"];
+  function accaMode() { return store("nfl-acca:mode") === "value" ? "value" : "fun"; }
+  function modeEdge(leg, mode) { return mode === "value" ? (leg.accept_edge ?? -0.02) : FUN_EDGE; }
+  // The price needed at the consensus line in the current mode (older data: none).
+  function neededPrice(leg) { return leg.fair_prob && leg.accept_edge !== undefined ? (1 + modeEdge(leg, accaMode())) / leg.fair_prob : null; }
+
   function checkLeg(leg) {
     const saved = store(`${weekKey()}:chk:${leg.key}`) || {};
     const line = parseFloat(saved.line);
     const price = toDecimal(saved.price);
     const min = leg.min_price_decimal;
     if (!saved.line && !saved.price) return { state: "todo", saved };
-    if (!Number.isFinite(line) || price === null) return { state: "todo", saved, msg: "Enter both bet365's line and price." };
-    if (sideOf(leg) === "under" && line < targetOf(leg)) return { state: "no", saved, price, msg: `Don't bet: bet365's line ${line} is below your min ${fmtLine(targetOf(leg))}.` };
-    if (sideOf(leg) === "over" && line > targetOf(leg)) return { state: "no", saved, price, msg: `Don't bet: bet365's line ${line} is above your max ${fmtLine(targetOf(leg))}.` };
+    const book = saved.book || "bet365";
+    if (!Number.isFinite(line) || price === null) return { state: "todo", saved, msg: `Enter both ${book}'s line and price.` };
+    if (sideOf(leg) === "under" && line < targetOf(leg)) return { state: "no", saved, price, msg: `Don't bet: ${book}'s line ${line} is below your min ${fmtLine(targetOf(leg))}.` };
+    if (sideOf(leg) === "over" && line > targetOf(leg)) return { state: "no", saved, price, msg: `Don't bet: ${book}'s line ${line} is above your max ${fmtLine(targetOf(leg))}.` };
     const fair = leg.accept_edge === undefined ? null : fairAt(leg, line);
     if (fair === null) {  // older data, or no spread to move the fair chance to bet365's line
       if (price < min) return { state: "no", saved, price, msg: `Don't bet: ${saved.price} is shorter than ${leg.min_price_fractional}.` };
       return { state: "ok", saved, price, msg: `OK to bet: ${line} at ${saved.price} meets the target.` };
     }
-    const ev = price * fair - 1, fairOdds = 1 / fair, need = (1 + leg.accept_edge) / fair;
-    if (ev < leg.accept_edge) {
-      return { state: "no", saved, price, fair, ev, msg: `Don't bet: ${saved.price} is worse than the fair price (${fairOdds.toFixed(2)}) at line ${line}. You'd need ${toFraction(need, true)} (${need.toFixed(2)}) or bigger.` };
+    const mode = accaMode(), edge = modeEdge(leg, mode);
+    const ev = price * fair - 1, fairOdds = 1 / fair, need = (1 + edge) / fair;
+    const at = book === "bet365" ? "" : ` at ${book}`;
+    if (ev < edge) {
+      const fun = mode === "value" && ev >= FUN_EDGE ? " It would pass in Fun acca mode." : "";
+      return { state: "no", saved, price, fair, ev, msg: `Don't bet${at}: ${saved.price} is ${pctSigned(ev)} against the fair price (${fairOdds.toFixed(2)}) at line ${line}. You'd need ${toFraction(need, true)} (${need.toFixed(2)}) or bigger.${fun} Try the same leg at another of your books.` };
     }
-    const label = ev >= leg.value_edge ? `Value: ${pctSigned(ev)} vs the fair price` : `OK to bet: close to fair (${pctSigned(ev)})`;
+    const label = ev >= leg.value_edge ? `Value${at}: ${pctSigned(ev)} vs the fair price`
+      : ev >= modeEdge(leg, "value") ? `OK to bet${at}: close to fair (${pctSigned(ev)})`
+      : `OK for a fun acca${at}: ${pctSigned(ev)} against fair, the bookmaker's usual margin -- not a value bet`;
     return { state: "ok", saved, price, fair, ev, msg: `${label}. Fair at ${line} is ${fairOdds.toFixed(2)} (${toFraction(fairOdds)}); you have ${saved.price}.` };
   }
 
@@ -1056,13 +1083,15 @@
           <span class="slip-name">${esc(leg.player)}</span>
           <span class="slip-market">${esc(leg.stat_label)} ${esc(sideOf(leg))} · ${esc(leg.game)}${tags ? ` · ${tags}` : ""}</span>
         </span>
-        <span class="slip-target"><strong>${sideOf(leg) === "under" ? "≥" : "≤"} ${esc(fmtLine(targetOf(leg)))}</strong><br>at ${esc(leg.required_price ? toFraction(leg.required_price, true) : leg.min_price_fractional)}+</span>
+        <span class="slip-target"><strong>${sideOf(leg) === "under" ? "≥" : "≤"} ${esc(fmtLine(targetOf(leg)))}</strong><br>at ${esc(neededPrice(leg) ? toFraction(neededPrice(leg), true) : leg.min_price_fractional)}+</span>
       </button>
       ${open ? `<div class="chk">
         <div class="chk-fields">
-          <div class="chk-field"><label for="line-${id}">bet365 line</label>
+          <div class="chk-field"><label for="book-${id}">Book</label>
+            <select class="chk-input" id="book-${id}" data-field="book" data-key="${esc(leg.key)}">${BOOKS.map(b => `<option${(c.saved.book || "bet365") === b ? " selected" : ""}>${esc(b)}</option>`).join("")}</select></div>
+          <div class="chk-field"><label for="line-${id}">Line</label>
             <input class="chk-input" id="line-${id}" inputmode="decimal" autocomplete="off" placeholder="${esc(fmtLine(targetOf(leg)))}" value="${esc(c.saved.line || "")}" data-field="line" data-key="${esc(leg.key)}"></div>
-          <div class="chk-field"><label for="price-${id}">bet365 price</label>
+          <div class="chk-field"><label for="price-${id}">Price</label>
             <input class="chk-input" id="price-${id}" autocomplete="off" placeholder="e.g. 5/6" value="${esc(c.saved.price || "")}" data-field="price" data-key="${esc(leg.key)}"></div>
         </div>
         ${c.msg ? `<div class="verdict ${c.state === "todo" ? "" : c.state}">${esc(c.msg)}</div>` : ""}
@@ -1130,6 +1159,13 @@
       <div class="section-head">
         <h2 id="acca-title">This week's accumulators</h2>
         <span class="kicker">Overs and unders · Week 4 spec gates</span>
+      </div>
+      <div class="mode-row" role="group" aria-label="How to judge prices">
+        <button class="mode-btn${accaMode() === "fun" ? " on" : ""}" type="button" data-mode="fun" aria-pressed="${accaMode() === "fun"}">Fun acca</button>
+        <button class="mode-btn${accaMode() === "value" ? " on" : ""}" type="button" data-mode="value" aria-pressed="${accaMode() === "value"}">Value bets</button>
+        <span class="mode-note">${accaMode() === "fun"
+          ? "Prices up to 6% below fair pass: you pay the bookmaker's usual margin and dodge the worst-priced legs."
+          : "Only prices within 2% of fair pass. Shop each leg across your books and back what passes as singles."}</span>
       </div>`;
     if (a.error) {
       el.innerHTML = head + `<div class="acca-empty">The accumulator report failed on this run (${esc(a.error)}). The rankings below are unaffected.</div>`;
@@ -1271,6 +1307,12 @@
       renderAcca(accaState.a, accaState.data);
       const input = accaEl.querySelector(`.chk-input[data-field="line"]`);
       if (input && accaState.open) input.focus();
+      return;
+    }
+    const modeBtn = t.closest("[data-mode]");
+    if (modeBtn) {
+      store("nfl-acca:mode", modeBtn.dataset.mode);
+      renderAcca(accaState.a, accaState.data);
       return;
     }
     const swap = t.closest("[data-swap]");
