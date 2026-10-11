@@ -2,9 +2,13 @@ name: NFL Prop Rankings (weekly)
 
 on:
   schedule:
-    # Sunday 11:00 UTC ~= 7:00am ET / 4:00am PT, before the early kickoff
-    # window. Adjust for your timezone and preferred lead time.
-    - cron: "0 11 * * 0"
+    # Sunday 10:17 UTC, with a backup at 11:47. GitHub starts scheduled runs
+    # late when it's busy, worst on the hour: the 11:00 slot ran 4.5 hours
+    # late on 27 Sep and 4 Oct and hadn't started after 2 hours on 11 Oct.
+    # Off-the-hour times are GitHub's own advice. Whichever slot actually
+    # runs first does the work; the check job below makes the other skip.
+    - cron: "17 10 * * 0"
+    - cron: "47 11 * * 0"
   workflow_dispatch:
     inputs:
       teams:
@@ -23,12 +27,12 @@ permissions:
   actions: read    # the schedule check below lists this workflow's recent runs
 
 jobs:
-  # GitHub often starts the Sunday schedule hours late, so Dan presses Run
-  # workflow instead -- and the late scheduled run would then spend another
-  # ~150 Odds API credits on the same slate. A scheduled run skips itself if
-  # a manual run started in the last 12 hours wasn't cancelled -- a red run
-  # can still have fetched the odds and published the page. (A manual run
-  # limited to a few teams counts too.)
+  # A scheduled run skips itself if another run of this workflow from the
+  # last 12 hours -- manual or the other schedule slot -- got past this check
+  # (its run job isn't skipped) and wasn't cancelled, so the slate is never
+  # fetched twice (~150 Odds API credits each time). A red run still counts:
+  # it can have fetched the odds and published the page. A manual run
+  # limited to a few teams counts too.
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -41,11 +45,18 @@ jobs:
         run: |
           if [ "$EVENT" != "schedule" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
           since=$(date -u -d '12 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-          n=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/nfl-prop-rankings.yml/runs" \
-                -f created=">=$since" -f event=workflow_dispatch -f per_page=20 \
-                --jq '[.workflow_runs[] | select(.conclusion != "cancelled")] | length')
+          ids=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/nfl-prop-rankings.yml/runs" \
+                  -f created=">=$since" -f per_page=20 \
+                  --jq ".workflow_runs[] | select(.id != $GITHUB_RUN_ID and .conclusion != \"cancelled\") | .id")
+          n=0
+          for id in $ids; do
+            # The run job's state; a run still in its check job has none yet and counts.
+            state=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs" \
+                      --jq '[.jobs[] | select(.name == "run") | (.conclusion // .status)][0] // "pending"')
+            if [ "$state" != "skipped" ]; then n=$((n + 1)); fi
+          done
           if [ "$n" -gt 0 ]; then
-            echo "A manual run in the last 12 hours already covers this slate; skipping to save Odds API credits."
+            echo "Another run in the last 12 hours already covers this slate; skipping to save Odds API credits."
             echo "go=false" >> "$GITHUB_OUTPUT"
           else
             echo "go=true" >> "$GITHUB_OUTPUT"
