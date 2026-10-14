@@ -1,3 +1,5 @@
+import contextlib
+
 import pytest
 
 from analyst_sweep import (
@@ -206,6 +208,9 @@ class _FakeClient:
         self.calls.append(kwargs)
         return self.responses.pop(0)
 
+    def stream(self, **kwargs):
+        return contextlib.nullcontext(SimpleNamespace(get_final_message=lambda: self.create(**kwargs)))
+
 
 def _install(monkeypatch, responses):
     client = _FakeClient(responses)
@@ -230,7 +235,7 @@ def test_api_failure_returns_no_picks_rather_than_crashing(monkeypatch):
         def __init__(self):
             self.messages = self
 
-        def create(self, **kwargs):
+        def stream(self, **kwargs):
             raise analyst_sweep.anthropic.APIConnectionError(request=None)
 
     monkeypatch.setattr(analyst_sweep.anthropic, "Anthropic", lambda api_key=None: Boom())
@@ -307,3 +312,29 @@ def test_parse_picks_json_still_rejects_text_with_no_json():
 def test_line_tolerance_scales_with_yardage_lines(market, line, tolerance):
     from analyst_sweep import line_tolerance_for
     assert line_tolerance_for(market, line) == pytest.approx(tolerance)
+
+
+def test_a_search_that_runs_out_of_room_is_asked_for_its_list(monkeypatch):
+    pick_json = '[{"outlet": "Covers", "player": "Drake Maye", "market": "Passing Yards", "side": "Over", "line": 214.5}]'
+    client = _install(monkeypatch, [
+        _response("max_tokens", text="Good, the variable persisted. Let me extract the full content."),
+        _response("end_turn", text=pick_json, searches=0),
+    ])
+    picks, usage = analyst_sweep.search_for_picks("sys", "find picks", "Week 5 slate", 8, 2)
+    assert picks[0]["player"] == "Drake Maye" and "error" not in usage
+    follow_up = client.calls[1]["messages"]
+    assert [m["role"] for m in follow_up] == ["user", "assistant", "user"]
+    assert follow_up[-1]["content"] == analyst_sweep.FINAL_ANSWER_PROMPT
+    assert client.calls[0]["max_tokens"] == analyst_sweep.SEARCH_MAX_TOKENS
+
+
+def test_a_search_that_never_returns_a_list_says_so(monkeypatch):
+    _install(monkeypatch, [_response("max_tokens", text="Let me dig in."), _response("end_turn", text="Sorry.")])
+    picks, usage = analyst_sweep.search_for_picks("sys", "find picks", "Week 5 slate", 8, 2)
+    assert picks == [] and usage["error"] == "the search didn't return a usable list of picks"
+
+
+def test_an_empty_list_is_an_answer_not_a_failure(monkeypatch):
+    client = _install(monkeypatch, [_response("end_turn", text="[]")])
+    picks, usage = analyst_sweep.search_for_picks("sys", "find picks", "Week 5 slate", 8, 2)
+    assert (picks, "error" in usage, len(client.calls)) == ([], False, 1)

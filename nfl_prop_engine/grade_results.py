@@ -8,8 +8,12 @@ event for any one player, inflating the naive overall hit rate well above
 what the props that actually carry information were doing).
 
     python grade_results.py            # grade every ungraded (season, week)
+    python grade_results.py --regrade  # grade every logged week again from
+                                        # scratch (after a grading fix)
     python grade_results.py --report   # skip grading, just report on what's
                                         # already graded
+    python grade_results.py --check    # integrity checks only; exits 1 on a
+                                        # problem (see integrity.py)
 
 Every actual value used here comes from the same fetch_all_stats() /
 derive_stats_from_pbp.py fallback run_weekly.py already relies on -- no
@@ -25,38 +29,36 @@ import pandas as pd
 from config import RESULTS_DB_PATH
 from fetch_schedule import load_schedule_seasons
 from fetch_stats import fetch_all_stats
+from participation import WeekParticipation, week_participation
 from pricing import american_to_decimal
-from results_log import _connect, grade_acca_week, grade_analyst_week, grade_week
+from results_log import VOID, Outcome, _connect, grade_acca_week, grade_analyst_week, grade_week
 
 logger = logging.getLogger(__name__)
 
 
-def _ungraded_season_weeks(db_path: str = RESULTS_DB_PATH) -> list[tuple[int, int]]:
+TABLES = ("weekly_output", "acca_legs", "analyst_picks")
+PENDING = "actual_value IS NULL AND void = 0"  # not graded yet (a void row is settled)
+
+
+def _ungraded_season_weeks(db_path: str = RESULTS_DB_PATH, regrade: bool = False) -> list[tuple[int, int]]:
+    where = "" if regrade else f" WHERE {PENDING}"
     conn = _connect(db_path)  # creates acca_legs on an older database that predates it
     try:
-        cur = conn.execute(
-            """SELECT season, week FROM weekly_output WHERE actual_value IS NULL
-               UNION SELECT season, week FROM acca_legs WHERE actual_value IS NULL
-               UNION SELECT season, week FROM analyst_picks WHERE actual_value IS NULL
-               ORDER BY season, week"""
-        )
-        return cur.fetchall()
+        union = " UNION ".join(f"SELECT season, week FROM {t}{where}" for t in TABLES)
+        return conn.execute(f"{union} ORDER BY season, week").fetchall()
     finally:
         conn.close()
 
 
-def _ungraded_pairs(season: int, week: int, db_path: str = RESULTS_DB_PATH) -> set[tuple[str, str]]:
+def _ungraded_pairs(season: int, week: int, db_path: str = RESULTS_DB_PATH, regrade: bool = False) -> set[tuple[str, str]]:
+    pending = "" if regrade else f" AND {PENDING}"
     conn = _connect(db_path)
     try:
-        cur = conn.execute(
-            """SELECT player_id, stat_col FROM weekly_output
-               WHERE season=? AND week=? AND actual_value IS NULL AND player_id IS NOT NULL
-               UNION SELECT player_id, stat_col FROM acca_legs
-               WHERE season=? AND week=? AND actual_value IS NULL AND player_id IS NOT NULL
-               UNION SELECT player_id, stat_col FROM analyst_picks
-               WHERE season=? AND week=? AND actual_value IS NULL AND player_id IS NOT NULL""",
-            (season, week, season, week, season, week),
+        union = " UNION ".join(
+            f"SELECT player_id, stat_col FROM {t} WHERE season=? AND week=? AND player_id IS NOT NULL{pending}"
+            for t in TABLES
         )
+        cur = conn.execute(union, (season, week) * len(TABLES))
         return {(pid, stat) for pid, stat in cur.fetchall()}
     finally:
         conn.close()
@@ -78,23 +80,43 @@ def _match_actual(
     offense_by_player: dict,
     defense_by_player: dict,
     player_id: str,
-) -> float | None:
+    participation: WeekParticipation | None = None,
+    pfr_id: str | None = None,
+    name: str | None = None,
+) -> Outcome | None:
     """Pure matching logic, split out from the network-fetching in
-    build_actuals_for_week so it's directly testable: None means "leave
-    ungraded, game not final yet"; 0.0 means "game's over, player just has
-    no row for this stat" (didn't record any, or didn't play -- this engine
-    has no injury/inactive feed yet to tell the two apart, see README)."""
+    build_actuals_for_week so it's directly testable. None means "leave
+    ungraded for now": the game isn't final, or he has no stats and the
+    week's snap sheet isn't out yet to say whether he played. Otherwise:
+    - a stats row: he played; his value (0 for a stat he didn't record);
+    - no stats row but he took a snap: he played and recorded nothing, 0;
+    - no stats row and no snaps: he didn't play, the bet is void."""
     if team not in completed_teams:
         return None
+    snaps = participation.lookup(pfr_id, name, team) if participation is not None else None
+    pct = snaps.pct if snaps is not None and snaps.played else None
     row = offense_by_player.get(player_id) or defense_by_player.get(player_id)
-    value = row.get(stat_col) if row else None
-    return float(value) if value is not None else 0.0
+    if row:
+        value = row.get(stat_col)
+        return Outcome(0.0 if value is None or pd.isna(value) else float(value), pct)
+    if participation is None or not participation.reported(team):
+        return None
+    return Outcome(0.0, snaps.pct) if snaps.played else VOID
 
 
-def build_actuals_for_week(season: int, week: int, needed: set[tuple[str, str]]) -> dict[tuple[str, str], float]:
-    """{(player_id, stat_col): actual_value}, only for pairs in `needed`
-    whose team's game is confirmed final -- see _match_actual for the
-    matching rule itself."""
+def _load_participation(season: int, week: int) -> WeekParticipation | None:
+    """None (and a loud log line) when the snap sheet can't be read: props
+    with no stats row then wait for the next run instead of guessing."""
+    try:
+        return week_participation(nfl.import_snap_counts([season]), week)
+    except Exception as exc:
+        logger.error("Couldn't read the %s snap counts (%s): players with no stats stay ungraded.", season, exc)
+        return None
+
+
+def build_actuals_for_week(season: int, week: int, needed: set[tuple[str, str]]) -> dict[tuple[str, str], Outcome]:
+    """{(player_id, stat_col): Outcome}, only for pairs in `needed` that can
+    be settled -- see _match_actual for the rule itself."""
     completed = _completed_teams(season, week)
     if not completed:
         return {}
@@ -108,13 +130,18 @@ def build_actuals_for_week(season: int, week: int, needed: set[tuple[str, str]])
     offense_by_player = offense.set_index("player_id").to_dict("index") if not offense.empty else {}
     defense_by_player = defense.set_index("player_id").to_dict("index") if not defense.empty else {}
 
-    roster = nfl.import_seasonal_rosters([season])[["player_id", "team"]].drop_duplicates("player_id")
-    team_by_player = dict(zip(roster["player_id"], roster["team"]))
+    roster = nfl.import_seasonal_rosters([season])[["player_id", "pfr_id", "player_name", "team"]]
+    roster = roster.drop_duplicates("player_id").set_index("player_id")
+    participation = _load_participation(season, week)
 
     actuals = {}
     for player_id, stat_col in needed:
+        info = roster.loc[player_id] if player_id in roster.index else None
         value = _match_actual(
-            team_by_player.get(player_id), stat_col, completed, offense_by_player, defense_by_player, player_id
+            info["team"] if info is not None else None, stat_col, completed, offense_by_player, defense_by_player,
+            player_id, participation,
+            pfr_id=info["pfr_id"] if info is not None and isinstance(info["pfr_id"], str) else None,
+            name=info["player_name"] if info is not None else None,
         )
         if value is not None:
             actuals[(player_id, stat_col)] = value
@@ -122,23 +149,26 @@ def build_actuals_for_week(season: int, week: int, needed: set[tuple[str, str]])
     return actuals
 
 
-def grade_all_ungraded(db_path: str = RESULTS_DB_PATH) -> int:
+def grade_all_ungraded(db_path: str = RESULTS_DB_PATH, regrade: bool = False) -> int:
+    """Grades every prop not yet settled; with regrade, every logged prop
+    again from scratch (after a fix to the grading rules)."""
     total_graded = 0
-    for season, week in _ungraded_season_weeks(db_path):
-        needed = _ungraded_pairs(season, week, db_path)
+    for season, week in _ungraded_season_weeks(db_path, regrade):
+        needed = _ungraded_pairs(season, week, db_path, regrade)
         if not needed:
             continue
         actuals = build_actuals_for_week(season, week, needed)
         if not actuals:
             logger.info("Season %s week %s: no completed games yet -- nothing to grade.", season, week)
             continue
-        n = grade_week(season, week, actuals, db_path)
-        n_acca = grade_acca_week(season, week, actuals, db_path)
-        n_analyst = grade_analyst_week(season, week, actuals, db_path)
+        n = grade_week(season, week, actuals, db_path, overwrite=regrade)
+        n_acca = grade_acca_week(season, week, actuals, db_path, overwrite=regrade)
+        n_analyst = grade_analyst_week(season, week, actuals, db_path, overwrite=regrade)
+        n_void = sum(outcome.void for outcome in actuals.values())
         logger.info(
             "Season %s week %s: graded %d logged row(s), %d accumulator leg(s) and %d analyst pick(s) covering "
-            "%d distinct player/stat pair(s).",
-            season, week, n, n_acca, n_analyst, len(actuals),
+            "%d distinct player/stat pair(s), %d of them void (didn't play); %d pair(s) left for a later run.",
+            season, week, n, n_acca, n_analyst, len(actuals), n_void, len(needed) - len(actuals),
         )
         total_graded += n + n_acca + n_analyst
     return total_graded
@@ -202,11 +232,12 @@ def print_profit(df: pd.DataFrame) -> None:
 
 
 def print_report(db_path: str = RESULTS_DB_PATH) -> None:
-    conn = sqlite3.connect(db_path)
+    conn = _connect(db_path)  # also brings an older database up to one row per prop
     try:
         df = pd.read_sql_query(
             "SELECT * FROM weekly_output WHERE actual_value IS NOT NULL", conn
         )
+        n_void = conn.execute("SELECT COUNT(*) FROM weekly_output WHERE void = 1").fetchone()[0]
     finally:
         conn.close()
 
@@ -219,14 +250,8 @@ def print_report(db_path: str = RESULTS_DB_PATH) -> None:
     ]
 
     n_weeks = df[["season", "week"]].drop_duplicates().shape[0]
-    n_runs = df["logged_at"].nunique()
-    print(f"=== Backtest report: {len(df)} graded rows across {n_weeks} week(s), {n_runs} logged run(s) ===")
-    if n_runs > n_weeks:
-        print(
-            f"({n_runs} runs for {n_weeks} week(s) -- more than one run per week means some of "
-            f"this is duplicate dev/test runs on the same real games, not independent weekly picks. "
-            f"Once this runs on schedule (one real run per week), that goes away on its own.)"
-        )
+    print(f"=== Backtest report: {len(df)} graded props across {n_weeks} week(s), one row per prop per week ===")
+    print(f"({n_void} more were void -- the player took no snaps -- and are left out, as a bookmaker would.)")
     print()
 
     print("Overall:")
@@ -336,11 +361,16 @@ def print_analyst_report(db_path: str = RESULTS_DB_PATH) -> None:
 def main():
     parser = argparse.ArgumentParser(description="Grade logged props against real results and report hit rate.")
     parser.add_argument("--report", action="store_true", help="skip grading, just report on what's already graded")
+    parser.add_argument("--regrade", action="store_true", help="grade every logged week again from scratch")
+    parser.add_argument("--check", action="store_true", help="only run the integrity checks; exit 1 on a problem")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
+    if args.check:
+        from integrity import find_problems, report
+        raise SystemExit(report(find_problems()))
     if not args.report:
-        n = grade_all_ungraded()
+        n = grade_all_ungraded(regrade=args.regrade)
         logger.info("Graded %d prop(s) this run.", n)
     print_report()
     print_acca_report()

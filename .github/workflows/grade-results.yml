@@ -5,7 +5,12 @@ on:
     # Tuesday 12:00 UTC -- after Monday Night Football, so the whole
     # week's real slate has a final score by the time this runs.
     - cron: "0 12 * * 2"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      regrade:
+        description: "Grade every logged week again from scratch (after a grading fix)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # needed to commit the graded results_log.sqlite3 back to the repo
@@ -34,7 +39,10 @@ jobs:
       - name: Grade logged props against real results
         # No ODDS_API_KEY needed -- this only pulls real final stats from
         # nflverse to grade against, never calls the odds API.
-        run: python grade_results.py
+        env:
+          REGRADE: ${{ inputs.regrade }}
+        run: |
+          if [ "$REGRADE" = "true" ]; then python grade_results.py --regrade; else python grade_results.py; fi
 
       - name: Commit graded results log
         # Same reasoning as the ranking workflow's commit step -- a fresh
@@ -52,3 +60,9 @@ jobs:
             sleep $((attempt * 5))
           done
           exit 1
+
+      - name: Check the results log
+        # After the commit on purpose: the grades are saved either way, and
+        # a problem (a feed losing players, an empty analyst feed, props
+        # never graded) turns this run red instead of skewing every report.
+        run: python grade_results.py --check

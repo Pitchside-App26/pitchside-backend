@@ -129,7 +129,7 @@ def _clean_tree(value):
 
 def write_json(
     ranked: list[RankedProp], season: int, week: int, path: str, accumulator: dict | None = None,
-    analyst_picks: dict | None = None,
+    analyst_picks: dict | None = None, health: list[str] | None = None,
 ) -> None:
     payload = {
         "season": season,
@@ -141,5 +141,6 @@ def write_json(
         payload["accumulator"] = _clean_tree(accumulator)
     if analyst_picks is not None:
         payload["analyst_picks"] = _clean_tree(analyst_picks)
+    payload["health"] = list(health or [])  # what didn't work this run; the page shows it as a warning
     with open(path, "w") as f:
         json.dump(payload, f, indent=2, allow_nan=False)

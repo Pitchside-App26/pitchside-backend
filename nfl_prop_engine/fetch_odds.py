@@ -33,7 +33,16 @@ class OddsApiError(RuntimeError):
     pass
 
 
+_credits_remaining: int | None = None
+
+
+def credits_remaining() -> int | None:
+    """Odds API credits left after this run's latest call (None before any)."""
+    return _credits_remaining
+
+
 def _get(path: str, params: dict) -> requests.Response:
+    global _credits_remaining
     if not ODDS_API_KEY:
         raise OddsApiError("ODDS_API_KEY is not set (check your .env file).")
     resp = requests.get(f"{ODDS_API_BASE}{path}", params={**params, "apiKey": ODDS_API_KEY}, timeout=15)
@@ -41,6 +50,10 @@ def _get(path: str, params: dict) -> requests.Response:
     used = resp.headers.get("x-requests-used")
     if remaining is not None:
         logger.info("Odds API credits used=%s remaining=%s", used, remaining)
+        try:
+            _credits_remaining = int(float(remaining))
+        except ValueError:
+            pass
     if resp.status_code != 200:
         raise OddsApiError(f"{resp.status_code} from {path}: {resp.text[:500]}")
     return resp

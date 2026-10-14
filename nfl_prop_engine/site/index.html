@@ -18,6 +18,8 @@
     --over: #1c6e4a;
     --under: #a6192e;
     --low-conf: #a9740f;
+    --warn: #7a4f00;
+    --warn-soft: #fbf1dc;
     --over-soft: #e3f1e9;
     --under-soft: #f8e4e7;
     --bar-miss: #b8c0cc;
@@ -309,6 +311,19 @@
     line-height: 1.5;
     color: var(--sub);
   }
+
+  .health {
+    background: var(--warn-soft);
+    color: var(--warn);
+    border: 1px solid var(--low-conf);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+  .health strong { display: block; margin-bottom: 4px; }
+  .health ul { margin: 0; padding-left: 18px; }
 
   .empty, .error {
     text-align: center;
@@ -650,6 +665,8 @@
       <div class="meta" id="meta">Loading…</div>
       <div class="update-note">Opens GitHub Actions — tap "Run workflow", leave the branch on main, then "Run workflow" again to refresh this page.</div>
     </header>
+
+    <section class="health" id="health" hidden role="status"></section>
 
     <section class="acca" id="acca" hidden aria-labelledby="acca-title"></section>
 
@@ -1276,6 +1293,17 @@
     return `${Math.round(hours / 24)}d ago`;
   }
 
+  // What didn't work in this week's run (no wind forecasts, a failed
+  // analyst search, odds credits running out): a check that quietly did
+  // nothing must not look like a clean run.
+  function renderHealth(health) {
+    const el = document.getElementById("health");
+    if (!Array.isArray(health) || !health.length) { el.hidden = true; return; }
+    el.innerHTML = `<strong>Not everything worked in this run</strong>` +
+      `<ul>${health.map(h => `<li>${esc(h)}</li>`).join("")}</ul>`;
+    el.hidden = false;
+  }
+
   fetch("data.json?_=" + Date.now())
     .then(r => {
       if (!r.ok) throw new Error("HTTP " + r.status);
@@ -1287,6 +1315,7 @@
       meta.innerHTML = `<span>Season ${data.season}, Week ${data.week}</span>` +
         `<span>Updated ${timeAgo(data.generated_at)}</span>` +
         `<span>${state.props.length} props</span>`;
+      renderHealth(data.health);
       renderAcca(data.accumulator, data);
       renderAnalysts(data.analyst_picks);
       render();
