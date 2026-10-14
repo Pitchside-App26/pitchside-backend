@@ -95,3 +95,28 @@ def test_a_failing_analyst_search_never_stops_the_run(monkeypatch):
     picks, info, by_game = run_weekly.run_analyst_search(games, {"PHI": "early", "LA": "early"}, 4, 2026)
     assert (picks, by_game, info["ran"]) == ([], None, False)
     assert "failed (RuntimeError)" in info["note"]
+
+
+def test_run_health_names_every_check_that_silently_did_nothing(monkeypatch):
+    import run_weekly
+
+    monkeypatch.setitem(run_weekly.ANALYST_PICKS, "enabled", True)
+    game = {"wind_mph": None, "indoors": False}
+    dome = {"wind_mph": None, "indoors": True}
+    winds = {"BUF": game, "NE": game, "DET": dome, "CHI": dome}
+    health = run_weekly.run_health(winds, {"ran": False, "note": "the analyst search failed: out of room"},
+                                   {"error": "boom"}, credits_left=40)
+    assert health == [
+        "Wind forecasts didn't load for 1 of 1 outdoor games, so the Weather gate couldn't check those games.",
+        "Analyst picks: the analyst search failed: out of room.",
+        "The slips failed to build (boom).",
+        "Only 40 Odds API credits left this month: not enough for another full Sunday run (about 150).",
+    ]
+
+
+def test_a_clean_run_reports_nothing(monkeypatch):
+    import run_weekly
+
+    monkeypatch.setitem(run_weekly.ANALYST_PICKS, "enabled", True)
+    winds = {"BUF": {"wind_mph": 12.0, "indoors": False}}
+    assert run_weekly.run_health(winds, {"ran": True}, {"accumulators": []}, credits_left=300) == []

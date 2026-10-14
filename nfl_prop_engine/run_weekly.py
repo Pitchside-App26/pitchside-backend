@@ -33,7 +33,9 @@ from config import (
     SHRINKAGE_K,
     get_current_nfl_season,
 )
-from fetch_odds import consolidate_lines, fetch_all_event_odds, list_events, parse_event_odds, pivot_over_under
+from fetch_odds import (
+    consolidate_lines, credits_remaining, fetch_all_event_odds, list_events, parse_event_odds, pivot_over_under,
+)
 from fetch_schedule import (
     fetch_week_games,
     kickoff_map,
@@ -53,7 +55,7 @@ from output import print_report, write_json
 from projection_engine import Projection, league_fallback_std, project_rookie, project_veteran
 from rank_props import build_ranked_prop, rank
 from results_log import log_acca_legs, log_analyst_picks, log_weekly_output
-from weather import game_winds
+from weather import failed_forecasts, game_winds
 
 SITE_DATA_PATH = "site/data.json"
 
@@ -193,10 +195,44 @@ def run_analyst_search(
         logger.exception("Analyst search failed")
         return [], {"ran": False, "note": f"the analyst search failed ({type(exc).__name__})"}, None
     logger.info("Analyst search: %d pick(s) found, %d kept, usage %s", len(raw), len(resolved), usage)
+    if usage.get("error"):
+        return [], {"ran": False, "usage": usage, "note": f"the analyst search failed: {usage['error']}"}, None
     info = {"ran": True, "n_found": len(raw), "n_dropped": dropped, "usage": usage,
             "note": f"{len(resolved)} pick(s) from one web search over the early and late games"}
     by_game = picks_by_game(resolved, sorted({ref.description for ref in team_games.values()}))
     return resolved, info, by_game
+
+
+# About one Sunday run's worth (15 games x 10 markets).
+LOW_ODDS_CREDITS = 150
+
+
+def run_health(winds: dict, analyst_info: dict, accumulator: dict, credits_left: int | None) -> list[str]:
+    """Plain-English list of what didn't work this run, for the page and the
+    job summary: a check that silently did nothing (no wind forecasts, an
+    analyst search that broke) must never look the same as a clean run."""
+    problems = []
+    n_failed, n_outdoor = failed_forecasts(winds)
+    if n_failed:
+        problems.append(f"Wind forecasts didn't load for {n_failed} of {n_outdoor} outdoor games, so the Weather "
+                        "gate couldn't check those games.")
+    if ANALYST_PICKS["enabled"] and not analyst_info.get("ran"):
+        problems.append(f"Analyst picks: {analyst_info.get('note', 'the search did not run')}.")
+    if "error" in accumulator:
+        problems.append(f"The slips failed to build ({accumulator['error']}).")
+    if credits_left is not None and credits_left < LOW_ODDS_CREDITS:
+        problems.append(f"Only {credits_left} Odds API credits left this month: not enough for another full Sunday "
+                        f"run (about {LOW_ODDS_CREDITS}).")
+    return problems
+
+
+def write_job_summary(health: list[str]) -> None:
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not path:
+        return
+    lines = [f"- {p}" for p in health] or ["- Everything ran."]
+    with open(path, "a") as f:
+        f.write("### What didn't work this run\n" + "\n".join(lines) + "\n")
 
 
 def prep_position_group(df: pd.DataFrame, position_col: str, constant: str | None = None) -> pd.DataFrame:
@@ -448,7 +484,11 @@ def run(
     if analyst_feed["picks"]:
         log_analyst_picks(analyst_log_rows(analyst_feed), season, week)
 
-    write_json(ranked, season, week, SITE_DATA_PATH, accumulator=accumulator, analyst_picks=analyst_feed)
+    health = run_health(winds, analyst_info, accumulator, credits_remaining())
+    for problem in health:
+        logger.warning("Run health: %s", problem)
+    write_job_summary(health)
+    write_json(ranked, season, week, SITE_DATA_PATH, accumulator=accumulator, analyst_picks=analyst_feed, health=health)
     logger.info("Wrote %d ranked props to %s", len(ranked), SITE_DATA_PATH)
 
 

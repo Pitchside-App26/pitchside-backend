@@ -2,7 +2,8 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-from weather import game_winds, kickoff_utc, max_wind_mph
+import weather
+from weather import failed_forecasts, game_winds, kickoff_utc, max_wind_mph
 
 
 def test_kickoff_converts_eastern_to_utc_across_the_clock_change():
@@ -49,9 +50,40 @@ def test_game_winds_skips_domes_and_never_raises():
             raise ConnectionError("down")
         return _Resp(_forecast(17, [21, 22, 19, 18]))
 
-    winds = game_winds(games, {"BUF", "NE", "DET", "CHI", "KC", "LV"}, get=fake_get)
+    waits = []
+    winds = game_winds(games, {"BUF", "NE", "DET", "CHI", "KC", "LV"}, get=fake_get, sleep=waits.append)
     assert winds["NE"] == {"wind_mph": 22, "indoors": False}
     assert winds["DET"] == {"wind_mph": None, "indoors": True}
     assert winds["KC"] == {"wind_mph": None, "indoors": False}
     assert "SEA" not in winds  # outside the teams asked for
-    assert len(calls) == 2  # no request for the dome
+    assert len(calls) == 1 + weather.ATTEMPTS  # no request for the dome; Arrowhead tried 3 times
+    assert len(waits) == weather.ATTEMPTS - 1
+    assert failed_forecasts(winds) == (1, 2)
+
+
+def test_a_flaky_forecast_service_is_retried():
+    games = pd.DataFrame([{"home_team": "BUF", "away_team": "NE", "roof": "outdoors", "gameday": "2026-10-11",
+                           "gametime": "13:00"}])
+    answers = [TimeoutError("slow"), _Resp(_forecast(17, [21, 22, 19, 18]))]
+
+    def fake_get(url, params, timeout):
+        answer = answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    assert game_winds(games, get=fake_get, sleep=lambda s: None)["BUF"]["wind_mph"] == 22
+
+
+def test_a_dead_forecast_service_is_given_up_on_after_two_games():
+    games = pd.DataFrame([{"home_team": h, "away_team": a, "roof": "outdoors", "gameday": "2026-10-11",
+                           "gametime": "13:00"} for h, a in [("BUF", "NE"), ("KC", "LV"), ("PIT", "IND"), ("NYJ", "CLE")]])
+    calls = []
+
+    def fake_get(url, params, timeout):
+        calls.append(1)
+        raise ConnectionError("503")
+
+    winds = game_winds(games, get=fake_get, sleep=lambda s: None)
+    assert len(calls) == 2 * weather.ATTEMPTS
+    assert failed_forecasts(winds) == (4, 4)

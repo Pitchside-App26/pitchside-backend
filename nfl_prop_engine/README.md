@@ -36,7 +36,9 @@ live verification" below.
 
 ```
 python grade_results.py            # grade every ungraded logged week, then report
+python grade_results.py --regrade  # grade every logged week again from scratch (after a grading fix)
 python grade_results.py --report   # skip grading, just report on what's already graded
+python grade_results.py --check    # integrity checks only; exit 1 on a problem
 ```
 
 Since 4 Oct every logged prop also keeps both sides' prices at its line,
@@ -57,11 +59,32 @@ confidence tier, and `|edge_score|` bucket -- not just one overall number,
 which grading week 1 by hand already proved can be badly misleading on its
 own (see "Week 1 grading" below).
 
-A player with a completed game but no row in that week's stats is graded
-as a hard 0 (they recorded none of that stat) -- this engine has no
-injury/inactive feed yet, so a genuinely-inactive player and a
-zero-production active one currently grade the same way. Known
-simplification, not a bug; revisit if it turns out to matter.
+**Who played** (`participation.py`, since 14 Oct): a prop is settled the
+way a bookmaker settles it, using nflverse's weekly snap counts:
+- the player took a snap (special teams included) -> graded on what he
+  recorded, **0 if he recorded nothing**: the under wins, the over loses;
+- he took no snaps (inactive, injured, scratched) -> **void**: `void = 1`,
+  no `actual_value`, left out of every hit rate;
+- he has no stats and the snap sheet isn't out yet -> left for the next run.
+
+Until 14 Oct a player who didn't play was graded 0, so every injured
+player's under counted as a win (Puka Nacua, out in week 2, went down as 0
+yards on an 85.5 line). The regrade voided 15 props across weeks 2-5; no
+other graded value changed. Each graded row also keeps `snap_pct`, his
+share of his unit's snaps.
+
+**One row per prop per week**: each table has a unique key (season, week,
+player, stat, and side / analyst where they apply), and a re-run of the
+same week replaces its rows. Weeks 1 and 2 had been logged several times
+over (764 extra rows), counting those weeks two to five times in every
+total; the first connection after this change kept the latest row of each.
+
+**Checks** (`integrity.py`, run as the last step of the Tuesday grading
+workflow, after the results are saved): the run goes red on a duplicate
+prop, props still ungraded 9+ days after logging, a week with over 5% of
+props void (snap matching broken), over 10% of full-time players graded 0
+on a volume stat (stats feed losing players), or an empty analyst feed.
+The problems are listed in the job summary.
 
 Intended to run on a schedule (see below) the same way the ranking run
 does, so the track record builds up automatically week over week.
@@ -107,6 +130,12 @@ averages, the blend weighting, the opponent-matchup adjustment, or the
 draft-analog pool for rookies) into a plain-English sentence or two. It's
 built directly from real values the engine already computed, not inferred
 after the fact from the final projection.
+
+**Run health** (since 14 Oct): `data.json` carries a `health` list of
+what didn't work in that run, shown as a warning box at the top of the
+page and in the run's GitHub job summary: wind forecasts that didn't load,
+an analyst search that failed, slips that failed to build, or fewer than
+150 Odds API credits left (about one Sunday run). A clean run shows nothing.
 
 **Deployment**: `.github/workflows/nfl-prop-rankings.yml` uploads `site/` as
 a GitHub Pages artifact after every run (scheduled or manual) and deploys it.
@@ -486,7 +515,10 @@ chance. Every prop is logged on both sides, each graded on its own side.
 - **Weather gate.** Wind from the free Open-Meteo forecast (`weather.py`,
   strongest hour from kickoff, outdoor stadiums only): 15 mph or more
   (`WIND_FADE_MPH`) fails passing and receiving overs and backs their
-  unders. No forecast never fails a leg.
+  unders. No forecast never fails a leg. Each game gets 3 tries; after two
+  games fail outright the service is taken as down. On 11 Oct every
+  forecast timed out or returned 503, so the gate checked nothing that week
+  -- a run like that now says so on the page (see "Run health" below).
 
 For each leg (described for an over; an under mirrors it):
 1. **US consensus.** The median line across US books, from every book's own
@@ -536,6 +568,11 @@ For each leg (described for an over; an under mirrors it):
    Each pick is matched to a player, game and engine market; picks on other
    markets (anytime TD, combos), with no line, or that can't be matched are
    counted and skipped.
+   - The search is streamed with room for 64,000 output tokens. On 11 Oct it
+     ran out at 16,000 while still reading articles and returned no list
+     ($1.42, 0 picks). If a search ends without a list it is asked once for
+     the picks it has already found; if that fails too, the page and the
+     Tuesday checks say the search failed rather than "0 picks".
    - Every leg in the windows gets its analyst backing from these picks at
      no extra cost. An analyst's line counts as the same bet within 5% of a
      yardage line (min 2.5 yards) or 1 on counts of 2+; lines under 2 must
@@ -681,6 +718,8 @@ Not built yet:
 | `output.py` | step 7 |
 | `results_log.py` | durable weekly logging (SQLite) for later grading |
 | `grade_results.py` | fills in real outcomes and reports hit rate -- the "later" `results_log.py` was built for |
+| `participation.py` | who took the field each week (nflverse snap counts): played and 0, or void |
+| `integrity.py` | results-log checks that turn the Tuesday grading run red on a problem |
 | `run_weekly.py` | orchestrator / CLI entrypoint |
 | `tests/` | unit tests for the pure-logic pieces (projection math, matching, ranking) |
 | `docs/week4-upgrade-spec.md` | the accumulator-engine spec below, saved in full |

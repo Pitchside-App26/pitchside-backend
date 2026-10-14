@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from grade_results import _direction_hit, _match_actual, _ungraded_pairs, print_report
+from participation import week_participation
 from results_log import SCHEMA
 
 
@@ -26,13 +27,46 @@ def test_match_actual_none_when_team_game_not_final():
     assert result is None
 
 
-def test_match_actual_zero_when_game_final_but_no_stat_row():
-    # Game's over (DEN is in completed_teams) but this player has no row at
-    # all in either stats frame -- graded as 0, not left ungraded.
-    result = _match_actual(
-        "DEN", "receiving_yards", completed_teams={"DEN"}, offense_by_player={}, defense_by_player={}, player_id="p1",
-    )
-    assert result == 0.0
+def _sheet(*rows, week=1):
+    """A snap-count sheet: (player, pfr_id, team, offense, defense, special teams)."""
+    return week_participation(pd.DataFrame([
+        {"week": week, "player": p, "pfr_player_id": pfr, "team": t, "offense_snaps": o, "offense_pct": o / 60,
+         "defense_snaps": d, "defense_pct": d / 60, "st_snaps": st}
+        for p, pfr, t, o, d, st in rows
+    ]), week)
+
+
+SHEET = _sheet(("Puka Nacua", "NacuPu00", "LA", 0, 0, 0),  # listed with no snaps: did not play
+               ("Davis Allen", "AlleDa00", "LA", 30, 0, 5),
+               ("Gunner Guy", "GuyGu00", "LA", 0, 0, 12))
+
+
+def _grade(player_id, stats=None, participation=SHEET, pfr_id=None, name=None, team="LA"):
+    return _match_actual(team, "receiving_yards", {"LA"}, stats or {}, {}, player_id, participation,
+                         pfr_id=pfr_id, name=name)
+
+
+def test_a_player_who_took_no_snaps_is_void_not_zero():
+    assert _grade("p1", pfr_id="NacuPu00").void
+    assert _grade("p2", pfr_id="NobodyX00", name="Not On The Sheet").void
+
+
+def test_a_player_who_played_and_recorded_nothing_is_a_real_zero():
+    outcome = _grade("p1", pfr_id="AlleDa00")
+    assert (outcome.value, outcome.snap_pct) == (0.0, 0.5)
+
+
+def test_special_teams_snaps_count_as_playing():
+    assert _grade("p1", pfr_id="GuyGu00").value == 0.0
+
+
+def test_a_player_without_a_pfr_id_is_found_by_name():
+    assert _grade("p1", name="Davis Allen Jr.").value == 0.0
+
+
+def test_no_stats_waits_for_the_snap_sheet_rather_than_guessing():
+    assert _grade("p1", pfr_id="AlleDa00", participation=None) is None
+    assert _grade("p1", pfr_id="AlleDa00", participation=_sheet(("X", "X00", "KC", 50, 0, 0))) is None
 
 
 def test_match_actual_uses_real_value_when_present():
@@ -41,7 +75,12 @@ def test_match_actual_uses_real_value_when_present():
         "DEN", "receiving_yards", completed_teams={"DEN"}, offense_by_player=offense_by_player,
         defense_by_player={}, player_id="p1",
     )
-    assert result == 42.0
+    assert result.value == 42.0
+
+
+def test_a_stats_row_means_he_played_even_without_the_stat():
+    result = _match_actual("DEN", "receiving_yards", {"DEN"}, {"p1": {"rushing_yards": 30.0}}, {}, "p1")
+    assert result.value == 0.0
 
 
 def test_match_actual_falls_back_to_defense_frame():
@@ -50,7 +89,7 @@ def test_match_actual_falls_back_to_defense_frame():
         "DEN", "def_tackles", completed_teams={"DEN"}, offense_by_player={},
         defense_by_player=defense_by_player, player_id="p1",
     )
-    assert result == 7.0
+    assert result.value == 7.0
 
 
 def _seed_db(path, rows):
@@ -210,3 +249,56 @@ def test_an_old_database_gets_the_price_columns(tmp_path):
     old.commit(); old.close()
     cols = {r[1] for r in _connect(db).execute("PRAGMA table_info(weekly_output)")}
     assert {"over_price", "under_price", "bookmaker", "market_over_prob"} <= cols
+
+
+# --- voids and one row per prop ------------------------------------------------
+
+def test_a_void_prop_is_settled_and_left_out_of_the_hit_rate(tmp_path, capsys):
+    from results_log import VOID, grade_week
+
+    db = str(tmp_path / "log.sqlite3")
+    _seed_db(db, [
+        ("t", 2026, 2, "nacua", "Puka Nacua", "receiving_yards", 85.5, 80.0, -0.2, "under", None, 0, "veteran", "normal", None, None),
+        ("t", 2026, 2, "p2", "Player Two", "receiving_yards", 40.0, 50.0, 0.5, "over", None, 0, "veteran", "normal", None, None),
+    ])
+    assert grade_week(2026, 2, {("nacua", "receiving_yards"): VOID, ("p2", "receiving_yards"): 50.0}, db) == 2
+    assert _ungraded_pairs(2026, 2, db) == set()  # a void is settled, not retried every week
+    print_report(db)
+    out = capsys.readouterr().out
+    assert "1 graded props" in out and "1 more were void" in out
+    assert "hit=1" in out and "miss=0" in out  # the injured player's under is not a win
+
+
+def test_a_regrade_replaces_an_old_zero_with_a_void(tmp_path):
+    from results_log import VOID, grade_week
+
+    db = str(tmp_path / "log.sqlite3")
+    _seed_db(db, [("t", 2026, 2, "nacua", "Puka Nacua", "receiving_yards", 85.5, 80.0, -0.2, "under", None, 0,
+                   "veteran", "normal", 0.0, "old")])
+    assert grade_week(2026, 2, {("nacua", "receiving_yards"): VOID}, db) == 0  # graded rows are left alone...
+    assert grade_week(2026, 2, {("nacua", "receiving_yards"): VOID}, db, overwrite=True) == 1  # ...unless regrading
+    row = sqlite3.connect(db).execute("SELECT actual_value, void FROM weekly_output").fetchone()
+    assert row == (None, 1)
+    assert _ungraded_pairs(2026, 2, db, regrade=True) == {("nacua", "receiving_yards")}
+
+
+def test_a_rerun_replaces_the_weeks_rows_instead_of_adding_more(tmp_path):
+    db = str(tmp_path / "log.sqlite3")
+    for n_over in (0, 1, 2):
+        log_acca_legs([_acca_row("p", n_over=n_over)], 2026, 4, db_path=db)
+    rows = sqlite3.connect(db).execute("SELECT n_over_sources FROM acca_legs").fetchall()
+    assert rows == [(2,)]  # one row, from the latest run
+
+
+def test_an_old_database_with_duplicates_keeps_the_latest_row_per_prop(tmp_path):
+    from results_log import _connect
+
+    db = str(tmp_path / "log.sqlite3")
+    _seed_db(db, [
+        ("run1", 2026, 1, "p1", "P", "receptions", 4.5, 5.0, 0.1, "over", None, 0, "veteran", "normal", 6.0, "g"),
+        ("run2", 2026, 1, "p1", "P", "receptions", 4.5, 5.2, 0.1, "over", None, 0, "veteran", "normal", 6.0, "g"),
+        ("run2", 2026, 1, "p1", "P", "receiving_yards", 40.5, 45.0, 0.1, "over", None, 0, "veteran", "normal", 50.0, "g"),
+        ("run2", 2026, 2, "p1", "P", "receptions", 4.5, 5.0, 0.1, "over", None, 0, "veteran", "normal", 3.0, "g"),
+    ])
+    rows = _connect(db).execute("SELECT logged_at, week, stat_col FROM weekly_output ORDER BY id").fetchall()
+    assert rows == [("run2", 1, "receptions"), ("run2", 1, "receiving_yards"), ("run2", 2, "receptions")]

@@ -111,62 +111,101 @@ def fetch_analyst_picks_with_usage(game_description: str, week: int, api_key: st
     )
 
 
+# Streamed, so a long search can't hit the HTTP timeout. Thinking, the web
+# search tool's own filtering code and the final JSON all share this; the
+# Week 5 slate search ran out at 16000 mid-way through reading articles and
+# returned nothing usable ($1.42 spent, 0 picks).
+SEARCH_MAX_TOKENS = 64000
+# Sent once if the search ends without a parseable list (out of room, or
+# narration instead of JSON): the picks it already read are kept, not lost.
+FINAL_ANSWER_PROMPT = (
+    "Stop searching now. Using only what you have already found, reply with the JSON array described in your "
+    "instructions and nothing else. If you found no usable picks, reply []."
+)
+
+
+def _create(client, **kwargs):
+    with client.messages.stream(**kwargs) as stream:
+        return stream.get_final_message()
+
+
+def _response_text(response) -> str:
+    return "".join(block.text for block in response.content if block.type == "text")
+
+
 def search_for_picks(
     system: str, user_text: str, label: str, max_searches: int, max_continuations: int,
     api_key: str | None = None, model: str | None = None,
 ) -> tuple[list[dict], dict]:
     """One Claude call with web search that should end in a JSON array of
-    picks. Returns (picks, usage); a failed call logs and returns no picks."""
+    picks. Returns (picks, usage). A failed search returns no picks and says
+    why in usage["error"], so the page can tell "analysts tipped nothing"
+    apart from "the search broke"."""
     client = anthropic.Anthropic(api_key=api_key)
+    request = {
+        "model": model or ANALYST_SWEEP["model"],
+        "max_tokens": SEARCH_MAX_TOKENS,
+        "system": system,
+        "tools": [{"type": "web_search_20260209", "name": "web_search", "max_uses": max_searches}],
+    }
     user_message = {"role": "user", "content": user_text}
     usage = {"input_tokens": 0, "output_tokens": 0, "web_searches": 0}
-    messages = [user_message]
+
+    def call(messages):
+        response = _create(client, messages=messages, **request)
+        for k, v in _usage_dict(response).items():
+            usage[k] += v
+        return response
+
     try:
         # A long web-search turn can come back as stop_reason="pause_turn"
         # (the server's own iteration limit); resending the paused turn
         # resumes it. Without this a paused search reads as "no picks found".
+        messages = [user_message]
         for _ in range(1 + max_continuations):
-            response = client.messages.create(
-                model=model or ANALYST_SWEEP["model"],
-                # 16000 (not 4096): Sonnet 5 runs adaptive thinking on by
-                # default, and thinking + the web_search tool's own turns
-                # share this budget with the final JSON. 4096 returned zero
-                # picks in the first real smoke test; 16000 returned four.
-                max_tokens=16000,
-                system=system,
-                tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": max_searches}],
-                messages=messages,
-            )
-            for k, v in _usage_dict(response).items():
-                usage[k] += v
+            response = call(messages)
             if response.stop_reason != "pause_turn":
                 break
             messages = [user_message, {"role": "assistant", "content": response.content}]
+        _log_response(label, response, usage)
+        picks = _parse_picks(_response_text(response))
+        if picks is None:
+            logger.warning("Analyst search for %r ended without a list of picks (stop_reason=%s); asking for it.",
+                           label, response.stop_reason)
+            final = call([user_message, {"role": "assistant", "content": response.content},
+                          {"role": "user", "content": FINAL_ANSWER_PROMPT}])
+            _log_response(f"{label} (final answer)", final, usage)
+            picks = _parse_picks(_response_text(final))
     except anthropic.APIError as exc:
         logger.warning("Analyst search failed for %r (%s) -- no picks from it.", label, exc)
-        return [], usage
+        return [], {**usage, "error": f"the search request failed ({type(exc).__name__})"}
+    if picks is None:
+        logger.warning("Analyst search for %r never returned a usable list -- no picks from it.", label)
+        return [], {**usage, "error": "the search didn't return a usable list of picks"}
+    return picks, usage
 
+
+def _log_response(label: str, response, usage: dict) -> None:
     block_types = dict(Counter(block.type for block in response.content))
     logger.info(
         "Analyst search response for %r: stop_reason=%s, blocks=%s, usage=%s (~$%.2f)",
         label, response.stop_reason, block_types, usage, estimate_cost_usd(usage),
     )
-    if response.stop_reason == "max_tokens":
-        logger.warning(
-            "Analyst search for %r hit max_tokens before finishing -- output was likely "
-            "truncated. Consider raising max_tokens further.", label,
-        )
-
-    text = "".join(block.text for block in response.content if block.type == "text")
-    if not text.strip():
-        logger.warning(
-            "Analyst search for %r got no text block back (stop_reason=%s, blocks=%s) -- "
-            "nothing to parse.", label, response.stop_reason, block_types,
-        )
-    picks = parse_picks_json(text, label)
-    if not picks and text.strip():
+    text = _response_text(response)
+    if text.strip() and _parse_picks(text) is None:
         logger.info("Analyst search for %r raw text (first 2000 chars): %s", label, text[:2000])
-    return picks, usage
+
+
+def _parse_picks(text: str) -> list | None:
+    """The JSON array in the reply, or None if there isn't one."""
+    for candidate in _json_candidates(text):
+        try:
+            picks = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(picks, list):
+            return picks
+    return None
 
 
 def parse_picks_json(text: str, game_description: str = "") -> list[dict]:
@@ -174,18 +213,9 @@ def parse_picks_json(text: str, game_description: str = "") -> list[dict]:
     API call. Tolerant of the model wrapping its JSON in a markdown fence
     despite being told not to -- a real, observed model behavior, not a
     hypothetical."""
-    picks = None
-    for candidate in _json_candidates(text):
-        try:
-            picks = json.loads(candidate)
-            break
-        except json.JSONDecodeError:
-            continue
+    picks = _parse_picks(text)
     if picks is None:
-        logger.warning("Analyst sweep for %r returned non-JSON output -- skipping.", game_description)
-        return []
-    if not isinstance(picks, list):
-        logger.warning("Analyst sweep for %r returned JSON that wasn't a list -- skipping.", game_description)
+        logger.warning("Analyst sweep for %r returned no JSON list -- skipping.", game_description)
         return []
     return picks
 

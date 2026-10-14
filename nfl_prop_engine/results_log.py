@@ -4,6 +4,7 @@ its track record, and that track record can't be checked later unless
 every week's output is logged now. SQLite, stdlib only.
 """
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from config import RESULTS_DB_PATH
@@ -106,11 +107,40 @@ ACCA_ADDED_COLUMNS = {"window": "TEXT", "filler": "INTEGER NOT NULL DEFAULT 0", 
 WEEKLY_ADDED_COLUMNS = {"over_price": "REAL", "under_price": "REAL", "bookmaker": "TEXT", "market_over_prob": "REAL"}
 
 
+# Set by grading on every table. void: the player took no snaps, so a
+# bookmaker would void the bet -- left out of every hit rate instead of
+# counting as a 0 (which wrongly scored a win for every under on an injured
+# player). snap_pct: his share of his unit's snaps that week, so "played but
+# recorded nothing" can be told apart from "barely played".
+RESULT_COLUMNS = {"void": "INTEGER NOT NULL DEFAULT 0", "snap_pct": "REAL"}
+
+# One row per prop: a re-run of the same week replaces its rows instead of
+# adding more. Weeks 1 and 2 were logged several times before this, which
+# counted those weeks two to five times over in every total.
+UNIQUE_KEYS = {
+    "weekly_output": ("season", "week", "player_id", "stat_col"),
+    "acca_legs": ("season", "week", "player_id", "stat_col", "side"),
+    "analyst_picks": ("season", "week", "player_id", "stat_col", "side", "outlet", "analyst"),
+}
+
+
 def _add_columns(conn: sqlite3.Connection, table: str, columns: dict[str, str]) -> None:
     existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
     for column, decl in columns.items():
         if column not in existing:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+
+
+def _one_row_per_prop(conn: sqlite3.Connection, table: str) -> None:
+    """Keeps the latest row for each prop (highest id) and adds the unique
+    index that keeps it that way. Runs once per database."""
+    index = f"ux_{table}_prop"
+    if conn.execute("SELECT 1 FROM sqlite_master WHERE type='index' AND name=?", (index,)).fetchone():
+        return
+    key = ", ".join(UNIQUE_KEYS[table])
+    with conn:
+        conn.execute(f"DELETE FROM {table} WHERE id NOT IN (SELECT MAX(id) FROM {table} GROUP BY {key})")
+        conn.execute(f"CREATE UNIQUE INDEX {index} ON {table} ({key})")
 
 
 def _connect(db_path: str = RESULTS_DB_PATH) -> sqlite3.Connection:
@@ -120,6 +150,12 @@ def _connect(db_path: str = RESULTS_DB_PATH) -> sqlite3.Connection:
     conn.execute(ANALYST_SCHEMA)
     _add_columns(conn, "acca_legs", ACCA_ADDED_COLUMNS)
     _add_columns(conn, "weekly_output", WEEKLY_ADDED_COLUMNS)
+    for table in UNIQUE_KEYS:
+        _add_columns(conn, table, RESULT_COLUMNS)
+    with conn:  # rows from before unders joined the slips (6 Oct) are overs
+        conn.execute("UPDATE acca_legs SET side = 'over' WHERE side IS NULL")
+    for table in UNIQUE_KEYS:
+        _one_row_per_prop(conn, table)
     return conn
 
 
@@ -128,7 +164,7 @@ def log_acca_legs(rows: list[dict], season: int, week: int, db_path: str = RESUL
     conn = _connect(db_path)
     with conn:
         conn.executemany(
-            """INSERT INTO acca_legs
+            """INSERT OR REPLACE INTO acca_legs
                (logged_at, season, week, player_id, player_name, stat_col, market, game, window, consensus_line,
                 max_line, projection, fair_prob, passed_gates, failed_gates, selected, filler, sources_checked,
                 n_over_sources, n_under_sources, side)
@@ -154,7 +190,7 @@ def log_analyst_picks(rows: list[dict], season: int, week: int, db_path: str = R
     conn = _connect(db_path)
     with conn:
         conn.executemany(
-            f"INSERT INTO analyst_picks (logged_at, season, week, {', '.join(cols)}) "
+            f"INSERT OR REPLACE INTO analyst_picks (logged_at, season, week, {', '.join(cols)}) "
             f"VALUES ({', '.join('?' * (3 + len(cols)))})",
             [(logged_at, season, week, *(r.get(c) for c in cols)) for r in rows],
         )
@@ -162,42 +198,58 @@ def log_analyst_picks(rows: list[dict], season: int, week: int, db_path: str = R
     return len(rows)
 
 
-def grade_analyst_week(season: int, week: int, actuals: dict[tuple[str, str], float], db_path: str = RESULTS_DB_PATH) -> int:
-    """Same actuals as grade_week, applied to the analyst_picks log."""
+@dataclass(frozen=True)
+class Outcome:
+    """A graded prop: the stat he recorded (0 if he played and recorded
+    nothing), or value None when he took no snaps and the bet is void."""
+    value: float | None
+    snap_pct: float | None = None
+
+    @property
+    def void(self) -> bool:
+        return self.value is None
+
+
+VOID = Outcome(None, 0.0)
+
+
+def _as_outcome(result) -> Outcome:
+    return result if isinstance(result, Outcome) else Outcome(float(result))
+
+
+def _grade_table(
+    table: str, season: int, week: int, results: dict, db_path: str, overwrite: bool,
+) -> int:
+    """results: {(player_id, stat_col): Outcome or a plain number}. Only
+    rows not yet graded unless overwrite (a regrade)."""
     conn = _connect(db_path)
     graded_at = datetime.now(timezone.utc).isoformat()
+    pending = "" if overwrite else " AND actual_value IS NULL AND void = 0"
     count = 0
     with conn:
-        cur = conn.execute(
-            "SELECT id, player_id, stat_col FROM analyst_picks WHERE season=? AND week=? AND actual_value IS NULL",
-            (season, week),
-        )
+        cur = conn.execute(f"SELECT id, player_id, stat_col FROM {table} WHERE season=? AND week=?{pending}", (season, week))
         for row_id, player_id, stat_col in cur.fetchall():
-            actual = actuals.get((player_id, stat_col))
-            if actual is not None:
-                conn.execute("UPDATE analyst_picks SET actual_value=?, graded_at=? WHERE id=?", (actual, graded_at, row_id))
-                count += 1
+            result = results.get((player_id, stat_col))
+            if result is None:
+                continue
+            outcome = _as_outcome(result)
+            conn.execute(
+                f"UPDATE {table} SET actual_value=?, void=?, snap_pct=?, graded_at=? WHERE id=?",
+                (outcome.value, int(outcome.void), outcome.snap_pct, graded_at, row_id),
+            )
+            count += 1
     conn.close()
     return count
 
 
-def grade_acca_week(season: int, week: int, actuals: dict[tuple[str, str], float], db_path: str = RESULTS_DB_PATH) -> int:
-    """Same actuals as grade_week, applied to the acca_legs log."""
-    conn = _connect(db_path)
-    graded_at = datetime.now(timezone.utc).isoformat()
-    count = 0
-    with conn:
-        cur = conn.execute(
-            "SELECT id, player_id, stat_col FROM acca_legs WHERE season=? AND week=? AND actual_value IS NULL",
-            (season, week),
-        )
-        for row_id, player_id, stat_col in cur.fetchall():
-            actual = actuals.get((player_id, stat_col))
-            if actual is not None:
-                conn.execute("UPDATE acca_legs SET actual_value=?, graded_at=? WHERE id=?", (actual, graded_at, row_id))
-                count += 1
-    conn.close()
-    return count
+def grade_analyst_week(season: int, week: int, actuals: dict, db_path: str = RESULTS_DB_PATH, overwrite: bool = False) -> int:
+    """Same results as grade_week, applied to the analyst_picks log."""
+    return _grade_table("analyst_picks", season, week, actuals, db_path, overwrite)
+
+
+def grade_acca_week(season: int, week: int, actuals: dict, db_path: str = RESULTS_DB_PATH, overwrite: bool = False) -> int:
+    """Same results as grade_week, applied to the acca_legs log."""
+    return _grade_table("acca_legs", season, week, actuals, db_path, overwrite)
 
 
 def log_weekly_output(ranked: list[RankedProp], season: int, week: int, db_path: str = RESULTS_DB_PATH) -> int:
@@ -205,7 +257,7 @@ def log_weekly_output(ranked: list[RankedProp], season: int, week: int, db_path:
     conn = _connect(db_path)
     with conn:
         conn.executemany(
-            """INSERT INTO weekly_output
+            """INSERT OR REPLACE INTO weekly_output
                (logged_at, season, week, player_id, player_name, stat_col, line, projection,
                 edge_score, direction, hit_rate, sample_size, method, confidence,
                 over_price, under_price, bookmaker, market_over_prob)
@@ -224,25 +276,8 @@ def log_weekly_output(ranked: list[RankedProp], season: int, week: int, db_path:
     return len(ranked)
 
 
-def grade_week(season: int, week: int, actuals: dict[tuple[str, str], float], db_path: str = RESULTS_DB_PATH) -> int:
-    """actuals: {(player_id, stat_col): actual_value}. Call this once real
-    results are in, to close the loop on whether the ranking is worth
-    trusting past week one."""
-    conn = _connect(db_path)
-    graded_at = datetime.now(timezone.utc).isoformat()
-    count = 0
-    with conn:
-        cur = conn.execute(
-            "SELECT id, player_id, stat_col FROM weekly_output WHERE season=? AND week=?",
-            (season, week),
-        )
-        for row_id, player_id, stat_col in cur.fetchall():
-            actual = actuals.get((player_id, stat_col))
-            if actual is not None:
-                conn.execute(
-                    "UPDATE weekly_output SET actual_value=?, graded_at=? WHERE id=?",
-                    (actual, graded_at, row_id),
-                )
-                count += 1
-    conn.close()
-    return count
+def grade_week(season: int, week: int, actuals: dict, db_path: str = RESULTS_DB_PATH, overwrite: bool = False) -> int:
+    """actuals: {(player_id, stat_col): Outcome or a plain number}. Call
+    this once real results are in, to close the loop on whether the ranking
+    is worth trusting."""
+    return _grade_table("weekly_output", season, week, actuals, db_path, overwrite)

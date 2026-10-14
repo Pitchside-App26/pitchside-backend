@@ -9,6 +9,7 @@ Never raises: no forecast (indoors, an unknown venue, the service down)
 just means the gate passes with a "no forecast" reason.
 """
 import logging
+import time
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -33,6 +34,13 @@ STADIUMS = {
 }
 INDOOR_ROOFS = {"dome", "closed"}
 GAME_HOURS = 3  # wind is taken as the strongest hour from kickoff to roughly the final whistle
+# Open-Meteo timed out or answered 503 for every game on 11 Oct, so the
+# Weather gate checked nothing. Each game now gets a few tries; after two
+# games fail outright the service is taken as down and the rest are skipped
+# rather than waited on (the run reports it either way).
+ATTEMPTS = 3
+RETRY_WAIT_SECONDS = 5
+GIVE_UP_AFTER_FAILED_GAMES = 2
 
 
 def kickoff_utc(gameday: str, gametime: str) -> datetime | None:
@@ -58,15 +66,27 @@ def fetch_forecast(lat: float, lon: float, day: str, get=requests.get) -> dict:
     resp = get(FORECAST_URL, params={
         "latitude": lat, "longitude": lon, "hourly": "wind_speed_10m", "wind_speed_unit": "mph",
         "timezone": "UTC", "start_date": day, "end_date": (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d"),
-    }, timeout=15)
+    }, timeout=20)
     resp.raise_for_status()
     return resp.json()
 
 
-def game_winds(games: pd.DataFrame, teams: set[str] | None = None, get=requests.get) -> dict[str, dict]:
+def _fetch_with_retries(lat: float, lon: float, day: str, get, sleep) -> dict:
+    for attempt in range(ATTEMPTS):
+        try:
+            return fetch_forecast(lat, lon, day, get=get)
+        except Exception:
+            if attempt == ATTEMPTS - 1:
+                raise
+            sleep(RETRY_WAIT_SECONDS * (attempt + 1))
+
+
+def game_winds(games: pd.DataFrame, teams: set[str] | None = None, get=requests.get, sleep=time.sleep) -> dict[str, dict]:
     """team -> {"wind_mph": float | None, "indoors": bool} for each game
-    (both teams), limited to games involving `teams` when given."""
+    (both teams), limited to games involving `teams` when given. An outdoor
+    game with wind_mph None had no forecast (see failed_forecasts)."""
     result = {}
+    failed_in_a_row = 0
     for row in games.itertuples():
         if teams is not None and row.home_team not in teams and row.away_team not in teams:
             continue
@@ -75,10 +95,22 @@ def game_winds(games: pd.DataFrame, teams: set[str] | None = None, get=requests.
         start = kickoff_utc(getattr(row, "gameday", None), getattr(row, "gametime", None))
         venue = STADIUMS.get(row.home_team)
         if not info["indoors"] and start is not None and venue is not None:
-            try:
-                forecast = fetch_forecast(*venue, start.strftime("%Y-%m-%d"), get=get)
-                info["wind_mph"] = max_wind_mph(forecast, start)
-            except Exception as exc:  # the weather must never stop the run
-                logger.warning("No wind forecast for %s @ %s (%s)", row.away_team, row.home_team, exc)
+            if failed_in_a_row >= GIVE_UP_AFTER_FAILED_GAMES:
+                logger.warning("No wind forecast for %s @ %s (the forecast service is down)", row.away_team, row.home_team)
+            else:
+                try:
+                    forecast = _fetch_with_retries(*venue, start.strftime("%Y-%m-%d"), get, sleep)
+                    info["wind_mph"] = max_wind_mph(forecast, start)
+                    failed_in_a_row = 0
+                except Exception as exc:  # the weather must never stop the run
+                    failed_in_a_row += 1
+                    logger.warning("No wind forecast for %s @ %s (%s)", row.away_team, row.home_team, exc)
         result[row.home_team] = result[row.away_team] = info
     return result
+
+
+def failed_forecasts(winds: dict[str, dict]) -> tuple[int, int]:
+    """(outdoor games with no forecast, outdoor games) from game_winds."""
+    games = {id(info): info for info in winds.values()}.values()  # both teams share one entry per game
+    outdoor = [info for info in games if not info["indoors"]]
+    return sum(info["wind_mph"] is None for info in outdoor), len(outdoor)
