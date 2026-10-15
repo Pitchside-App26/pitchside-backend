@@ -9,6 +9,7 @@ import math
 from datetime import datetime, timezone
 
 from config import STAT_LABELS
+from pricing import no_vig_probability
 from rank_props import RankedProp
 
 KNOWN_LIMITATIONS = """
@@ -88,6 +89,7 @@ def to_json_records(ranked: list[RankedProp]) -> list[dict]:
         edge_pct = (p.projection - p.line) / p.line if p.line else None
         market_prob = _clean(p.market_prob)
         model_prob = _clean(p.model_prob)
+        over_chance = no_vig_probability(p.over_price, p.under_price)
         records.append({
             "player": p.player_name,
             "team": p.team,
@@ -109,6 +111,7 @@ def to_json_records(ranked: list[RankedProp]) -> list[dict]:
             "market_prob": round(market_prob * 100, 1) if market_prob is not None else None,
             "model_prob": round(model_prob * 100, 1) if model_prob is not None else None,
             "value_pct": _clean(p.value_pct, 1),
+            "over_chance": _clean(over_chance * 100, 1) if over_chance is not None else None,
             "injury_status": p.injury_status,
             "avg_targets": _clean(p.avg_targets, 1),
         })
@@ -128,8 +131,8 @@ def _clean_tree(value):
 
 
 def write_json(
-    ranked: list[RankedProp], season: int, week: int, path: str, accumulator: dict | None = None,
-    analyst_picks: dict | None = None, health: list[str] | None = None,
+    ranked: list[RankedProp], season: int, week: int, path: str, slips: dict | None = None,
+    health: list[str] | None = None,
 ) -> None:
     payload = {
         "season": season,
@@ -137,10 +140,8 @@ def write_json(
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "props": to_json_records(ranked),
     }
-    if accumulator is not None:
-        payload["accumulator"] = _clean_tree(accumulator)
-    if analyst_picks is not None:
-        payload["analyst_picks"] = _clean_tree(analyst_picks)
+    if slips is not None:
+        payload["slips"] = _clean_tree(slips)
     payload["health"] = list(health or [])  # what didn't work this run; the page shows it as a warning
     with open(path, "w") as f:
         json.dump(payload, f, indent=2, allow_nan=False)

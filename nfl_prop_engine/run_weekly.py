@@ -12,20 +12,19 @@ projection/ranking layered on top. --raw does exactly that.
 import argparse
 import logging
 
+import nfl_data_py as nfl
 import pandas as pd
 
 import os
 
-from acca_report import ABBR_TO_TEAM_NAME, LegContext, build_acca_report
-from analyst_picks import GameRef, PlayerRef, build_feed, fetch_slate_picks, picks_by_game, resolve_picks
-from analyst_picks import log_rows as analyst_log_rows
+from acca_report import LegContext
 from config import (
-    ACCA_WINDOWS,
     ALL_MARKETS,
-    ANALYST_PICKS,
     CREDIT_CAP,
     DEFENSE_MARKETS,
+    FETCH_MARKETS,
     FORM_WINDOW,
+    FUN_SLIPS,
     ODDS_API_TEAM_NAME_TO_ABBR,
     OFFENSE_MARKETS,
     POSITION_GROUP_MAP,
@@ -38,6 +37,7 @@ from fetch_odds import (
 )
 from fetch_schedule import (
     fetch_week_games,
+    game_window,
     kickoff_map,
     load_schedule_seasons,
     opponent_map,
@@ -54,8 +54,9 @@ from opponent_stats import add_opponent_column, allowed_rate_table
 from output import print_report, write_json
 from projection_engine import Projection, league_fallback_std, project_rookie, project_veteran
 from rank_props import build_ranked_prop, rank
-from results_log import log_acca_legs, log_analyst_picks, log_weekly_output
-from weather import failed_forecasts, game_winds
+from milestone_slips import ChanceModel, build_slips
+from participation import Role, season_roles
+from results_log import graded_props, log_slip_legs, log_weekly_output
 
 SITE_DATA_PATH = "site/data.json"
 
@@ -72,6 +73,9 @@ def build_odds_dataframe(
     games = fetch_week_games(season, week)
     if teams_filter:
         games = games[games["home_team"].isin(teams_filter) | games["away_team"].isin(teams_filter)]
+    # Only the early and late Sunday games the slips are built from: the
+    # Thursday/Sunday/Monday night and London games cost credits for nothing.
+    games = games[[game_window(r.weekday, r.gametime) is not None for r in games.itertuples()]]
     this_week_teams = teams_playing(games)
     # The Odds API identifies teams by full name ("New York Giants"); nflverse
     # (and so this_week_teams) uses short codes ("NYG") -- translate before
@@ -84,13 +88,13 @@ def build_odds_dataframe(
     ]
     if not week_events:
         logger.warning("No matching events returned by the odds API for this week's schedule.")
-    credits = len(week_events) * len(ALL_MARKETS) * len(REGIONS.split(","))
+    credits = len(week_events) * len(FETCH_MARKETS) * len(REGIONS.split(","))
     logger.info("Odds for %d game(s) will cost up to %d credits", len(week_events), credits)
     if credits > CREDIT_CAP and not use_cache:
         raise RuntimeError(f"this run would cost up to {credits} odds credits, over CREDIT_CAP ({CREDIT_CAP})")
 
     raw_by_event = fetch_all_event_odds(
-        [e["id"] for e in week_events], list(ALL_MARKETS.keys()), use_cache=use_cache
+        [e["id"] for e in week_events], FETCH_MARKETS, use_cache=use_cache
     )
     rows = []
     for event_id, raw in raw_by_event.items():
@@ -144,84 +148,59 @@ def rows_for_matched_player(
     return rows[rows["player_id"] == chosen]
 
 
-def window_team_games(games: pd.DataFrame, window_lookup: dict[str, str]) -> dict[str, GameRef]:
-    """team -> its game, for teams playing in one of the acca windows."""
-    result = {}
-    for row in games.itertuples():
-        window = window_lookup.get(row.home_team)
-        if window not in ACCA_WINDOWS:
-            continue
-        ref = GameRef(
-            game=f"{row.away_team} @ {row.home_team}",
-            description=f"{ABBR_TO_TEAM_NAME.get(row.away_team, row.away_team)} at {ABBR_TO_TEAM_NAME.get(row.home_team, row.home_team)}",
-            window=window,
-        )
-        result[row.home_team] = result[row.away_team] = ref
-    return result
-
-
-def players_on_teams(teams: set[str], *stat_frames: pd.DataFrame) -> list[PlayerRef]:
-    """Everyone whose latest stats row is on one of these teams."""
-    players = []
-    for frame in stat_frames:
-        if frame.empty:
-            continue
-        team_col = "recent_team" if "recent_team" in frame.columns else "team"
-        latest = frame.sort_values(["season", "week"]).groupby("player_id").tail(1)
-        for row in latest[latest[team_col].isin(teams)].itertuples():
-            players.append(PlayerRef(row.player_id, row.player_display_name, getattr(row, team_col)))
-    return players
-
-
-def run_analyst_search(
-    games: pd.DataFrame, window_lookup: dict[str, str], week: int, season: int, *stat_frames: pd.DataFrame,
-) -> tuple[list[dict], dict, dict[str, list[dict]] | None]:
-    """(resolved picks, info for the page, picks by game for the slips).
-    Never raises: the slips and rankings don't depend on it."""
-    if not ANALYST_PICKS["enabled"]:
-        return [], {"ran": False, "note": "the analyst search is turned off in config"}, None
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        return [], {"ran": False, "note": "no ANTHROPIC_API_KEY in this run, so the analyst search didn't run"}, None
-    team_games = window_team_games(games, window_lookup)
-    if not team_games:
-        return [], {"ran": False, "note": "no games in the acca windows this week"}, None
+def load_roles(season: int, week: int):
+    """(role_of(ctx) -> Role | None, problem or None) from this season's snap
+    counts. Without them nobody can be checked for a part-time or changed
+    role, so every player passes and the run says so."""
     try:
-        lines = sorted({
-            f"{ref.description} ({ACCA_WINDOWS[ref.window]['label'].lower()})" for ref in team_games.values()
-        })
-        raw, usage = fetch_slate_picks(lines, week, season)
-        resolved, dropped = resolve_picks(raw, players_on_teams(set(team_games), *stat_frames), team_games)
+        book = season_roles(nfl.import_snap_counts([season]), week)
+        roster = nfl.import_seasonal_rosters([season])[["player_id", "pfr_id"]].dropna()
+        pfr_by_player = dict(zip(roster["player_id"], roster["pfr_id"]))
     except Exception as exc:
-        logger.exception("Analyst search failed")
-        return [], {"ran": False, "note": f"the analyst search failed ({type(exc).__name__})"}, None
-    logger.info("Analyst search: %d pick(s) found, %d kept, usage %s", len(raw), len(resolved), usage)
-    if usage.get("error"):
-        return [], {"ran": False, "usage": usage, "note": f"the analyst search failed: {usage['error']}"}, None
-    info = {"ran": True, "n_found": len(raw), "n_dropped": dropped, "usage": usage,
-            "note": f"{len(resolved)} pick(s) from one web search over the early and late games"}
-    by_game = picks_by_game(resolved, sorted({ref.description for ref in team_games.values()}))
-    return resolved, info, by_game
+        logger.error("Snap counts didn't load (%s)", exc)
+        return (lambda ctx: Role(1.0, None, 0)), (
+            "Snap counts didn't load, so the slips couldn't leave out part-timers or players whose role just changed.")
+    return (lambda ctx: book.lookup(pfr_by_player.get(ctx.player_id), ctx.player, ctx.team)), None
 
 
-# About one Sunday run's worth (15 games x 10 markets).
-LOW_ODDS_CREDITS = 150
+def build_fun_slips(
+    contexts: list[LegContext], per_book_rows: list[dict], games: pd.DataFrame, season: int, week: int,
+) -> tuple[dict, list[str]]:
+    """The page's fun slips (milestone_slips.py) and anything that went
+    wrong building them. Never raises: the props list still publishes."""
+    role_of, problem = load_roles(season, week)
+    problems = [problem] if problem else []
+    try:
+        model = ChanceModel.from_graded(graded_props())
+        slips = build_slips(contexts, per_book_rows, model, role_of, window_uk_kickoffs(games),
+                            log_rows=lambda rows: log_slip_legs(rows, season, week))
+        for slip in slips["slips"]:
+            logger.info("Fun slip (%s): %d legs, about 1 in %s, from %d candidates", slip["window"],
+                        len(slip["legs"]), slip["one_in"], slip["n_candidates"])
+        logger.info("Left out of the slips: %s", slips["excluded"])
+    except Exception as exc:
+        logger.exception("Fun slips failed")
+        slips = {"error": f"{type(exc).__name__}: {exc}"}
+    return slips, problems
 
 
-def run_health(winds: dict, analyst_info: dict, accumulator: dict, credits_left: int | None) -> list[str]:
+# About one Sunday run's worth (12 games x 7 markets).
+LOW_ODDS_CREDITS = 90
+
+
+def run_health(slips: dict, problems: list[str], credits_left: int | None) -> list[str]:
     """Plain-English list of what didn't work this run, for the page and the
-    job summary: a check that silently did nothing (no wind forecasts, an
-    analyst search that broke) must never look the same as a clean run."""
-    problems = []
-    n_failed, n_outdoor = failed_forecasts(winds)
-    if n_failed:
-        problems.append(f"Wind forecasts didn't load for {n_failed} of {n_outdoor} outdoor games, so the Weather "
-                        "gate couldn't check those games.")
-    if ANALYST_PICKS["enabled"] and not analyst_info.get("ran"):
-        problems.append(f"Analyst picks: {analyst_info.get('note', 'the search did not run')}.")
-    if "error" in accumulator:
-        problems.append(f"The slips failed to build ({accumulator['error']}).")
+    job summary: a step that silently did nothing must never look the same
+    as a clean run."""
+    problems = list(problems)
+    if "error" in slips:
+        problems.append(f"The slips failed to build ({slips['error']}).")
+    for slip in slips.get("slips", []):
+        if not slip["complete"]:
+            problems.append(f"The {slip['label'].lower()} slip only found {len(slip['legs'])} of "
+                            f"{FUN_SLIPS['legs']} legs.")
     if credits_left is not None and credits_left < LOW_ODDS_CREDITS:
-        problems.append(f"Only {credits_left} Odds API credits left this month: not enough for another full Sunday "
+        problems.append(f"Only {credits_left} Odds API credits left this month: not enough for another Sunday "
                         f"run (about {LOW_ODDS_CREDITS}).")
     return problems
 
@@ -353,8 +332,6 @@ def run(
         return
 
     out_by_team = players_out_by_team(injury_report, offense_df, defense_df)
-    # Wind forecasts for the acca windows' games only (a request per game).
-    winds = game_winds(games, {t for t, w in window_lookup.items() if w in ACCA_WINDOWS})
     acca_contexts: list[LegContext] = []
     ranked_props = []
     for _, row in matched.iterrows():
@@ -439,8 +416,6 @@ def run(
             player_id=player_id,
             window=window_lookup.get(player_team),
             season_std=proj.season_std,
-            wind_mph=winds.get(player_team, {}).get("wind_mph"),
-            indoors=winds.get(player_team, {}).get("indoors", False),
         ))
 
         ranked_props.append(build_ranked_prop(
@@ -454,41 +429,12 @@ def run(
     print_report(ranked, season, week)
     log_weekly_output(ranked, season, week)
 
-    analyst_picks, analyst_info, slate_picks = run_analyst_search(
-        games, window_lookup, week, season, offense_df, defense_df,
-    )
-
-    # The rankings page must still publish if the newer accumulator stage
-    # fails, so a failure here becomes a message on the page, not a crash.
-    try:
-        accumulator = build_acca_report(
-            acca_contexts, per_book_rows, week, season,
-            log_rows=lambda rows: log_acca_legs(rows, season, week),
-            window_kickoffs=window_uk_kickoffs(games),
-            slate_picks=slate_picks,
-        )
-        for acca in accumulator["accumulators"]:
-            logger.info(
-                "Accumulator (%s): %s, %d legs passed every gate + %d fillers, from %d in the window",
-                acca["window"], acca["mode"], acca["n_passed"], acca["n_fillers"], acca["n_legs_in_window"],
-            )
-        logger.info("Analyst sweep: %s", accumulator["analyst_sweep"])
-    except Exception as exc:
-        logger.exception("Accumulator report failed")
-        accumulator = {"error": f"{type(exc).__name__}: {exc}"}
-
-    ranked_view = {
-        (p.player_id, p.stat_col): {"projection": p.projection, "line": p.line, "direction": p.direction} for p in ranked
-    }
-    analyst_feed = build_feed(analyst_picks, accumulator, ranked_view, analyst_info)
-    if analyst_feed["picks"]:
-        log_analyst_picks(analyst_log_rows(analyst_feed), season, week)
-
-    health = run_health(winds, analyst_info, accumulator, credits_remaining())
+    slips, problems = build_fun_slips(acca_contexts, per_book_rows, games, season, week)
+    health = run_health(slips, problems, credits_remaining())
     for problem in health:
         logger.warning("Run health: %s", problem)
     write_job_summary(health)
-    write_json(ranked, season, week, SITE_DATA_PATH, accumulator=accumulator, analyst_picks=analyst_feed, health=health)
+    write_json(ranked, season, week, SITE_DATA_PATH, slips=slips, health=health)
     logger.info("Wrote %d ranked props to %s", len(ranked), SITE_DATA_PATH)
 
 
