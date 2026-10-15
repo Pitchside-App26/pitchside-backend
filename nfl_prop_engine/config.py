@@ -59,6 +59,16 @@ DEFENSE_MARKETS = {
 
 ALL_MARKETS = {**OFFENSE_MARKETS, **DEFENSE_MARKETS}
 
+# Markets fetched from the Odds API each Sunday (15 Oct, fun-only): the fun
+# slips' milestone markets plus rushing yards for the props list. Sacks,
+# interceptions and passing TDs are 0.5/1.5 lines priced too short or too
+# swingy for a milestone, and cost credits for nothing. With only the early
+# and late games fetched this is about 7 x 12 = 84 credits a run, inside the
+# free 500 a month.
+FETCH_MARKETS = [m for m, info in ALL_MARKETS.items()
+                 if info["stat_col"] in {"passing_yards", "completions", "rushing_yards", "carries", "receptions",
+                                         "receiving_yards", "def_tackles"}]
+
 # CONFIRMED BUG, found running against a real live week: The Odds API
 # identifies teams by full name ("New York Giants"), while nflverse (and
 # so the rest of this codebase) uses short codes ("NYG"). A live run
@@ -274,6 +284,34 @@ MAX_LEGS_PER_GAME = 2  # same-game pairs are tagged as bet-builder legs -- bet36
 MAX_LEGS_PER_STAT = 2
 STAKE_GBP = 5.0  # flat stake; never rises after a loss
 
+# Fun slips (Dan, 15 Oct: "I expect to lose my £5. I just want it to go
+# really close and win occasionally"). Each window gets one six-fold built
+# to land about 1 time in TARGET_ODDS: every leg is a milestone ("5+
+# receptions") picked so its chance is about (1/20)^(1/6) = 61%, rather than
+# the main line's ~50% (a 1-in-64 slip). See milestone_slips.py.
+FUN_SLIPS = {
+    "target_odds": 20,
+    "legs": 6,
+    # Milestone markets. Rushing yards is left out: on held-out weeks its
+    # milestones hit 53% when the estimate said 61% -- the biggest miss of
+    # any stat, and in line with rushing yards going under its line 60% of
+    # the time.
+    "stats": ["passing_yards", "completions", "carries", "receptions", "receiving_yards", "def_tackles"],
+    # Milestones are shown in steps bet365 is likely to offer; counts go 1 at a time.
+    "yard_steps": {"passing_yards": 10, "receiving_yards": 5},
+    "leg_chance_window": (0.54, 0.69),  # a leg's chance must land in here to be used
+    "min_graded_props": 40,  # per stat, before its chances are trusted
+    # Role: share of his unit's snaps. Part-timers and anyone whose share
+    # just swung (Ollie Gordon, backup to starter; Tory Horton, fading) are
+    # left out -- their lines lag what they'll actually do.
+    "min_snap_pct": 0.6,
+    "min_snap_pct_carries": 0.45,  # lead backs often share with a change-of-pace back
+    "max_snap_swing": 0.15,  # last game vs his average before it
+    "max_per_game": 1,  # relaxed to 2 only when a window has too few games
+    "max_per_stat": 2,
+    "spares": 8,
+}
+
 TIMEZONE = "Europe/London"  # display only -- everything is stored in UTC
 ODDS_API_REGIONS_ACCA = ["us"]
 CREDIT_CAP = 500  # print the estimated credit cost (events x markets x regions) and refuse to run over this
@@ -332,7 +370,7 @@ ANALYST_SWEEP = {
 # never used to pick legs. Searches are the cost driver (each pulls tens of
 # thousands of tokens of results), so max_searches caps the bill: ~$1-2 a run.
 ANALYST_PICKS = {
-    "enabled": True,
+    "enabled": False,  # off since 15 Oct: never logged a pick, ~$1.40-3 a run
     "model": ANALYST_SWEEP["model"],
     "max_searches": 8,
     "max_continuations": 2,

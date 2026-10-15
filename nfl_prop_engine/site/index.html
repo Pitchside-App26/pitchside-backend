@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NFL Prop Rankings</title>
+<title>NFL Fun Slips</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
 <style>
@@ -342,324 +342,45 @@
     padding-top: 14px;
   }
 
-  /* ── Accumulator section ── */
-  .acca {
-    margin: 4px 0 26px;
-  }
-
-  .section-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 4px 12px;
-    flex-wrap: wrap;
-    border-top: 3px double var(--rule-strong);
-    padding-top: 10px;
-  }
-
-  h2 {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-size: 1.25rem;
-    margin: 0;
-    text-wrap: balance;
-  }
-
-  .kicker {
-    color: var(--sub);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .acca-summary {
-    margin: 8px 0 4px;
-    font-size: 0.9rem;
-    line-height: 1.45;
-  }
-
-  .acca-summary strong {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-  }
-
-  .leg {
-    padding: 14px 0;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .target {
-    margin-top: 10px;
-    background: var(--panel);
-    border: 1px solid var(--rule-strong);
-    border-left-width: 4px;
-    border-left-color: var(--over);
-    padding: 9px 12px;
-    font-size: 0.85rem;
-    line-height: 1.4;
-  }
-
-  .target .big {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-size: 1.05rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .leg-facts {
-    margin-top: 8px;
-    color: var(--sub);
-    font-size: 0.78rem;
-    line-height: 1.5;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
-  }
-
-  .pill {
-    font-size: 0.68rem;
-    padding: 2px 8px;
-    border-radius: 2px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    border: 1px solid var(--rule);
-    color: var(--sub);
-  }
-
-  .pill.warn { color: var(--low-conf); border-color: var(--low-conf); }
-  .pill.good { color: var(--over); border-color: var(--over); }
-  .pill.bad { color: var(--under); border-color: var(--under); }
-
-  /* ── Analyst picks ── */
-  .analysts { margin: 4px 0 26px; }
-  .tip-group {
-    margin-top: 14px;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--sub);
-  }
-  .tip {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--rule);
-    font-size: 0.85rem;
-    line-height: 1.45;
-  }
-  .tip .who { font-weight: 600; }
-  .tip .bet { font-variant-numeric: tabular-nums; }
-  .tip .src { color: var(--sub); font-size: 0.78rem; overflow-wrap: anywhere; }
-  .tip .src a { color: var(--text); text-underline-offset: 2px; }
-  .tip .pills { margin-top: 4px; }
-
-  .sources {
-    margin-top: 8px;
-    font-size: 0.78rem;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-  }
-
-  .sources a { color: var(--text); text-underline-offset: 2px; }
-  .sources .against { color: var(--under); }
-
-  details.gates, details.more {
-    margin-top: 8px;
-  }
-
-  details.gates summary, details.more summary {
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  details.more summary {
-    font-size: 0.85rem;
-    padding: 8px 0;
-  }
-
-  details summary:focus-visible, .sources a:focus-visible, .why-btn:focus-visible, .update-btn:focus-visible {
-    outline: 2px solid var(--text);
-    outline-offset: 2px;
-  }
-
-  .gate-list {
-    list-style: none;
-    margin: 6px 0 0;
-    padding: 0;
-    font-size: 0.78rem;
-    line-height: 1.45;
-  }
-
-  .gate-list li {
-    display: grid;
-    grid-template-columns: 1.1em 6.2em 1fr;
-    gap: 6px;
-    padding: 3px 0;
-  }
-
-  .gate-list .mark { font-weight: 700; }
-  .gate-list .ok .mark { color: var(--over); }
-  .gate-list .no .mark { color: var(--under); }
-  .gate-list .name { font-weight: 600; text-transform: capitalize; }
-  .gate-list .why { color: var(--sub); overflow-wrap: anywhere; }
-
-  .excl-row {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--rule);
-    font-size: 0.8rem;
-    line-height: 1.45;
-  }
-
-  .excl-row .who { font-weight: 600; }
-  .excl-row .why { color: var(--sub); overflow-wrap: anywhere; }
-
-  .acca-notes {
-    margin-top: 12px;
-    color: var(--sub);
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-
-  .acca-notes ul { margin: 4px 0 0; padding-left: 18px; }
-
-  .acca-empty {
-    margin: 10px 0 4px;
-    padding: 12px;
-    background: var(--panel);
-    border: 1px solid var(--rule);
-    font-size: 0.88rem;
-    line-height: 1.5;
-  }
-
-  .ranked-head {
-    margin-bottom: 0;
-  }
-
-  .window-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 4px 8px;
-    flex-wrap: wrap;
-    margin: 18px 0 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--rule-strong);
-  }
-
-  h3 {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-size: 1.1rem;
-    margin: 0;
-  }
-
-  /* ── Bet slip and bet365 checklist ── */
-  .slip { background: var(--panel); border: 1px solid var(--rule-strong); margin-top: 8px; }
-  .slip-row { border-bottom: 1px solid var(--rule); }
-  .slip-btn {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 22px minmax(0, 1fr) auto;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 12px;
-    background: none;
-    border: none;
-    text-align: left;
-    font-family: inherit;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .status {
-    width: 20px; height: 20px; border-radius: 50%;
-    border: 1.5px solid var(--rule);
-    display: grid; place-items: center;
-    font-size: 0.75rem; font-weight: 700; color: var(--panel);
-  }
-  .status.ok { background: var(--over); border-color: var(--over); }
-  .status.no { background: var(--under); border-color: var(--under); }
-  .slip-who { min-width: 0; display: flex; flex-direction: column; }
-  .slip-name { font-weight: 600; font-size: 0.92rem; }
-  .slip-market { color: var(--sub); font-size: 0.75rem; overflow-wrap: anywhere; }
-  .filler-tag { color: var(--low-conf); font-weight: 600; }
-  .swap-tag { color: var(--text); font-weight: 600; }
-  .slip-target { text-align: right; font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .slip-target strong { font-family: "Fraunces", Georgia, serif; font-size: 0.98rem; }
-  .chk { padding: 0 12px 12px 42px; }
-  .chk-fields { display: flex; gap: 8px; flex-wrap: wrap; }
-  select.chk-input { background: var(--panel); color: var(--text); }
-  .mode-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 10px 0 4px; }
-  .mode-btn {
-    font: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 2px;
-    border: 1px solid var(--rule-strong); background: var(--panel); color: var(--text); cursor: pointer;
-  }
-  .mode-btn.on { background: var(--rule-strong); color: var(--panel); }
-  .mode-btn:focus-visible { outline: 2px solid var(--over); outline-offset: 2px; }
-  .mode-note { flex: 1 1 100%; font-size: 0.78rem; color: var(--sub); line-height: 1.4; }
-  .chk-field { display: flex; flex-direction: column; gap: 3px; flex: 1 1 110px; min-width: 0; }
-  .chk-field label { font-size: 0.7rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.04em; }
-  .chk-input {
-    width: 100%;
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    padding: 9px 10px;
-    font-family: inherit;
-    font-size: 1rem;
-    font-variant-numeric: tabular-nums;
-    background: var(--bg);
-    color: var(--text);
-  }
-  .verdict { margin-top: 8px; font-size: 0.8rem; font-weight: 600; padding: 6px 8px; }
-  .verdict.ok { background: var(--over-soft); color: var(--over); }
-  .verdict.no { background: var(--under-soft); color: var(--under); }
-  .swap-offer { padding: 0 12px 12px 42px; font-size: 0.8rem; line-height: 1.5; }
-  .swap-btn {
-    margin-left: 6px;
-    background: var(--text);
-    color: var(--panel);
-    border: none;
-    border-radius: 2px;
-    padding: 4px 10px;
-    font-family: inherit;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .slip-row.dropped { color: var(--sub); }
-  .dropped-line { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 12px; font-size: 0.8rem; }
-  .slip-foot { border-top: 1px solid var(--rule-strong); padding: 10px 12px; font-size: 0.82rem; line-height: 1.45; font-variant-numeric: tabular-nums; }
-  .slip-foot .big { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1rem; }
-  .slip-actions { margin-top: 6px; }
-  .progress { display: flex; gap: 3px; margin-bottom: 8px; }
-  .progress span { flex: 1; height: 4px; background: var(--rule); }
-  .progress span.ok { background: var(--over); }
-  .progress span.no { background: var(--under); }
+  /* ── Fun slips ── */
+  .slips { margin: 4px 0 26px; }
+  .slips-intro { font-size: 0.85rem; color: var(--sub); line-height: 1.5; margin: 0 0 12px; max-width: 62ch; }
+  .slip { background: var(--panel); border: 1px solid var(--rule-strong); border-radius: 6px; margin-bottom: 16px; }
+  .slip-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding: 12px 12px 10px; border-bottom: 1px solid var(--rule); }
+  .slip-title { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.15rem; }
+  .slip-when { font-size: 0.78rem; color: var(--sub); }
+  .slip-odds { text-align: right; font-variant-numeric: tabular-nums; }
+  .slip-odds .big { display: block; font-family: "Fraunces", Georgia, serif; font-weight: 700; font-size: 1.3rem; }
+  .slip-odds .small { font-size: 0.75rem; color: var(--sub); }
+  .legs { list-style: none; margin: 0; padding: 0; }
+  .leg { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  .leg:last-child { border-bottom: none; }
+  .leg-who { font-size: 0.8rem; color: var(--sub); }
+  .leg-who .player { color: var(--text); font-weight: 600; font-size: 0.92rem; }
+  .leg-what { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.05rem; }
+  .leg-how { font-size: 0.75rem; color: var(--sub); }
+  .leg-side { text-align: right; font-variant-numeric: tabular-nums; align-self: center; }
+  .leg-side .chance { display: block; font-weight: 700; font-size: 1.05rem; color: var(--over); }
+  .leg-side .price { font-size: 0.75rem; color: var(--sub); }
+  .leg-actions { grid-column: 1 / -1; display: flex; gap: 14px; margin-top: 4px; }
+  .alts { grid-column: 1 / -1; font-size: 0.8rem; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .alts[hidden] { display: none; }
+  .alts span { border: 1px solid var(--rule); border-radius: 4px; padding: 2px 6px; font-variant-numeric: tabular-nums; }
+  .alts span.on { border-color: var(--rule-strong); font-weight: 600; }
+  .slip-foot { border-top: 1px solid var(--rule-strong); padding: 10px 12px; font-size: 0.82rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
   .text-btn {
     background: none; border: none; padding: 0;
     font-family: inherit; font-size: 0.78rem; color: var(--sub);
     text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
   }
-  .slip-btn:focus-visible, .chk-input:focus-visible, .text-btn:focus-visible, .swap-btn:focus-visible {
-    outline: 2px solid var(--text);
-    outline-offset: -2px;
-  }
-  .chart { margin-top: 10px; }
-  .chart svg { width: 100%; height: auto; display: block; }
-  .chart-cap { font-size: 0.75rem; color: var(--sub); margin-top: 2px; }
-  .chart-cap strong { color: var(--text); }
+  .text-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="head-row">
-        <h1>NFL Prop Rankings</h1>
+        <h1>NFL Fun Slips</h1>
         <a class="update-btn" href="https://github.com/Pitchside-App26/pitchside-backend/actions/workflows/nfl-prop-rankings.yml" target="_blank" rel="noopener">Run update</a>
       </div>
       <div class="meta" id="meta">Loading…</div>
@@ -668,25 +389,16 @@
 
     <section class="health" id="health" hidden role="status"></section>
 
-    <section class="acca" id="acca" hidden aria-labelledby="acca-title"></section>
-
-    <section class="analysts" id="analysts" hidden aria-labelledby="analysts-title"></section>
+    <section class="slips" id="slips" hidden aria-labelledby="slips-title"></section>
 
     <div class="section-head ranked-head">
-      <h2>All ranked props</h2>
+      <h2>Every prop in the early and late games</h2>
     </div>
 
     <div class="controls">
       <input type="search" id="search" placeholder="Search player…" autocomplete="off">
-      <select id="sideFilter">
-        <option value="all">All</option>
-        <option value="over">Over</option>
-        <option value="under">Under</option>
-      </select>
       <select id="sortBy">
-        <option value="value">Sort: Value</option>
-        <option value="edge">Sort: Edge</option>
-        <option value="hit_rate">Sort: Hit rate</option>
+        <option value="game">Sort: By game</option>
         <option value="player">Sort: Player A-Z</option>
       </select>
     </div>
@@ -697,590 +409,206 @@
 
 <script>
 (function () {
-  const state = { props: [], search: "", side: "all", sort: "value" };
+  const state = { props: [], search: "", sort: "game" };
 
   function fmtLine(v) {
     return Number.isFinite(v) ? (Number.isInteger(v) ? v : v.toFixed(1)) : "-";
   }
 
-  // Each sort shows its own number in the badge, so the list always reads
-  // as sorted. Edge sorts by the standardised edge (projection minus line,
-  // in that player's usual game-to-game swings): edge as a % of the line
-  // put every 0.5 line at the top. Value is signed, best first, with
-  // unpriced props last: sorting by its size alone put the worst-priced
-  // bets next to the best ones.
-  const MIN_HIT_SAMPLE = 3;
-
-  function hasValue(p) {
-    return p.value_pct !== null && p.value_pct !== undefined;
+  function gameOf(p) {
+    return [p.team, p.opponent].filter(Boolean).sort().join(" v ");
   }
 
   function sortProps(list) {
     const arr = list.slice();
-    const byEdge = (a, b) => Math.abs(b.edge_score) - Math.abs(a.edge_score);
-    if (state.sort === "hit_rate") {
-      // A 100% hit rate from one game says little, so 3+ games rank first.
-      const tier = p => (p.hit_rate === null || p.hit_rate === undefined) ? 2 : p.sample_size >= MIN_HIT_SAMPLE ? 0 : 1;
-      arr.sort((a, b) => tier(a) - tier(b) || (b.hit_rate ?? 0) - (a.hit_rate ?? 0) || b.sample_size - a.sample_size || byEdge(a, b));
-    } else if (state.sort === "player") {
-      arr.sort((a, b) => a.player.localeCompare(b.player));
-    } else if (state.sort === "edge") {
-      arr.sort(byEdge);
+    if (state.sort === "player") {
+      arr.sort((a, b) => a.player.localeCompare(b.player) || a.stat_label.localeCompare(b.stat_label));
     } else {
-      arr.sort((a, b) => (hasValue(b) - hasValue(a)) || (hasValue(a) ? b.value_pct - a.value_pct : 0) || byEdge(a, b));
+      arr.sort((a, b) => (a.kickoff || "").localeCompare(b.kickoff || "") || gameOf(a).localeCompare(gameOf(b))
+        || a.player.localeCompare(b.player) || a.stat_label.localeCompare(b.stat_label));
     }
     return arr;
   }
 
-  function badgeText(p) {
-    if (state.sort === "value") {
-      return hasValue(p) ? `${p.value_pct > 0 ? "+" : ""}${p.value_pct.toFixed(1)} pts` : "no price";
-    }
-    if (state.sort === "edge") {
-      return `${p.edge_score > 0 ? "+" : ""}${p.edge_score.toFixed(2)} SD`;
-    }
-    // The gap in the stat's own units (+4.9 yds). Not a % of the line: on a
-    // 0.5 line a 5-yard projection read as "+985%".
-    const gap = p.projection - p.line;
-    return `${gap > 0 ? "+" : ""}${fmtLine(Math.round(gap * 10) / 10)} vs line`;
-  }
-
-  const SORT_NOTES = {
-    value: "Value: our chance minus the market's fair chance, in percentage points. Best first; props with no price last.",
-    edge: "Edge: how far our projection is from the line, in the player's usual game-to-game swings (SD).",
-    hit_rate: "Hit rate this season. Players with 3+ games come first.",
-    player: "",
-  };
-
+  // The books' fair chance of each side at the line. The model's projection
+  // is shown for interest only: its picks lost money at real prices, and the
+  // slips above don't use it.
   function render() {
     const list = document.getElementById("list");
     const countEl = document.getElementById("count");
     const q = state.search.trim().toLowerCase();
+    const filtered = sortProps(state.props.filter(p => !q || p.player.toLowerCase().includes(q)));
 
-    let filtered = state.props.filter(p => {
-      if (state.side !== "all" && p.direction !== state.side) return false;
-      if (q && !p.player.toLowerCase().includes(q)) return false;
-      return true;
-    });
-    filtered = sortProps(filtered);
-
-    countEl.textContent = filtered.length + (filtered.length === 1 ? " prop" : " props")
-      + (SORT_NOTES[state.sort] ? ` · ${SORT_NOTES[state.sort]}` : "");
-
+    countEl.textContent = `${filtered.length} ${filtered.length === 1 ? "prop" : "props"} · chances are the US books' fair price, with their margin taken out`;
     if (filtered.length === 0) {
-      list.innerHTML = '<div class="empty">No props match this filter.</div>';
+      list.innerHTML = '<div class="empty">No props match this search.</div>';
       return;
     }
 
     list.innerHTML = filtered.map(p => {
-      const edgeLabel = badgeText(p);
-      const priceLabel = p.price !== null && p.price !== undefined ? `, ${p.price > 0 ? "+" : ""}${p.price}` : "";
-      const matchup = [p.team, p.opponent ? `vs ${p.opponent}` : "", p.kickoff].filter(Boolean).join(" · ");
-      const hitRate = p.hit_rate !== null
-        ? `${Math.round(p.hit_rate * 100)}% hit rate (${p.sample_size}g)`
-        : "No games yet this season";
-      const confLabel = p.confidence === "low" ? `low · ${p.method}` : "normal";
-
+      const matchup = [p.team, p.opponent ? `vs ${p.opponent}` : "", p.kickoff].filter(Boolean).map(esc).join(" · ");
+      const over = Number.isFinite(p.over_chance) ? p.over_chance : null;
+      const chances = over === null ? "no price"
+        : `over ${Math.round(over)}% · under ${Math.round(100 - over)}%`;
       return `
         <div class="card">
           <div class="card-top">
             <div class="player-row">
-              <span class="player">${p.player}</span>
-              <span class="stat-label">${p.stat_label}</span>
+              <span class="player">${esc(p.player)}</span>
+              <span class="stat-label">${esc(p.stat_label)}</span>
             </div>
             <div class="sub">${matchup}</div>
           </div>
           <div class="nums">
             <span class="nums-left">
-              <span class="ours">${fmtLine(p.projection)}</span>
-              <span class="line">vs line ${fmtLine(p.line)} (${p.direction}${priceLabel})</span>
+              <span class="ours">${fmtLine(p.line)}</span>
+              <span class="line">${chances}</span>
             </span>
-            <span class="edge-badge ${p.direction}">${edgeLabel}</span>
           </div>
           <div class="foot-row">
-            <span class="conf-pill ${p.confidence}">${confLabel}</span>
-            ${p.injury_status ? `<span class="injury-pill">${p.injury_status}</span>` : ""}
-            <span class="hit-rate">${hitRate}</span>
+            ${p.injury_status ? `<span class="injury-pill">${esc(p.injury_status)}</span>` : ""}
+            <span class="hit-rate">Model projection ${fmtLine(p.projection)} (for interest only)</span>
           </div>
-          ${p.explanation ? `
-          <button class="why-btn" type="button" aria-expanded="false">
-            Why this number? <span class="why-arrow">▾</span>
-          </button>
-          <div class="why-text" hidden>${p.explanation}</div>
-          ` : ""}
         </div>
       `;
     }).join("");
   }
 
-  // Analyst names and links come from web search, so every value is
-  // escaped before it reaches innerHTML.
+  // Player names come from the odds feed, so every value is escaped before
+  // it reaches innerHTML.
   function esc(v) {
     return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  function safeUrl(u) {
-    return /^https?:\/\//i.test(u || "") ? u : "";
-  }
-
-  function pct(p) {
-    return Number.isFinite(p) ? `${Math.round(p * 100)}%` : "–";
-  }
-
-  const GATE_NAMES = { game_script: "Game script" };
-  function gateName(g) {
-    return GATE_NAMES[g] || (g.charAt(0).toUpperCase() + g.slice(1));
-  }
-
-  function money(v) {
-    return Number.isFinite(v) ? v.toFixed(2) : "–";
-  }
-
-  function gateList(gates) {
-    return `<ul class="gate-list">${gates.map(g => `
-      <li class="${g.passed ? "ok" : "no"}">
-        <span class="mark" aria-label="${g.passed ? "passed" : "failed"}">${g.passed ? "✓" : "✗"}</span>
-        <span class="name">${esc(gateName(g.gate))}</span>
-        <span class="why">${esc(g.reason)}</span>
-      </li>`).join("")}</ul>`;
-  }
-
-  function sourceLinks(list) {
-    return list.map(s => {
-      const label = esc([s.outlet, s.analyst].filter(Boolean).join(", ") || "unnamed source");
-      const url = safeUrl(s.url);
-      return url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label;
-    }).join("; ");
-  }
-
-  // Each leg is an over or an under (mixed slips since 6 Oct). Its target
-  // line is the worst bet365 line to accept: a max for an over, a min for
-  // an under. Older data.json files have only max_line and no side.
-  function sideOf(leg) { return leg.side || "over"; }
-  function targetOf(leg) { return leg.target_line ?? leg.max_line; }
-  function targetText(leg) { return `${sideOf(leg)} ${sideOf(leg) === "under" ? "≥" : "≤"} ${fmtLine(targetOf(leg))}`; }
-  function beatsTarget(leg, v) { return sideOf(leg) === "under" ? v < targetOf(leg) : v > targetOf(leg); }
-
-  // Value check (7 Oct). The US books' fair chance for this side is known at
-  // the consensus line; at bet365's own line it's moved along a normal curve
-  // with the player's game-to-game spread (sd). Value = price x fair chance - 1.
-  function normCdf(z) {
-    const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
-    const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t
-      * Math.exp(-(z * z) / 2);
-    return z >= 0 ? (1 + erf) / 2 : (1 - erf) / 2;
-  }
-  function normInv(p) {  // Acklam's approximation
-    const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239];
-    const b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
-    const c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
-    const d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
-    const lo = 0.02425;
-    if (p < lo) { const q = Math.sqrt(-2 * Math.log(p)); return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
-    if (p > 1 - lo) { const q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
-    const q = p - 0.5, r = q * q;
-    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
-  }
-  function fairAt(leg, line) {
-    const p = leg.fair_prob, cons = leg.consensus_line;
-    if (!(p > 0 && p < 1) || cons === null || cons === undefined) return null;
-    if (line === cons) return p;
-    if (!leg.sd) return null;
-    const overAtCons = sideOf(leg) === "over" ? p : 1 - p;
-    const over = normCdf(normInv(overAtCons) - (line - cons) / leg.sd);
-    return sideOf(leg) === "over" ? over : 1 - over;
-  }
-  // The fractional prices UK books actually offer. toFraction gives the
-  // nearest; with atLeast it gives the shortest price at or above dec, so a
-  // "you need" price is never rounded down.
+  // ── Fun slips ──
+  // Built server-side by milestone_slips.py: six milestones per window, each
+  // about 60%, so a slip lands about 1 time in 20-25. Swaps are kept on this
+  // phone only.
+  const slipState = { data: null, legs: {} };
   const LADDER = ["1/5", "2/9", "1/4", "2/7", "3/10", "1/3", "4/11", "2/5", "4/9", "1/2", "8/15", "4/7", "8/13",
-    "4/6", "8/11", "4/5", "5/6", "10/11", "20/21", "evens", "21/20", "11/10", "6/5", "5/4", "11/8", "6/4", "13/8",
-    "7/4", "15/8", "2/1", "9/4", "5/2", "11/4", "3/1", "10/3", "7/2", "4/1", "9/2", "5/1", "6/1", "7/1", "8/1", "10/1"]
-    .map(f => ({ f, d: f === "evens" ? 2 : 1 + +f.split("/")[0] / +f.split("/")[1] }));
-  function toFraction(dec, atLeast = false) {
-    if (!Number.isFinite(dec)) return "–";
-    const pool = atLeast ? LADDER.filter(x => x.d >= dec - 1e-9) : LADDER;
-    if (!pool.length) return dec.toFixed(2);
-    return pool.reduce((a, x) => Math.abs(x.d - dec) < Math.abs(a.d - dec) ? x : a).f;
+    "4/6", "8/11", "4/5", "5/6", "10/11", "1/1", "11/10", "6/5", "5/4", "11/8", "6/4", "13/8", "7/4", "15/8",
+    "2/1", "9/4", "5/2", "11/4", "3/1", "10/3", "7/2", "4/1", "9/2", "5/1", "11/2", "6/1", "13/2", "7/1", "15/2",
+    "8/1", "9/1", "10/1", "11/1", "12/1", "14/1", "16/1", "18/1", "20/1", "22/1", "25/1", "28/1", "33/1",
+    "40/1", "50/1", "66/1", "80/1", "100/1", "150/1", "200/1"];
+  function fraction(decimal) {
+    const target = decimal - 1;
+    let best = LADDER[0];
+    for (const f of LADDER) {
+      const [n, d] = f.split("/").map(Number);
+      const [bn, bd] = best.split("/").map(Number);
+      if (Math.abs(n / d - target) < Math.abs(bn / bd - target)) best = f;
+    }
+    return best === "1/1" ? "evens" : best;
   }
-  function pctSigned(x) { return `${x >= 0 ? "+" : ""}${(x * 100).toFixed(1)}%`; }
-
-  function legCard(leg, opts = {}) {
-    const passed = leg.gates.filter(g => g.passed).length;
-    const failed = leg.gates.filter(g => !g.passed);
-    const pills = [
-      leg.filler ? `<span class="pill warn">Filler: failed ${esc(failed.map(g => gateName(g.gate)).join(", "))}</span>` : "",
-      leg.bet_builder ? `<span class="pill">Same game: bet365 prices these as a bet builder</span>` : "",
-      ...leg.flags.map(f => `<span class="pill warn">${esc(f)}</span>`),
-    ].join("");
-    const side = sideOf(leg);
-    const backers = leg.sources?.[side] || [];
-    const against = leg.sources?.[side === "over" ? "under" : "over"] || [];
-    const target = targetOf(leg) !== null && targetOf(leg) !== undefined
-      ? `<div class="target">Bet the ${side} only if bet365's line is <span class="big">${esc(fmtLine(targetOf(leg)))} or ${side === "under" ? "higher" : "lower"}</span>,
-           at <span class="big">${esc(neededPrice(leg) ? toFraction(neededPrice(leg), true) : leg.min_price_fractional)}</span> (${esc(money(neededPrice(leg) || leg.min_price_decimal))}) or bigger${neededPrice(leg) ? ` -- in ${accaMode() === "fun" ? "Fun acca" : "Value bets"} mode, at the consensus line; the check works out the fair price at your book's own line` : ""}.</div>`
-      : "";
-    return `
-      <div class="leg">
-        <div class="player-row">
-          <span class="player">${esc(leg.player)}</span>
-          <span class="stat-label">${esc(leg.stat_label)} ${esc(side)}</span>
-        </div>
-        <div class="sub">${esc([leg.game, leg.kickoff].filter(Boolean).join(" · "))}</div>
-        ${opts.failedOnly || leg.filler ? `<div class="leg-facts">Failed: ${failed.map(g => `<strong>${esc(gateName(g.gate))}</strong>, ${esc(g.reason)}`).join("; ")}</div>` : ""}
-        ${opts.failedOnly ? "" : target}
-        <div class="leg-facts">US consensus ${esc(fmtLine(leg.consensus_line))} (${esc(leg.n_books)} books) · projection ${esc(fmtLine(leg.projection))} · fair chance ${pct(leg.fair_prob)}</div>
-        ${opts.chart ? chartSvg(leg) : ""}
-        ${pills ? `<div class="pills">${pills}</div>` : ""}
-        ${backers.length ? `<div class="sources">Backed by: ${sourceLinks(backers)}</div>` : ""}
-        ${against.length ? `<div class="sources against">Against: ${sourceLinks(against)}</div>` : ""}
-        ${leg.sources_checked === false ? `<div class="sources">Analysts: ${esc(leg.sources_note)}.</div>` : ""}
-        ${leg.sources_checked && !backers.length && !against.length ? `<div class="sources">Analysts: none found backing this ${esc(side)}.</div>` : ""}
-        <details class="gates">
-          <summary>${passed} of ${leg.gates.length} gates passed</summary>
-          ${gateList(leg.gates)}
-        </details>
-      </div>`;
-  }
-
-  // ── bet365 checklist ────────────────────────────────────────────────
-  // Dan types what bet365 shows for each leg; the page checks it against the
-  // leg's target. Entries and swaps live in this browser only.
-  const accaState = { a: null, data: null, open: null };
 
   function store(key, value) {
     try {
       if (value === undefined) return JSON.parse(localStorage.getItem(key) || "null");
-      if (value === null) localStorage.removeItem(key);
-      else localStorage.setItem(key, JSON.stringify(value));
+      localStorage.setItem(key, JSON.stringify(value));
     } catch (e) { return null; }
-    return null;
   }
+  function slipKey(w) { return `nfl-slips:${slipState.data.season}-${slipState.data.week}:${w.window}`; }
+  function legKey(leg) { return `${leg.player_id}|${leg.stat}`; }
 
-  function weekKey() {
-    return `nfl-acca:${accaState.data.season}-w${accaState.data.week}`;
-  }
-
-  // Odds as bet365 shows them: "5/6", "evens", or decimal "1.83".
-  function toDecimal(raw) {
-    const t = String(raw || "").trim().toLowerCase();
-    if (!t) return null;
-    if (t === "evens" || t === "evs") return 2;
-    const m = t.match(/^(\d+)\s*\/\s*(\d+)$/);
-    if (m) return +m[2] ? +m[1] / +m[2] + 1 : null;
-    const d = parseFloat(t);
-    return Number.isFinite(d) && d > 1 ? d : null;
-  }
-
-  // Two ways to judge a price (Dan's call, 11 Oct). "Fun acca": OK within
-  // FUN_EDGE (6%) of fair -- you knowingly pay the bookmaker's usual margin and
-  // just dodge the worst-priced legs. "Value bets": OK only within 2% of fair
-  // (the leg's accept_edge), for singles found by shopping the same leg
-  // across books. Remembered on this phone.
-  const FUN_EDGE = -0.06;
-  const BOOKS = ["bet365", "Sky Bet", "Betfred", "BoyleSports", "Spreadex", "Other"];
-  function accaMode() { return store("nfl-acca:mode") === "value" ? "value" : "fun"; }
-  function modeEdge(leg, mode) { return mode === "value" ? (leg.accept_edge ?? -0.02) : FUN_EDGE; }
-  // The price needed at the consensus line in the current mode (older data: none).
-  function neededPrice(leg) { return leg.fair_prob && leg.accept_edge !== undefined ? (1 + modeEdge(leg, accaMode())) / leg.fair_prob : null; }
-
-  function checkLeg(leg) {
-    const saved = store(`${weekKey()}:chk:${leg.key}`) || {};
-    const line = parseFloat(saved.line);
-    const price = toDecimal(saved.price);
-    const min = leg.min_price_decimal;
-    if (!saved.line && !saved.price) return { state: "todo", saved };
-    const book = saved.book || "bet365";
-    if (!Number.isFinite(line) || price === null) return { state: "todo", saved, msg: `Enter both ${book}'s line and price.` };
-    if (sideOf(leg) === "under" && line < targetOf(leg)) return { state: "no", saved, price, msg: `Don't bet: ${book}'s line ${line} is below your min ${fmtLine(targetOf(leg))}.` };
-    if (sideOf(leg) === "over" && line > targetOf(leg)) return { state: "no", saved, price, msg: `Don't bet: ${book}'s line ${line} is above your max ${fmtLine(targetOf(leg))}.` };
-    const fair = leg.accept_edge === undefined ? null : fairAt(leg, line);
-    if (fair === null) {  // older data, or no spread to move the fair chance to bet365's line
-      if (price < min) return { state: "no", saved, price, msg: `Don't bet: ${saved.price} is shorter than ${leg.min_price_fractional}.` };
-      return { state: "ok", saved, price, msg: `OK to bet: ${line} at ${saved.price} meets the target.` };
+  // Chance that at least k of the legs land (legs are in different games,
+  // so taken as independent).
+  function atLeast(chances, k) {
+    let dist = [1];
+    for (const p of chances) {
+      const next = new Array(dist.length + 1).fill(0);
+      dist.forEach((q, i) => { next[i] += q * (1 - p); next[i + 1] += q * p; });
+      dist = next;
     }
-    const mode = accaMode(), edge = modeEdge(leg, mode);
-    const ev = price * fair - 1, fairOdds = 1 / fair, need = (1 + edge) / fair;
-    const at = book === "bet365" ? "" : ` at ${book}`;
-    if (ev < edge) {
-      const fun = mode === "value" && ev >= FUN_EDGE ? " It would pass in Fun acca mode." : "";
-      return { state: "no", saved, price, fair, ev, msg: `Don't bet${at}: ${saved.price} is ${pctSigned(ev)} against the fair price (${fairOdds.toFixed(2)}) at line ${line}. You'd need ${toFraction(need, true)} (${need.toFixed(2)}) or bigger.${fun} Try the same leg at another of your books.` };
+    return dist.slice(k).reduce((a, b) => a + b, 0);
+  }
+
+  function currentLegs(w) {
+    if (!slipState.legs[w.window]) {
+      const saved = store(slipKey(w));
+      const all = [...w.legs, ...w.spares];
+      const restored = Array.isArray(saved) ? saved.map(k => all.find(l => legKey(l) === k)).filter(Boolean) : [];
+      slipState.legs[w.window] = restored.length === w.legs.length ? restored : w.legs.slice();
     }
-    const label = ev >= leg.value_edge ? `Value${at}: ${pctSigned(ev)} vs the fair price`
-      : ev >= modeEdge(leg, "value") ? `OK to bet${at}: close to fair (${pctSigned(ev)})`
-      : `OK for a fun acca${at}: ${pctSigned(ev)} against fair, the bookmaker's usual margin -- not a value bet`;
-    return { state: "ok", saved, price, fair, ev, msg: `${label}. Fair at ${line} is ${fairOdds.toFixed(2)} (${toFraction(fairOdds)}); you have ${saved.price}.` };
+    return slipState.legs[w.window];
   }
 
-  // Slip rows for a window: the suggested legs, plus any replacements Dan
-  // swapped in for legs that failed the bet365 check.
-  function slipRows(w) {
-    const swaps = store(`${weekKey()}:swap:${w.window}`) || {};
-    const spareByKey = Object.fromEntries((w.spares || []).map(s => [s.key, s]));
-    const rows = [];
-    const add = (leg, replaces, depth) => {
-      const by = swaps[leg.key] && spareByKey[swaps[leg.key]];
-      rows.push({ leg, replaces, replacedBy: by || null });
-      if (by && depth < 10) add(by, leg, depth + 1);
-    };
-    w.legs.forEach(l => add(l, null, 0));
-    return { rows, swaps };
+  function swapLeg(w, i) {
+    const legs = currentLegs(w);
+    const used = new Set(legs.map(l => l.player));
+    const games = new Set(legs.filter((_, j) => j !== i).map(l => l.game));
+    const pool = [...w.spares, ...w.legs].filter(l => !used.has(l.player));
+    const next = pool.find(l => !games.has(l.game)) || pool[0];
+    if (!next) return;
+    legs[i] = next;
+    store(slipKey(w), legs.map(legKey));
   }
 
-  function nextSpare(w, rows, failedLeg) {
-    const used = new Set(rows.map(r => r.leg.key));
-    const perGame = {}, perStat = {}, players = new Set();
-    rows.filter(r => !r.replacedBy && r.leg.key !== failedLeg.key)
-      .forEach(r => {
-        perGame[r.leg.game] = (perGame[r.leg.game] || 0) + 1;
-        perStat[r.leg.stat] = (perStat[r.leg.stat] || 0) + 1;
-        players.add(r.leg.player);
-      });
-    return (w.spares || []).find(s => !used.has(s.key) && !players.has(s.player)
-      && (perGame[s.game] || 0) < 2 && (perStat[s.stat] || 0) < 2) || null;
-  }
-
-  function chartSvg(leg) {
-    const vals = leg.recent || [];
-    const t = targetOf(leg);
-    if (!vals.length || t === null || t === undefined) return "";
-    const W = 300, H = 74, top = 14, base = 58, n = vals.length;
-    const scaleMax = Math.max(...vals, t) * 1.12 || 1;
-    const y = v => base - (v / scaleMax) * (base - top);
-    const slot = W / n, bw = slot * 0.56;
-    const bars = vals.map((v, i) => {
-      const x = i * slot + (slot - bw) / 2, hit = beatsTarget(leg, v), h = base - y(v);
-      const inside = !hit && h >= 14;
-      return `<rect x="${x.toFixed(1)}" y="${y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${hit ? "var(--over)" : "var(--bar-miss)"}"></rect>
-        <text x="${(x + bw / 2).toFixed(1)}" y="${(inside ? y(v) + 11 : y(v) - 3).toFixed(1)}" text-anchor="middle" font-size="9" fill="${inside ? "var(--text)" : "var(--sub)"}">${esc(fmtLine(v))}</text>`;
-    }).join("");
-    const ly = y(t).toFixed(1);
-    const hits = vals.filter(v => beatsTarget(leg, v)).length;
-    const lineName = sideOf(leg) === "under" ? "min line" : "max line";
-    return `<div class="chart">
-      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Last ${n} games: ${hits} ${esc(sideOf(leg))} the ${lineName} ${esc(fmtLine(t))}">
-        ${bars}
-        <line x1="0" x2="${W}" y1="${ly}" y2="${ly}" stroke="var(--text)" stroke-width="1.2" stroke-dasharray="4 3"></line>
-        <line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="var(--rule)" stroke-width="1"></line>
-        <text x="0" y="${H - 3}" font-size="9" fill="var(--sub)">${n} games ago</text>
-        <text x="${W}" y="${H - 3}" text-anchor="end" font-size="9" fill="var(--sub)">latest →</text>
-      </svg>
-      <div class="chart-cap"><strong>${hits} of ${n}</strong> recent games ${esc(sideOf(leg))} your ${lineName} (${esc(fmtLine(t))}, dashed)</div>
-    </div>`;
-  }
-
-  function slipRowHtml(w, row, rows) {
-    const leg = row.leg;
-    const tags = [
-      row.replaces ? `<span class="swap-tag">replacement</span>` : "",
-      leg.filler ? `<span class="filler-tag">filler: failed ${esc(leg.gates.filter(g => !g.passed).map(g => gateName(g.gate)).join(", "))}</span>` : "",
-    ].filter(Boolean).join(" · ");
-    if (row.replacedBy) {
-      const c = checkLeg(leg);
-      return `<div class="slip-row dropped">
-        <div class="dropped-line"><span class="status no">✕</span>
-          <span><strong>${esc(leg.player)}</strong> dropped (${esc((c.msg || "").replace(/^Don't bet: /, "").replace(/\.$/, ""))}). Replaced by ${esc(row.replacedBy.player)}.</span>
-          <button class="text-btn" type="button" data-undo="${esc(leg.key)}" data-window="${esc(w.window)}">Undo</button></div>
-      </div>`;
-    }
-    const c = checkLeg(leg);
-    const open = accaState.open === `${w.window}|${leg.key}`;
-    const id = `${w.window}-${leg.key}`.replace(/[^a-zA-Z0-9-]/g, "_");
-    const spare = c.state === "no" ? nextSpare(w, rows, leg) : null;
-    const swapHtml = c.state === "no"
-      ? (spare
-        ? `<div class="swap-offer">Swap in the next best leg: <strong>${esc(spare.player)}</strong>, ${esc(spare.stat_label)} ${esc(targetText(spare))}${spare.filler ? " (filler)" : ""}
-             <button class="swap-btn" type="button" data-swap="${esc(leg.key)}" data-spare="${esc(spare.key)}" data-window="${esc(w.window)}">Swap in</button></div>`
-        : `<div class="swap-offer">No replacement available that keeps to 2 legs per game, 2 per stat and 1 per player.</div>`)
-      : "";
-    return `<div class="slip-row">
-      <button class="slip-btn" type="button" data-open="${esc(w.window)}|${esc(leg.key)}" aria-expanded="${open}">
-        <span class="status ${c.state}" aria-label="${c.state === "ok" ? "checked, OK to bet" : c.state === "no" ? "checked, don't bet" : "not checked yet"}">${c.state === "ok" ? "✓" : c.state === "no" ? "✕" : ""}</span>
-        <span class="slip-who">
-          <span class="slip-name">${esc(leg.player)}</span>
-          <span class="slip-market">${esc(leg.stat_label)} ${esc(sideOf(leg))} · ${esc(leg.game)}${tags ? ` · ${tags}` : ""}</span>
-        </span>
-        <span class="slip-target"><strong>${sideOf(leg) === "under" ? "≥" : "≤"} ${esc(fmtLine(targetOf(leg)))}</strong><br>at ${esc(neededPrice(leg) ? toFraction(neededPrice(leg), true) : leg.min_price_fractional)}+</span>
-      </button>
-      ${open ? `<div class="chk">
-        <div class="chk-fields">
-          <div class="chk-field"><label for="book-${id}">Book</label>
-            <select class="chk-input" id="book-${id}" data-field="book" data-key="${esc(leg.key)}">${BOOKS.map(b => `<option${(c.saved.book || "bet365") === b ? " selected" : ""}>${esc(b)}</option>`).join("")}</select></div>
-          <div class="chk-field"><label for="line-${id}">Line</label>
-            <input class="chk-input" id="line-${id}" inputmode="decimal" autocomplete="off" placeholder="${esc(fmtLine(targetOf(leg)))}" value="${esc(c.saved.line || "")}" data-field="line" data-key="${esc(leg.key)}"></div>
-          <div class="chk-field"><label for="price-${id}">Price</label>
-            <input class="chk-input" id="price-${id}" autocomplete="off" placeholder="e.g. 5/6" value="${esc(c.saved.price || "")}" data-field="price" data-key="${esc(leg.key)}"></div>
+  function legHtml(leg, i, w) {
+    const alts = (leg.alternatives || []).map(a =>
+      `<span class="${a.threshold === leg.threshold ? "on" : ""}">${esc(a.label)} ${Math.round(a.chance * 100)}%</span>`).join("");
+    return `
+      <li class="leg">
+        <div>
+          <div class="leg-who"><span class="player">${esc(leg.player)}</span> · ${esc(leg.team)} v ${esc(leg.opponent)}</div>
+          <div class="leg-what">${esc(leg.label)}</div>
+          <div class="leg-how">bet365: over ${fmtLine(leg.over_line)} (main line ${fmtLine(leg.main_line)})</div>
         </div>
-        ${c.msg ? `<div class="verdict ${c.state === "todo" ? "" : c.state}">${esc(c.msg)}</div>` : ""}
-      </div>` : ""}
-      ${swapHtml}
-    </div>`;
+        <div class="leg-side"><span class="chance">${Math.round(leg.chance * 100)}%</span><span class="price">fair ${fraction(1 / leg.chance)}</span></div>
+        <div class="leg-actions">
+          <button class="text-btn" type="button" data-alts="${w.window}:${i}" aria-expanded="false">Other lines</button>
+          <button class="text-btn" type="button" data-swap="${w.window}:${i}">Swap</button>
+        </div>
+        <div class="alts" id="alts-${w.window}-${i}" hidden>${alts}</div>
+      </li>`;
   }
 
-  function slipFootHtml(w, active) {
-    const checks = active.map(r => checkLeg(r.leg));
-    const ok = checks.filter(c => c.state === "ok");
-    const no = checks.filter(c => c.state === "no").length;
-    const done = ok.length + no;
-    const fair = active.reduce((p, r) => p * (r.leg.fair_prob ? 1 / r.leg.fair_prob : NaN), 1);
-    let verdict;
-    if (done < active.length) {
-      verdict = `${done} of ${active.length} checked on bet365${no ? `, ${no} failed` : ""}. Tap a leg to enter bet365's line and price.`;
-    } else if (no) {
-      verdict = `${no} leg${no === 1 ? "" : "s"} failed the check. Swap ${no === 1 ? "it" : "them"} out, or leave ${no === 1 ? "it" : "them"} out of the acca.`;
+  function slipHtml(w) {
+    const legs = currentLegs(w);
+    const chances = legs.map(l => l.chance);
+    const all = chances.reduce((a, b) => a * b, 1);
+    const n = legs.length;
+    const fairReturn = slipState.data.slips.stake / all;
+    return `
+      <div class="slip">
+        <div class="slip-head">
+          <div><div class="slip-title">${esc(w.label)}</div><div class="slip-when">${esc(w.kickoff_uk ? w.kickoff_uk + " UK" : "")}</div></div>
+          <div class="slip-odds"><span class="big">1 in ${Math.round(1 / all)}</span><span class="small">fair ${fraction(1 / all)}</span></div>
+        </div>
+        <ol class="legs">${legs.map((leg, i) => legHtml(leg, i, w)).join("")}</ol>
+        <div class="slip-foot">
+          All ${n} land: <strong>${(all * 100).toFixed(1)}%</strong> ·
+          ${n - 1} or more: <strong>${Math.round(atLeast(chances, n - 1) * 100)}%</strong> ·
+          ${n - 2} or more: <strong>${Math.round(atLeast(chances, n - 2) * 100)}%</strong><br>
+          £${slipState.data.slips.stake} at fair odds returns about £${Math.round(fairReturn)}; bet365's milestone prices
+          usually pay a bit less. If bet365 doesn't offer a line, tap "Other lines" for the chances at nearby ones.
+          ${w.complete ? "" : `<br><strong>Only ${n} legs found this week.</strong>`}
+        </div>
+      </div>`;
+  }
+
+  function renderSlips(data) {
+    const el = document.getElementById("slips");
+    slipState.data = data;
+    const slips = data.slips;
+    let body;
+    if (!slips) {
+      body = '<div class="empty">No slips in this week\'s data yet.</div>';
+    } else if (slips.error) {
+      body = `<div class="error">The slips failed to build this week (${esc(slips.error)}).</div>`;
+    } else if (!slips.slips.length) {
+      body = '<div class="empty">No early or late games with enough props this week.</div>';
     } else {
-      const real = ok.reduce((p, c) => p * c.price, 1);
-      const fairHere = ok.every(c => c.fair) ? ok.reduce((p, c) => p / c.fair, 1) : fair;
-      const ev = real / fairHere - 1;
-      verdict = `All ${active.length} legs OK to bet. Your entered prices multiply to <span class="big">${esc(money(real))}</span> vs fair ${esc(money(fairHere))} at bet365's lines: ${ev >= 0 ? `${pctSigned(ev)} expected value, so there's value at these prices` : `${pctSigned(ev)} expected value, which is bet365's margin compounding across the legs`}. Same-game legs are priced together as a bet builder, so trust bet365's own slip total for those.`;
+      body = slips.slips.map(slipHtml).join("");
     }
-    return `<div class="slip-foot">
-      <div class="progress">${checks.map(c => `<span class="${c.state}"></span>`).join("")}</div>
-      ${verdict}
-      <div class="slip-actions"><button class="text-btn" type="button" data-clear="${esc(w.window)}">Clear my entries for this window</button></div>
-    </div>`;
-  }
-
-  function windowHtml(w) {
-    const a = accaState.a;
-    const { rows } = slipRows(w);
-    const active = rows.filter(r => !r.replacedBy);
-    const n = active.length;
-    const fillers = active.filter(r => r.leg.filler).length;
-    const fair = active.reduce((p, r) => p * (r.leg.fair_prob ? 1 / r.leg.fair_prob : NaN), 1);
-    const chance = active.reduce((p, r) => p * (r.leg.fair_prob || NaN), 1);
-    const kicker = [w.kickoff_uk ? `${w.kickoff_uk} UK` : "", n ? `${n}-fold` : "", fillers ? `${fillers} filler${fillers === 1 ? "" : "s"}` : ""]
-      .filter(Boolean).join(" · ");
-    const head = `<div class="window-head"><h3>${esc(w.label)}</h3><span class="kicker">${esc(kicker)}</span></div>`;
-    if (!n) {
-      return head + `<div class="acca-empty"><strong>No bet.</strong> None of the ${esc(w.n_legs_in_window)} overs in these games passed, or failed only one gate.</div>`;
-    }
-    const short = a.fill_with_near_misses && n < 6
-      ? ` Only ${n} leg${n === 1 ? "" : "s"} available: not enough legs passed or nearly passed to reach 6.` : "";
-    const summary = n >= 3
-      ? `<p class="acca-summary">£${esc(a.stake_gbp)} flat stake. Fair odds ${esc(money(fair))}; bet365's acca price needs to beat that to be value. Rough chance it lands: ${pct(chance)} (assumes the legs are independent).${short}</p>`
-      : `<p class="acca-summary">Too few legs for an accumulator, so take ${n === 1 ? "it as a single" : "them as singles"} or leave it.${short}</p>`;
-    const details = active.map(r => legCard(r.leg, { chart: true })).join("");
-    return head + summary
-      + `<div class="slip">${rows.map(r => slipRowHtml(w, r, rows)).join("")}${slipFootHtml(w, active)}</div>`
-      + `<details class="more legs-detail"><summary>Why these legs: charts, gates and analysts</summary>${details}</details>`;
-  }
-
-  function renderAcca(a, data) {
-    accaState.a = a;
-    accaState.data = data;
-    const el = document.getElementById("acca");
-    if (!a) return;  // older data.json without the section
+    el.innerHTML = `
+      <div class="section-head"><h2 id="slips-title">This week's slips</h2></div>
+      <p class="slips-intro">Each leg is a milestone set below the main line so it lands about 6 times in 10.
+        Six of them land together about 1 time in 20&ndash;25: you'll lose the £5 most weeks, but most weeks
+        get close. Picked from the books' prices and what's actually happened to every prop graded so far,
+        leaving out part-timers, players whose role just changed, and anyone on the injury report. No edge is
+        claimed.</p>
+      ${body}`;
     el.hidden = false;
-    const head = `
-      <div class="section-head">
-        <h2 id="acca-title">This week's accumulators</h2>
-        <span class="kicker">Overs and unders · Week 4 spec gates</span>
-      </div>
-      <div class="mode-row" role="group" aria-label="How to judge prices">
-        <button class="mode-btn${accaMode() === "fun" ? " on" : ""}" type="button" data-mode="fun" aria-pressed="${accaMode() === "fun"}">Fun acca</button>
-        <button class="mode-btn${accaMode() === "value" ? " on" : ""}" type="button" data-mode="value" aria-pressed="${accaMode() === "value"}">Value bets</button>
-        <span class="mode-note">${accaMode() === "fun"
-          ? "Prices up to 6% below fair pass: you pay the bookmaker's usual margin and dodge the worst-priced legs."
-          : "Only prices within 2% of fair pass. Shop each leg across your books and back what passes as singles."}</span>
-      </div>`;
-    if (a.error) {
-      el.innerHTML = head + `<div class="acca-empty">The accumulator report failed on this run (${esc(a.error)}). The rankings below are unaffected.</div>`;
-      return;
-    }
-
-    const accas = a.accumulators || [];
-    const body = accas.length
-      ? accas.map(windowHtml).join("")
-      : `<div class="acca-empty">No early or late Sunday games in this run, so no accumulators. Thursday, Sunday night, Monday and London games are ranked below but not used.</div>`;
-    const anyBet = accas.some(w => w.mode !== "no_bet");
-
-    const near = a.near_misses || [];
-    const nearHtml = near.length ? `
-      <details class="more" ${anyBet ? "" : "open"}>
-        <summary>Near misses: failed one gate (${near.length})</summary>
-        ${near.map(l => legCard(l, { failedOnly: true })).join("")}
-      </details>` : "";
-    const excluded = a.excluded || [];
-    const exclHtml = excluded.length ? `
-      <details class="more">
-        <summary>Every excluded leg, and why (${excluded.length})</summary>
-        ${excluded.map(e => `
-          <div class="excl-row">
-            <span class="who">${esc(e.player)}</span> · ${esc(e.stat_label)} ${esc(e.side || "over")} · ${esc(e.game)}
-            <div class="why">${e.failed.map(f => `<strong>${esc(gateName(f.gate))}</strong>: ${esc(f.reason)}`).join("<br>")}</div>
-          </div>`).join("")}
-      </details>` : "";
-
-    const sweep = a.analyst_sweep || {};
-    const sweepNote = sweep.ran && !sweep.usage
-      ? `Analysts: ${esc(sweep.note)}.`
-      : sweep.ran
-      ? `Analyst sweep covered ${sweep.games.length} game${sweep.games.length === 1 ? "" : "s"}${sweep.usage ? `, estimated cost $${esc(money(sweep.usage.estimated_cost_usd))}` : ""}.`
-      : `Analyst sweep: ${esc(sweep.note || "didn't run")}.`;
-    const feedNote = a.bet365_in_feed
-      ? "bet365 is in the odds feed this week, so the line check could be automated."
-      : `bet365 isn't in the odds feed (books seen: ${esc((a.bookmakers_seen || []).join(", ") || "none")}).`;
-
-    const outsideNote = a.n_outside_windows
-      ? `${esc(a.n_outside_windows)} props from games outside the two windows aren't used.` : "";
-    const modeNote = a.sources_mode === "signal"
-      ? "Analyst picks are shown as a signal, not a gate: a leg doesn't need analysts behind it to be suggested. Each leg's backing is logged so the weekly grading can show whether backed legs actually hit more."
-      : "";
-    el.innerHTML = head + body + nearHtml + exclHtml + `
-      <div class="acca-notes">
-        ${esc(modeNote)} ${sweepNote} ${feedNote} ${outsideNote}
-        <div>Not checked automatically:</div>
-        <ul>${(a.not_checked || []).map(n => `<li>${esc(n)}</li>`).join("")}</ul>
-      </div>`;
-  }
-
-  const TIP_PILL = { slip_agree: "good", slip_against: "bad", engine_agree: "", engine_disagree: "warn", unrated: "" };
-
-  function tipHtml(t) {
-    const e = t.engine || {};
-    const engineDetail = e.slip_line !== null && e.slip_line !== undefined
-      ? ` (slip: ${esc(e.slip_side || "over")} ${(e.slip_side || "over") === "under" ? "≥" : "≤"} ${esc(fmtLine(e.slip_line))})`
-      : e.projection !== null && e.projection !== undefined
-      ? ` (projects ${esc(fmtLine(e.projection))} vs ${esc(fmtLine(e.engine_line))})` : "";
-    const who = [t.outlet, t.analyst].filter(Boolean).join(", ") || "unnamed source";
-    const url = safeUrl(t.url);
-    const src = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(who)}</a>` : esc(who);
-    return `<div class="tip">
-      <div><span class="who">${esc(t.player)}</span> · <span class="bet">${esc(t.stat_label)} ${esc(t.side)} ${esc(fmtLine(t.line))}${t.price ? ` (${esc(t.price)})` : ""}</span></div>
-      <div class="src">${src}${t.publish_date ? ` · ${esc(t.publish_date)}` : ""} · ${esc(t.game)}</div>
-      <div class="pills"><span class="pill ${TIP_PILL[e.status] || ""}">${esc(e.label || "")}${engineDetail}</span></div>
-    </div>`;
-  }
-
-  function renderAnalysts(feed) {
-    const el = document.getElementById("analysts");
-    if (!feed) return;  // older data.json without the section
-    el.hidden = false;
-    const head = `
-      <div class="section-head">
-        <h2 id="analysts-title">What analysts are tipping</h2>
-        <span class="kicker">Not used to pick legs · graded on Tuesday</span>
-      </div>`;
-    const picks = feed.picks || [];
-    if (!feed.ran || !picks.length) {
-      el.innerHTML = head + `<div class="acca-empty">${feed.ran ? "The search found no usable picks on the early or late games this week." : esc(feed.note || "The analyst search didn't run.")}</div>`;
-      return;
-    }
-    const cost = feed.usage ? ` One web search, about $${esc(money(feed.usage.estimated_cost_usd))}.` : "";
-    const dropped = feed.n_dropped ? ` ${esc(feed.n_dropped)} more found but skipped (a market the engine doesn't cover, no line, or a player or game it couldn't match).` : "";
-    const onSlips = picks.filter(t => t.engine && t.engine.status.startsWith("slip_"));
-    const slipHtml = onSlips.length
-      ? `<div class="tip-group">On your slips</div>` + onSlips.map(tipHtml).join("")
-      : `<div class="acca-summary">No analyst tipped a leg on your slips.</div>`;
-    const byGame = {};
-    picks.forEach(t => { (byGame[t.game] = byGame[t.game] || []).push(t); });
-    const allHtml = Object.entries(byGame).map(([game, tips]) =>
-      `<div class="tip-group">${esc(game)}</div>` + tips.map(tipHtml).join("")).join("");
-    el.innerHTML = head +
-      `<div class="acca-summary"><strong>${picks.length}</strong> pick${picks.length === 1 ? "" : "s"} on the early and late games.${cost}${dropped}</div>` +
-      slipHtml +
-      `<details class="more"><summary>Every analyst pick, by game (${picks.length})</summary>${allHtml}</details>`;
   }
 
   function timeAgo(iso) {
@@ -1293,9 +621,9 @@
     return `${Math.round(hours / 24)}d ago`;
   }
 
-  // What didn't work in this week's run (no wind forecasts, a failed
-  // analyst search, odds credits running out): a check that quietly did
-  // nothing must not look like a clean run.
+  // What didn't work in this week's run (snap counts missing, a slip short
+  // of legs, odds credits running out): a step that quietly did nothing
+  // must not look like a clean run.
   function renderHealth(health) {
     const el = document.getElementById("health");
     if (!Array.isArray(health) || !health.length) { el.hidden = true; return; }
@@ -1316,8 +644,7 @@
         `<span>Updated ${timeAgo(data.generated_at)}</span>` +
         `<span>${state.props.length} props</span>`;
       renderHealth(data.health);
-      renderAcca(data.accumulator, data);
-      renderAnalysts(data.analyst_picks);
+      renderSlips(data);
       render();
     })
     .catch(err => {
@@ -1327,72 +654,26 @@
         `If this is the first run, data.json hasn't been published yet.</div>`;
     });
 
-  const accaEl = document.getElementById("acca");
-  accaEl.addEventListener("click", e => {
-    const t = e.target;
-    const open = t.closest("[data-open]");
-    if (open) {
-      accaState.open = accaState.open === open.dataset.open ? null : open.dataset.open;
-      renderAcca(accaState.a, accaState.data);
-      const input = accaEl.querySelector(`.chk-input[data-field="line"]`);
-      if (input && accaState.open) input.focus();
+  document.getElementById("slips").addEventListener("click", e => {
+    const alt = e.target.closest("[data-alts]");
+    if (alt) {
+      const [w, i] = alt.dataset.alts.split(":");
+      const box = document.getElementById(`alts-${w}-${i}`);
+      box.hidden = !box.hidden;
+      alt.setAttribute("aria-expanded", String(!box.hidden));
       return;
     }
-    const modeBtn = t.closest("[data-mode]");
-    if (modeBtn) {
-      store("nfl-acca:mode", modeBtn.dataset.mode);
-      renderAcca(accaState.a, accaState.data);
-      return;
-    }
-    const swap = t.closest("[data-swap]");
+    const swap = e.target.closest("[data-swap]");
     if (swap) {
-      const key = `${weekKey()}:swap:${swap.dataset.window}`;
-      const swaps = store(key) || {};
-      swaps[swap.dataset.swap] = swap.dataset.spare;
-      store(key, swaps);
-      accaState.open = `${swap.dataset.window}|${swap.dataset.spare}`;
-      renderAcca(accaState.a, accaState.data);
-      return;
+      const [window, i] = swap.dataset.swap.split(":");
+      const w = slipState.data.slips.slips.find(s => s.window === window);
+      swapLeg(w, Number(i));
+      renderSlips(slipState.data);
     }
-    const undo = t.closest("[data-undo]");
-    if (undo) {
-      const key = `${weekKey()}:swap:${undo.dataset.window}`;
-      const swaps = store(key) || {};
-      delete swaps[undo.dataset.undo];
-      store(key, Object.keys(swaps).length ? swaps : null);
-      renderAcca(accaState.a, accaState.data);
-      return;
-    }
-    const clear = t.closest("[data-clear]");
-    if (clear) {
-      const w = (accaState.a.accumulators || []).find(x => x.window === clear.dataset.clear);
-      if (!w) return;
-      [...w.legs, ...(w.spares || [])].forEach(l => store(`${weekKey()}:chk:${l.key}`, null));
-      store(`${weekKey()}:swap:${w.window}`, null);
-      accaState.open = null;
-      renderAcca(accaState.a, accaState.data);
-    }
-  });
-
-  accaEl.addEventListener("change", e => {
-    const input = e.target.closest(".chk-input");
-    if (!input) return;
-    const key = `${weekKey()}:chk:${input.dataset.key}`;
-    const saved = store(key) || {};
-    saved[input.dataset.field] = input.value.trim();
-    store(key, saved);
-    const next = input.dataset.field === "line" ? input.id.replace(/^line-/, "price-") : null;
-    renderAcca(accaState.a, accaState.data);
-    if (next) document.getElementById(next)?.focus();
   });
 
   document.getElementById("search").addEventListener("input", e => {
     state.search = e.target.value;
-    render();
-  });
-
-  document.getElementById("sideFilter").addEventListener("change", e => {
-    state.side = e.target.value;
     render();
   });
 
@@ -1414,9 +695,9 @@
 
   <div class="wrap">
     <footer>
-      Heuristic blend, not a backtested statistical model — see the project README for
-      known limitations (opponent data is broad-position only, name matching has gaps,
-      rookie projections are lower-confidence, tackle props may show a data-source offset).
+      For fun. The slips are built to be likely, not to beat the bookmaker: expect to lose the stake
+      most weeks. Chances come from the US books' prices and every prop graded so far; see the project
+      README for how they're checked each Tuesday.
     </footer>
   </div>
 </body>

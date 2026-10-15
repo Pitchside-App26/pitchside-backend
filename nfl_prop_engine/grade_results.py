@@ -21,7 +21,6 @@ separate, unverified data path for grading vs. projecting.
 """
 import argparse
 import logging
-import sqlite3
 
 import nfl_data_py as nfl
 import pandas as pd
@@ -31,12 +30,12 @@ from fetch_schedule import load_schedule_seasons
 from fetch_stats import fetch_all_stats
 from participation import WeekParticipation, week_participation
 from pricing import american_to_decimal
-from results_log import VOID, Outcome, _connect, grade_acca_week, grade_analyst_week, grade_week
+from results_log import VOID, Outcome, _connect, grade_acca_week, grade_analyst_week, grade_slip_week, grade_week
 
 logger = logging.getLogger(__name__)
 
 
-TABLES = ("weekly_output", "acca_legs", "analyst_picks")
+TABLES = ("weekly_output", "acca_legs", "analyst_picks", "slip_legs")
 PENDING = "actual_value IS NULL AND void = 0"  # not graded yet (a void row is settled)
 
 
@@ -164,9 +163,10 @@ def grade_all_ungraded(db_path: str = RESULTS_DB_PATH, regrade: bool = False) ->
         n = grade_week(season, week, actuals, db_path, overwrite=regrade)
         n_acca = grade_acca_week(season, week, actuals, db_path, overwrite=regrade)
         n_analyst = grade_analyst_week(season, week, actuals, db_path, overwrite=regrade)
+        n_analyst += grade_slip_week(season, week, actuals, db_path, overwrite=regrade)
         n_void = sum(outcome.void for outcome in actuals.values())
         logger.info(
-            "Season %s week %s: graded %d logged row(s), %d accumulator leg(s) and %d analyst pick(s) covering "
+            "Season %s week %s: graded %d logged row(s), %d accumulator leg(s) and %d analyst pick(s)/slip leg(s) covering "
             "%d distinct player/stat pair(s), %d of them void (didn't play); %d pair(s) left for a later run.",
             season, week, n, n_acca, n_analyst, len(actuals), n_void, len(needed) - len(actuals),
         )
@@ -358,6 +358,39 @@ def print_analyst_report(db_path: str = RESULTS_DB_PATH) -> None:
         _summarize(rows, label)
 
 
+def slip_summary(df: pd.DataFrame) -> pd.DataFrame:
+    """One row per (season, week, window) fun slip: legs reached, whether
+    the slip landed, and the chance it was given against what happened."""
+    legs = df[(df["role"] == "leg") & df["actual_value"].notna()].copy()
+    if legs.empty:
+        return pd.DataFrame()
+    legs["hit"] = legs["actual_value"] >= legs["threshold"]
+    return legs.groupby(["season", "week", "window"]).agg(
+        legs=("hit", "size"), hit=("hit", "sum"), predicted=("chance", "mean"),
+        slip_chance=("chance", "prod"),
+    ).reset_index().assign(landed=lambda t: t["hit"] == t["legs"])
+
+
+def print_slip_report(db_path: str = RESULTS_DB_PATH) -> None:
+    conn = _connect(db_path)
+    try:
+        df = pd.read_sql_query("SELECT * FROM slip_legs", conn)
+    finally:
+        conn.close()
+    print()
+    summary = slip_summary(df)
+    if summary.empty:
+        print("No graded fun slips yet.")
+        return
+    print("Fun slips (milestone six-folds aimed at about 1 in 20):")
+    for row in summary.itertuples():
+        print(f"  {row.season} week {row.week} {row.window:<6} {row.hit}/{row.legs} legs"
+              f"{'  LANDED' if row.landed else ''}  (given 1 in {1 / row.slip_chance:.0f})")
+    legs = df[(df["role"] == "leg") & df["actual_value"].notna()]
+    hit = (legs["actual_value"] >= legs["threshold"]).mean()
+    print(f"  Legs reached their milestone {hit:.0%} of the time; their average chance was {legs['chance'].mean():.0%}.")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Grade logged props against real results and report hit rate.")
     parser.add_argument("--report", action="store_true", help="skip grading, just report on what's already graded")
@@ -373,6 +406,7 @@ def main():
         n = grade_all_ungraded(regrade=args.regrade)
         logger.info("Graded %d prop(s) this run.", n)
     print_report()
+    print_slip_report()
     print_acca_report()
     print_analyst_report()
 

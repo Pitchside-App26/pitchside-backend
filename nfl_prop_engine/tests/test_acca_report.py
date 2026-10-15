@@ -249,9 +249,9 @@ def test_report_writes_valid_json(tmp_path):
     report = build_acca_report(contexts, rows, week=4, season=2026, sweep=FakeSweep({}), api_key_present=True)
     _acca(report)["combined_probability"] = float("nan")  # must never reach the page as a bare NaN
     path = tmp_path / "data.json"
-    write_json([], 2026, 4, str(path), accumulator=report)
+    write_json([], 2026, 4, str(path), slips=report)
     data = json.loads(path.read_text())
-    assert data["accumulator"]["accumulators"][0]["combined_probability"] is None
+    assert data["slips"]["accumulators"][0]["combined_probability"] is None
 
 
 @pytest.mark.parametrize("url, kept", [

@@ -98,6 +98,29 @@ CREATE TABLE IF NOT EXISTS analyst_picks (
 """
 
 
+# The fun slips' legs and spares (milestone_slips.py): each judged on
+# whether he reached the milestone ("5+ receptions" = threshold 5).
+SLIP_SCHEMA = """
+CREATE TABLE IF NOT EXISTS slip_legs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    logged_at TEXT NOT NULL,
+    season INTEGER NOT NULL,
+    week INTEGER NOT NULL,
+    window TEXT,
+    player_id TEXT,
+    player_name TEXT,
+    stat_col TEXT,
+    threshold REAL,
+    main_line REAL,
+    over_prob REAL,
+    chance REAL,
+    role TEXT,
+    actual_value REAL,
+    graded_at TEXT
+);
+"""
+
+
 # Columns added after acca_legs first shipped, so a database created by an
 # earlier run gets them too (CREATE TABLE IF NOT EXISTS won't add them).
 ACCA_ADDED_COLUMNS = {"window": "TEXT", "filler": "INTEGER NOT NULL DEFAULT 0", "side": "TEXT"}
@@ -121,6 +144,7 @@ UNIQUE_KEYS = {
     "weekly_output": ("season", "week", "player_id", "stat_col"),
     "acca_legs": ("season", "week", "player_id", "stat_col", "side"),
     "analyst_picks": ("season", "week", "player_id", "stat_col", "side", "outlet", "analyst"),
+    "slip_legs": ("season", "week", "player_id", "stat_col"),
 }
 
 
@@ -148,6 +172,7 @@ def _connect(db_path: str = RESULTS_DB_PATH) -> sqlite3.Connection:
     conn.execute(SCHEMA)
     conn.execute(ACCA_SCHEMA)
     conn.execute(ANALYST_SCHEMA)
+    conn.execute(SLIP_SCHEMA)
     _add_columns(conn, "acca_legs", ACCA_ADDED_COLUMNS)
     _add_columns(conn, "weekly_output", WEEKLY_ADDED_COLUMNS)
     for table in UNIQUE_KEYS:
@@ -181,6 +206,39 @@ def log_acca_legs(rows: list[dict], season: int, week: int, db_path: str = RESUL
         )
     conn.close()
     return len(rows)
+
+
+def graded_props(db_path: str = RESULTS_DB_PATH):
+    """Every graded, non-void ranked prop: what the fun slips' chances are
+    estimated from (milestone_slips.ChanceModel)."""
+    import pandas as pd
+
+    conn = _connect(db_path)
+    try:
+        return pd.read_sql_query(
+            "SELECT season, week, stat_col, line, actual_value FROM weekly_output "
+            "WHERE actual_value IS NOT NULL AND void = 0", conn)
+    finally:
+        conn.close()
+
+
+def log_slip_legs(rows: list[dict], season: int, week: int, db_path: str = RESULTS_DB_PATH) -> int:
+    logged_at = datetime.now(timezone.utc).isoformat()
+    cols = ["window", "player_id", "player_name", "stat_col", "threshold", "main_line", "over_prob", "chance", "role"]
+    conn = _connect(db_path)
+    with conn:
+        conn.executemany(
+            f"INSERT OR REPLACE INTO slip_legs (logged_at, season, week, {', '.join(cols)}) "
+            f"VALUES ({', '.join('?' * (3 + len(cols)))})",
+            [(logged_at, season, week, *(r.get(c) for c in cols)) for r in rows],
+        )
+    conn.close()
+    return len(rows)
+
+
+def grade_slip_week(season: int, week: int, actuals: dict, db_path: str = RESULTS_DB_PATH, overwrite: bool = False) -> int:
+    """Same results as grade_week, applied to the fun slips' legs."""
+    return _grade_table("slip_legs", season, week, actuals, db_path, overwrite)
 
 
 def log_analyst_picks(rows: list[dict], season: int, week: int, db_path: str = RESULTS_DB_PATH) -> int:

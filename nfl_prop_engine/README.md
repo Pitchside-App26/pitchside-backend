@@ -1,10 +1,67 @@
-# NFL Prop Ranking Engine
+# NFL Fun Slips (formerly the NFL Prop Ranking Engine)
 
-Weekly pipeline: pull nflverse stats + this week's schedule, pull live prop
-lines from The Odds API, blend a projection per player/stat with
-early-season shrinkage and opponent adjustment, rank props by
-standard-deviation-scaled edge, print a markdown table, and log every run to
-SQLite so the ranking's track record can actually be checked later.
+**What this is now (15 Oct):** a weekly page with one £5 six-fold for the
+early Sunday games and one for the late games, built to land about 1 time
+in 20-25 and to go close most weeks. It is for fun. No edge is claimed.
+
+Why: graded at real prices, the projection model's picks lost 4.2%, every
+over lost 11.7% and every under 0.9% (712 priced props, week 5). The model is
+less accurate than the books' line on every stat. So the slips don't use
+it; see "Fun slips" below.
+
+Weekly pipeline: pull nflverse stats and this week's schedule, pull prop
+lines for the early and late games from The Odds API, build the fun slips,
+publish the page, and log everything to SQLite so Tuesday's grading can
+check it. The projection and ranking still run and are logged, for interest.
+
+## Fun slips (milestone_slips.py)
+
+Main-line props are coin flips, so six of them land about 1 time in 64.
+Each leg here is instead a **milestone** ("5+ receptions", i.e. over 4.5)
+set below the main line so it lands about (1/20)^(1/6) = 61% of the time.
+
+**The chance of a milestone** comes from every prop graded so far: how far
+above or below its line each stat finished (actual / line, per stat, small
+and big lines apart), shifted so the main line sits where the US books' fair
+price puts it. "5+" is compared as "over 4.5", and ties count half each way.
+Checked on weeks it wasn't built from (weeks 4-5, before any slip existed):
+- legs aimed at 61% hit 63.7% (1,201 legs);
+- every eligible leg in the replays: given 61.5% on average, hit 58.7% (419);
+- random six-folds of them, given 1 in 19, landed 1 in 15.
+
+So realistically a slip lands about 1 time in 20-25. Rushing-yard
+milestones are left out: they hit 53% when given 61%.
+
+**Left out:** players on the injury report (Questionable or worse), anyone
+under 60% of his unit's snaps in his last game (45% for carries), anyone
+whose snap share just moved 15+ points against his previous three games
+(Ollie Gordon going from backup to starter; it settles after a few games),
+quarterbacks' carries, and props with fewer than two books.
+
+**Choosing the six:** closest to 61% first, one leg a game while there are
+enough games, at most two per stat, then single legs nudged up or down a
+milestone to bring the slip near 1 in 20. Eight spares per window feed the
+page's Swap button. Each leg shows its chance, the fair price, the bet365
+equivalent (over X.5), and the chances at nearby milestones in case bet365
+doesn't offer that one. The slip shows its chance of landing and of getting
+5 or 4 of 6.
+
+**Replayed on weeks 4 and 5** (chances estimated without the replayed week,
+after two fixes found on these same weeks, so treat it as a sanity check
+not proof): 4/6, 3/6, 4/6, 3/6.
+
+**Logged** to `slip_legs` (legs and spares) and graded each Tuesday:
+`grade_results.py` prints each slip's legs reached and whether it landed,
+and how often legs reached their milestone against the chance they were
+given, so the chances can be checked as weeks build up.
+
+**Retired from the weekly run (15 Oct):** the gated accumulator report
+(`acca_report.py` gates, value check, Fun/Value modes), the analyst picks
+search (never logged a pick; ~$1.40-3 a run), and the wind forecast. Their
+code stays in the repo with its tests; the run no longer calls them, so
+they cost nothing. Odds are fetched only for the early and late games and
+the 7 markets in `config.FETCH_MARKETS`: about 84 credits a run, inside the
+free 500 a month.
 
 ## Setup
 
@@ -133,9 +190,10 @@ after the fact from the final projection.
 
 **Run health** (since 14 Oct): `data.json` carries a `health` list of
 what didn't work in that run, shown as a warning box at the top of the
-page and in the run's GitHub job summary: wind forecasts that didn't load,
-an analyst search that failed, slips that failed to build, or fewer than
-150 Odds API credits left (about one Sunday run). A clean run shows nothing.
+page and in the run's GitHub job summary: snap counts that didn't load
+(so part-timers couldn't be left out), slips that failed to build or came
+up short of six legs, or fewer than 90 Odds API credits left (about one
+Sunday run). A clean run shows nothing.
 
 **Deployment**: `.github/workflows/nfl-prop-rankings.yml` uploads `site/` as
 a GitHub Pages artifact after every run (scheduled or manual) and deploys it.
@@ -479,7 +537,10 @@ real-money multi-leg bet has less tolerance for risk than a general
   `ANTHROPIC_API_KEY` repo secret, Sonnet 5, a $15/month spend cap set in
   `config.ANALYST_SWEEP`.
 
-## The accumulator report (top of the results page)
+## The accumulator report (retired from the page on 15 Oct)
+
+Kept for the record: this was the page's slip builder from 1 to 14 Oct. See
+"Fun slips" above for what replaced it and why.
 
 Every weekly run (`run_weekly.py`) now ends with `acca_report.py`. It uses
 data the run has already fetched, so it costs no extra Odds API credits.
@@ -720,6 +781,7 @@ Not built yet:
 | `grade_results.py` | fills in real outcomes and reports hit rate -- the "later" `results_log.py` was built for |
 | `participation.py` | who took the field each week (nflverse snap counts): played and 0, or void |
 | `integrity.py` | results-log checks that turn the Tuesday grading run red on a problem |
+| `milestone_slips.py` | the fun slips: milestone chances, the two six-folds, spares, logging |
 | `run_weekly.py` | orchestrator / CLI entrypoint |
 | `tests/` | unit tests for the pure-logic pieces (projection math, matching, ranking) |
 | `docs/week4-upgrade-spec.md` | the accumulator-engine spec below, saved in full |
