@@ -1,0 +1,187 @@
+{
+ "locked_at": "2026-10-16T11:58+00:00",
+ "o15": {
+  "legs": [
+   [
+    "ENG4",
+    "Tranmere",
+    "Barnet"
+   ],
+   [
+    "ENG4",
+    "Oldham",
+    "Cheltenham"
+   ],
+   [
+    "ENG2",
+    "Derby",
+    "Stoke"
+   ],
+   [
+    "SCO4",
+    "Elgin",
+    "Edinburgh City"
+   ],
+   [
+    "SCO3",
+    "East Kilbride",
+    "Montrose"
+   ],
+   [
+    "SCO4",
+    "Dumbarton",
+    "Stirling"
+   ],
+   [
+    "ENG3",
+    "Plymouth",
+    "Huddersfield"
+   ],
+   [
+    "ENG3",
+    "Wycombe",
+    "Notts County"
+   ],
+   [
+    "ENG6N",
+    "Merthyr Town",
+    "King's Lynn Town"
+   ],
+   [
+    "ENG6N",
+    "Hednesford",
+    "Brackley Town"
+   ],
+   [
+    "SCO4",
+    "Kelty Hearts",
+    "Forfar"
+   ],
+   [
+    "SCO2",
+    "Morton",
+    "Queens Park"
+   ],
+   [
+    "ENG2",
+    "Swansea",
+    "West Ham"
+   ],
+   [
+    "SCO3",
+    "Queen of Sth",
+    "Ross County"
+   ],
+   [
+    "ENG1",
+    "Brentford",
+    "Liverpool"
+   ],
+   [
+    "ENG3",
+    "Leyton Orient",
+    "Blackpool"
+   ],
+   [
+    "ENG3",
+    "Stockport",
+    "Bromley"
+   ],
+   [
+    "ENG3",
+    "Barnsley",
+    "Cambridge"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG6N",
+    "Southport",
+    "Radcliffe"
+   ],
+   [
+    "ENG6N",
+    "Buxton",
+    "Worksop Town"
+   ],
+   [
+    "SCO1",
+    "Hibernian",
+    "Falkirk"
+   ],
+   [
+    "SCO4",
+    "Spartans",
+    "Stranraer"
+   ],
+   [
+    "ENG2",
+    "Wrexham",
+    "Preston"
+   ],
+   [
+    "ENG4",
+    "Newport County",
+    "York"
+   ]
+  ],
+  "below_line": []
+ },
+ "gibh": {
+  "legs": [
+   [
+    "SCO4",
+    "Dumbarton",
+    "Stirling"
+   ],
+   [
+    "SCO4",
+    "Elgin",
+    "Edinburgh City"
+   ],
+   [
+    "SCO3",
+    "East Kilbride",
+    "Montrose"
+   ],
+   [
+    "ENG4",
+    "Tranmere",
+    "Barnet"
+   ],
+   [
+    "ENG2",
+    "Derby",
+    "Stoke"
+   ],
+   [
+    "ENG2",
+    "Southampton",
+    "Bolton"
+   ],
+   [
+    "ENG2",
+    "Swansea",
+    "West Ham"
+   ],
+   [
+    "ENG4",
+    "Oldham",
+    "Cheltenham"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG3",
+    "Stockport",
+    "Bromley"
+   ],
+   [
+    "SCO4",
+    "Spartans",
+    "Stranraer"
+   ]
+  ],
+  "below_line": []
+ }
+}
