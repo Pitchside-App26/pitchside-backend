@@ -96,6 +96,18 @@ def hit_rates(df: pd.DataFrame | None = None, cfg: dict | None = None) -> dict:
     return out
 
 
+def rated_at_least(df: pd.DataFrame, cfg: dict, mk: str, min_pct: float) -> dict:
+    """How often graded fixtures rated `min_pct`+ for this market actually landed:
+    the honest per-leg rate for an accumulator built from that pool."""
+    from .scope import in_scope
+    comb, hit = f"{mk}_combined", f"{mk}_hit"
+    g = df[(df["status"] == "graded")].dropna(subset=[comb])
+    g = g[g[comb].astype(float) >= min_pct]
+    g = g.loc[[in_scope(cfg, mk, lg, ko) for lg, ko in zip(g["league_name"], g["kickoff"])]] if len(g) else g
+    hits = int(g[hit].astype(str).str.lower().isin(["true", "1", "1.0"]).sum())
+    return {"n": len(g), "hits": hits, "since": g["report_date"].min() if len(g) else None}
+
+
 def _acca_record(df: pd.DataFrame, mk: str, tag: str):
     """Accumulator weeks, counting only weeks where every leg has a result.
     A postponed (void) leg drops out, as bookmakers settle it; a week with a

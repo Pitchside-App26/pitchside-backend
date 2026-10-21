@@ -198,8 +198,9 @@ def analyse_league(league, on, fd_fixtures, cfg):
     rows = []
     for f in fixtures:
         h, a = stats.get(f["home"]), stats.get(f["away"])
-        o = fixture_markets(h, a, "o15", t["min_games"])
-        g = fixture_markets(h, a, "gibh", t["min_games"])
+        k = cfg.get("shrink_games") or {}
+        o = fixture_markets(h, a, "o15", t["min_games"], lr.pct("o15"), k.get("over_1_5", 0))
+        g = fixture_markets(h, a, "gibh", t["min_games"], lr.pct("gibh"), k.get("gibh", 0))
         flags = list(o["flags"])
         if f.get("note"):
             flags.append(f["note"])
@@ -254,9 +255,10 @@ def build_acca(rows, cfg, market: str, odds_on: bool):
         below = under[:nres - len(reserves)]
     pct = a["min_combined_pct"]
     if k == 0:
+        size = lo if lo == hi else f"{lo}-{hi}"
         msg = (f"Only {n} fixture{'s' if n != 1 else ''} qualif{'y' if n != 1 else 'ies'} "
                f"({label} combined {pct}%+, every team {cfg['thresholds']['min_games']}+ games, "
-               f"data checks passed) - not enough for a {lo}-{hi} fold. They are listed below as candidates.")
+               f"data checks passed) - not enough for a {size}-fold. They are listed below as candidates.")
         legs, reserves = [], pool
     elif below:
         msg = (f"{k}-fold. {len(reserves)} reserve{'s' if len(reserves) != 1 else ''} at {pct}%+, "
@@ -273,6 +275,26 @@ def build_acca(rows, cfg, market: str, odds_on: bool):
         r[tag] = "below_line"
     return {"legs": legs, "reserves": reserves, "below_line": below, "message": msg, "pool": n,
             "note": (a.get("note") or "").strip(), "min_pct": pct}
+
+
+TRACK_MIN = 30  # graded fixtures needed before the track record is used for the odds of a fold landing
+
+
+def acca_chance(a: dict, df, cfg: dict, mk: str) -> dict | None:
+    """Chance every leg lands: from the legs' own percentages, and from how often
+    fixtures rated as highly have actually landed so far (the honest one)."""
+    legs = a["legs"]
+    if not legs:
+        return None
+    model = 1.0
+    for r in legs:
+        model *= r[mk]["combined_pct"]
+    out = {"legs": len(legs), "model": model}
+    t = history.rated_at_least(df, cfg, mk, a["min_pct"])
+    if t["n"] >= TRACK_MIN:
+        rate = t["hits"] / t["n"]
+        out.update(track=rate ** len(legs), rate=rate, n=t["n"], hits=t["hits"], since=t["since"])
+    return out
 
 
 def run(on: date, cfg: dict, repick: bool = False) -> dict:
@@ -357,6 +379,8 @@ def run(on: date, cfg: dict, repick: bool = False) -> dict:
         history.record_report(hist_rows, on.isoformat(), leagues={res["league"].key for res in loaded})
 
     hit_rates = history.hit_rates(cfg=cfg)
+    for mk, a in accas.items():
+        a["chance"] = acca_chance(a, history.load(), cfg, mk)
     return {
         "date": on, "generated": datetime.now(timezone.utc), "loaded": loaded, "failed": failed,
         "o15": o15, "gibh": gibh, "accas": accas, "odds": odds_info, "fixtures_meta": fx_meta,
