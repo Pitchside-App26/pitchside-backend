@@ -77,23 +77,42 @@ def _avg(a, b):
     return (a + b) / 2
 
 
-def fixture_markets(home: TeamStats | None, away: TeamStats | None, market: str, min_games: int):
-    """Combined % (all games) and venue-split % (home team at home, away team away)."""
+def shrunk(split: Split, market: str, league_pct: float | None, k: float) -> float | None:
+    """A team's rate pulled towards its league's average, by `k` games' worth.
+
+    Early in a season a team has 5-12 games, so its raw rate is noisy, and the
+    fixtures at the top of a ranking are mostly the ones that ran hot by chance.
+    (wins + k * league) / (games + k) keeps a 9-from-9 team high but not at 100%,
+    and lets the pull fade as the games build up. k = 0 gives the raw rate."""
+    if not split.gp:
+        return None
+    if league_pct is None or not k:
+        return split.pct(market)
+    return (getattr(split, market) + k * league_pct) / (split.gp + k)
+
+
+def fixture_markets(home: TeamStats | None, away: TeamStats | None, market: str, min_games: int,
+                    league_pct: float | None = None, shrink: float = 0):
+    """Combined % (all games) and venue-split % (home team at home, away team away).
+
+    home_pct / away_pct are the raw records (shown as facts); combined_pct and
+    venue_pct are estimates, each team's rate shrunk towards `league_pct`."""
     h_pct = home.all.pct(market) if home else None
     a_pct = away.all.pct(market) if away else None
+    est = lambda ts, split: shrunk(getattr(ts, split), market, league_pct, shrink) if ts else None  # noqa: E731
     flags = []
     for label, ts in (("home", home), ("away", away)):
         if ts is None:
             flags.append(f"{label} team has no games")
         elif ts.all.gp < min_games:
             flags.append(f"{ts.team}: only {ts.all.gp} games")
-    venue = _avg(home.home.pct(market) if home else None, away.away.pct(market) if away else None)
     return {
         "home_pct": h_pct,
         "away_pct": a_pct,
-        "combined_pct": _avg(h_pct, a_pct),
-        "venue_pct": venue,
+        "combined_pct": _avg(est(home, "all"), est(away, "all")),
+        "venue_pct": _avg(est(home, "home"), est(away, "away")),
         "home_gp": home.all.gp if home else 0,
         "away_gp": away.all.gp if away else 0,
+        "league_pct": league_pct,
         "flags": flags,
     }

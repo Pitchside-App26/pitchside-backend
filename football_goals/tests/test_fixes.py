@@ -134,6 +134,7 @@ def test_grading_refreshes_track_lines():
 # 12. Below-the-line reserves follow the same price rule as the legs.
 def test_below_line_reserves_respect_min_price():
     cfg = run_report.load_config()
+    cfg["accumulator"]["min_combined_pct"] = 80                       # the numbers below assume an 80% bar
     cfg["odds"]["min_price"] = 1.20
 
     def row(p, price):
@@ -227,3 +228,40 @@ def test_locked_picks_survive_a_rerun(tmp_path, monkeypatch):
     assert [r["home"] for r in a["legs"]] == ["B"] and [r["home"] for r in a["reserves"]] == ["C"]
     assert "A v Z" in a["message"] and "flagged" in a["message"] and a["locked"]
     assert [r.get("acca") for r in later] == ["leg", "reserve", None, None]
+
+
+# Short records run hot: estimates are pulled towards the league average.
+def test_shrinkage_pulls_short_records_towards_the_league():
+    from football_goals.stats import fixture_markets, shrunk, team_stats
+    res = [_m("A", f"X{i}", 2, 1) for i in range(9)] + [_m(f"Y{i}", "B", 1, 0) for i in range(3)]
+    st = team_stats(res)
+    assert shrunk(st["A"].all, "o15", 0.75, 0) == 1.0
+    assert abs(shrunk(st["A"].all, "o15", 0.75, 15) - (9 + 15 * 0.75) / 24) < 1e-9
+    m = fixture_markets(st["A"], st["B"], "o15", 0, 0.75, 15)
+    assert m["home_pct"] == 1.0 and m["away_pct"] == 0.0                  # the records shown stay raw
+    want = ((9 + 11.25) / 24 + (0 + 11.25) / 18) / 2
+    assert abs(m["combined_pct"] - want) < 1e-9 and m["league_pct"] == 0.75
+    assert fixture_markets(st["A"], st["B"], "o15", 0)["combined_pct"] == 0.5   # no league rate: raw, as before
+
+
+# The card's "chance all legs land" uses the track record once there's enough of it.
+def test_acca_chance_uses_the_track_record(tmp_path, monkeypatch):
+    import pandas as pd
+    from football_goals import history
+    cfg = run_report.load_config()
+    legs = [{"o15": {"combined_pct": 0.85}} for _ in range(10)]
+    a = {"legs": legs, "min_pct": 77}
+    rows = [{"report_date": "2026-10-03", "league_name": "League Two", "kickoff": "15:00", "status": "graded",
+             "o15_combined": 80.0 + i % 5, "o15_hit": i % 5 != 0} for i in range(40)]
+    df = pd.DataFrame(rows, columns=history.COLUMNS)
+    ch = run_report.acca_chance(a, df, cfg, "o15")
+    assert abs(ch["model"] - 0.85 ** 10) < 1e-12
+    assert ch["n"] == 40 and ch["hits"] == 32 and abs(ch["track"] - 0.8 ** 10) < 1e-12
+    assert "track" not in run_report.acca_chance(a, df.head(10), cfg, "o15")      # too few results yet
+    assert run_report.acca_chance({"legs": [], "min_pct": 77}, df, cfg, "o15") is None
+    assert history.rated_at_least(df.iloc[0:0], cfg, "o15", 77)["n"] == 0
+
+
+def test_gibh_fold_is_a_six_fold():
+    a = run_report.load_config()["gibh_accumulator"]
+    assert (a["min_legs"], a["max_legs"]) == (6, 6)

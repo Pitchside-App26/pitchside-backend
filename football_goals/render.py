@@ -149,6 +149,17 @@ def _acca(report, mk):
     out = [f"<div class='card acca' data-mk={mk} data-date={report['date'].isoformat()} data-title='{escape(title)}'>"
            f"<div class=acc-head><b>{title}</b><span class=sub>{size}</span></div>"
            f"<p class=sub style='margin:.2rem 0 0'>{escape(a['message'])}</p>"]
+    ch = a.get("chance")
+    if ch:
+        odds_of = lambda p: f"1 in {max(1, round(1 / p)):,}" if p > 0 else "nil"  # noqa: E731
+        if "track" in ch:
+            out.append(f"<p class='sub chance'><b>Chance all {ch['legs']} land: about {odds_of(ch['track'])}.</b> "
+                       f"Fixtures rated {a['min_pct']}%+ have landed {100 * ch['rate']:.0f}% of the time "
+                       f"({ch['hits']} of {ch['n']} since {escape(str(ch['since']))}). "
+                       f"The percentages alone say {odds_of(ch['model'])}.</p>")
+        else:
+            out.append(f"<p class='sub chance'>Chance all {ch['legs']} land, if the percentages are right: "
+                       f"about {odds_of(ch['model'])}. Too few results yet to check them.</p>")
     if a.get("note"):  # e.g. the bookmaker's boost rule: read before placing
         out.append(f"<div class=note>{escape(a['note'])}</div>")
     if a["legs"]:
@@ -190,10 +201,12 @@ def _fixture_list(report, mk):
             f"<summary><span class=fxn>{escape(_fixture(r))}<small>{escape(_short(r['league_name']))} · "
             f"{escape(r['kickoff'] or '–')} · venue {pct(m['venue_pct'])}{flag}</small></span>"
             f"<b class='pc{' hi' if hi else ''}'>{pct(m['combined_pct'], 1)}</b></summary>"
-            f"<div class=fxd><div><span>Home team</span>{pct(m['home_pct'])} · {m['home_gp']} games</div>"
-            f"<div><span>Away team</span>{pct(m['away_pct'])} · {m['away_gp']} games</div>"
+            f"<div class=fxd><div><span>Home team record</span>{pct(m['home_pct'])} · {m['home_gp']} games</div>"
+            f"<div><span>Away team record</span>{pct(m['away_pct'])} · {m['away_gp']} games</div>"
+            f"<div><span>League average</span>{pct(m.get('league_pct'))} · {escape(r['league_name'])}</div>"
             f"<div><span>Venue-split</span>{pct(m['venue_pct'], 1)}</div>"
-            f"<div><span>League</span>{escape(r['league_name'])}</div>{price}{flags}</div></details>")
+            f"<div class=sub>The big % is each team's record pulled towards the league average (less so the "
+            f"more games it has played): short records run hot by chance.</div>{price}{flags}</div></details>")
     opts = "".join(f"<option value='{escape(lg)}'>{escape(_short(lg))}</option>" for lg in leagues)
     n_hi = sum(1 for r in rows if r[mk]["combined_pct"] is not None and r[mk]["combined_pct"] >= thr)
     return (f"<h2>All fixtures <span class=sub>· {len(rows)}</span></h2>"
@@ -353,10 +366,15 @@ def _info(report):
             items.append(f"<li>source file last updated {escape(lm)}</li>")
         out.append(f"<details class=card><summary>{'⚠️ ' if res['problems'] else ''}{escape(res['league'].name)}</summary>"
                    f"<ul>{''.join(items)}</ul></details>")
+    k = cfg.get("shrink_games") or {}
     out.append(f"<h2>How the numbers work</h2><div class=card><p class=sub style='margin:0'>For each team: Over 1.5 % = "
                f"league games with 2+ goals ÷ games played. Goal-in-both-halves % = games with at least one goal in each "
-               f"half ÷ games played (second-half goals = full-time total minus half-time total). Combined % = average of "
-               f"the two teams. Venue-split = the home team's home games and the away team's away games. Teams with fewer "
+               f"half ÷ games played (second-half goals = full-time total minus half-time total). Each team's record is then "
+               f"pulled towards its league's average by {k.get('over_1_5', 0)} games' worth for Over 1.5 and "
+               f"{k.get('gibh', 0)} for GIBH: (hits + N × league rate) ÷ (games + N). Short records run hot by chance, "
+               f"so a 9-from-9 team in a 75% league shows 84%, not 100%; the pull fades as games build up. "
+               f"Combined % = average of the two teams' estimates. Venue-split = the same from the home team's home "
+               f"games and the away team's away games. Teams with fewer "
                f"than {cfg['thresholds']['min_games']} games are flagged ⚑.</p></div>")
     return "".join(out)
 

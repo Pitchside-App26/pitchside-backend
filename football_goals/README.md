@@ -32,7 +32,7 @@ afresh (only before you've bet), run the report workflow on GitHub with the
 
 The page works like an app. The bar along the bottom has four sections:
 - **Over 1.5** and **GIBH:** that market's suggested accumulator first, then every fixture as a one-line row. Tap a
-  row for its detail, or use the **80%+ only** and **league** filters.
+  row for its detail, or use the **77%+ only** (62%+ on GIBH) and **league** filters.
 - **Results:** last weekend fixture by fixture, plus the running track record.
 - **Info:** postponements, data sources and checks, how the numbers work, the CSV, running the report for another
   date, and the one-tap-update setup.
@@ -110,7 +110,7 @@ All the numbers you might want to change are in one file,
 [`football_goals/config.yaml`](config.yaml).
 
 1. Open the file on GitHub and tap the **pencil** (Edit) icon.
-2. Change a number. For example, set `over_1_5_highlight: 80` to `85`.
+2. Change a number. For example, set `over_1_5_highlight: 77` to `80`.
 3. Tap **Commit changes**.
 
 The next run uses the new value. The settings are:
@@ -120,17 +120,18 @@ The next run uses the new value. The settings are:
 | `markets:` `over_1_5:` `kickoffs` | UK kick-off times the Over 1.5 tab covers (`[]` = all) | `["15:00"]` |
 | `markets:` `gibh:` `kickoffs` | UK kick-off times the GIBH tab covers | `["15:00"]` |
 | `markets:` `gibh:` `exclude_leagues` | Leagues left off the GIBH tab | National League North, South |
-| `over_1_5_highlight` | Over 1.5 combined % at or above this is highlighted | 80 |
-| `gibh_highlight` | GIBH combined % at or above this is highlighted | 65 |
+| `over_1_5_highlight` | Over 1.5 combined % at or above this is highlighted | 77 |
+| `gibh_highlight` | GIBH combined % at or above this is highlighted | 62 |
+| `shrink_games:` `over_1_5` / `gibh` | How hard each team's rate is pulled towards its league average, in games (0 = raw rates) | 15 / 25 |
 | `min_games` | Teams with fewer league games than this are flagged | 6 |
 | `accumulator:` `min_legs` / `max_legs` | Size of the Over 1.5 accumulator | 16 / 18 |
 | `accumulator:` `reserves` | Reserves listed under it | 6 |
-| `accumulator:` `fill_reserves_below_line` | If fewer reserves reach 80%, top the list up with the best fixtures just under it (marked "below 80%") | true |
+| `accumulator:` `fill_reserves_below_line` | If fewer reserves reach the minimum, top the list up with the best fixtures just under it (marked "below 77%") | true |
 | `accumulator:` `note` | Reminder shown on the Over 1.5 accumulator card (`""` hides it) | the SpreadEx boost rule |
-| `accumulator:` `min_combined_pct` | Lowest Over 1.5 combined % allowed in it | 80 |
-| `gibh_accumulator:` `min_legs` / `max_legs` | Size of the goal-in-both-halves accumulator | 6 / 8 |
+| `accumulator:` `min_combined_pct` | Lowest Over 1.5 combined % allowed in it | 77 |
+| `gibh_accumulator:` `min_legs` / `max_legs` | Size of the goal-in-both-halves accumulator | 6 / 6 |
 | `gibh_accumulator:` `reserves` | Reserves listed under it | 2 |
-| `gibh_accumulator:` `min_combined_pct` | Lowest GIBH combined % allowed in it | 65 |
+| `gibh_accumulator:` `min_combined_pct` | Lowest GIBH combined % allowed in it | 62 |
 | `require_min_games` (in each) | `true` keeps flagged (low-game) teams out of that accumulator | true |
 | `odds: enabled` | `true` adds an Over 1.5 price column (see Odds below) | false |
 | `odds: min_price` | Only put a leg in the accumulator if its price is better than this | 1.0 (off) |
@@ -150,29 +151,41 @@ For each team, using this season's league games only:
 
 For each fixture:
 
-- **Combined %** = the average of the home team's % and the away team's %.
-- **Venue-split %** = the average of the home team's **home** games and the away team's **away** games.
+- **Combined %** = the average of the home team's and the away team's estimate.
+- **Venue-split %** = the same, from the home team's **home** games and the away team's **away** games.
+
+Each team's **estimate** is its record pulled towards its league's average:
+(hits + N × league rate) ÷ (games + N), with N = 15 games for Over 1.5 and 25 for
+GIBH. A team that's 9 from 9 in a 75% league shows 84%, not 100%. The pull
+fades as a team's games build up. Without it, the top of the list is mostly
+teams that have run hot by chance: from 3 to 17 October, legs rated 87% landed
+79% (Over 1.5) and legs rated 78% landed 50% (GIBH). With it, the same weeks'
+fixtures land close to their percentage. The fixture detail still shows each
+team's raw record.
 - **Flags**: a team with fewer than 6 games, or a league whose data checks failed.
 
 **The accumulators** work the same way for each market:
 - they take the fixtures at or above the minimum combined %, highest first;
 - they leave out flagged teams and any league whose data check failed;
 - with enough fixtures, they build a fold plus reserves; otherwise they say how many qualified and list them;
-- reserves are in order, so swap in the top one first. If too few reach the minimum, the list is topped up with the best fixtures just under it, each marked "below 80%".
+- reserves are in order, so swap in the top one first. If too few reach the minimum, the list is topped up with the best fixtures just under it, each marked "below 77%".
 
 The Over 1.5 card also shows the SpreadEx boost rule: every leg must be
 priced above 1/10. The report can't check SpreadEx's prices, so if a leg is
 1/10 or shorter, swap it for the next reserve.
 
 The two folds are different sizes:
-- **Over 1.5:** 16–18 legs at 80%+.
-- **Goal in both halves:** 6–8 legs at 65%+.
+- **Over 1.5:** 16–18 legs at 77%+.
+- **Goal in both halves:** a 6-fold at 62%+.
 
-The GIBH fold is smaller on purpose. GIBH rates run around 60–75%, so each
-extra leg costs far more than an Over 1.5 leg does. If the percentages were
-exact, these would land about as often as each other:
-- 8 GIBH legs at 72% each: about 7%;
-- 16 Over 1.5 legs at 85% each: also about 7%.
+The GIBH fold is smaller on purpose: GIBH legs land far less often, so each
+extra leg costs far more.
+
+**Chance all legs land.** Each card shows the realistic odds of the whole fold
+landing, worked out from how often fixtures rated that highly have actually
+landed so far (e.g. 79% for Over 1.5 at 77%+: an 18-fold is then about 1 in 75).
+It also shows what the percentages alone would say. Until 30 such fixtures
+have been graded, it shows only the percentages' figure.
 
 **The track record**, in the Results section, shows hit rates:
 - by market
@@ -182,6 +195,10 @@ exact, these would land about as often as each other:
 Each one is compared with the **league average**: that league's season-to-date
 rate at the time of the report. If a band doesn't beat its league average,
 the selection isn't adding anything.
+
+The estimates were introduced for 24 October. The three weeks before were
+rescored the same way, from the team records saved in each week's report,
+so every band compares like with like. The legs that were bet are unchanged.
 
 ---
 

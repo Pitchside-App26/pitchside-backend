@@ -154,6 +154,7 @@ def test_acca_sizes():
 
 def test_reserves_topped_up_below_the_line():
     cfg = run_report.load_config()
+    cfg["accumulator"]["min_combined_pct"] = 80                       # the numbers below assume an 80% bar
 
     def row(p, low=False):
         return {"o15": {"combined_pct": p, "venue_pct": p, "home_gp": 8, "away_gp": 8},
@@ -173,6 +174,7 @@ def test_reserves_topped_up_below_the_line():
 
 def test_gibh_acca_uses_its_own_settings():
     cfg = run_report.load_config()
+    cfg["gibh_accumulator"].update(min_legs=6, max_legs=8, min_combined_pct=65)   # the numbers below assume these
 
     def row(p):
         m = {"combined_pct": p, "venue_pct": p, "home_gp": 8, "away_gp": 8}
@@ -220,6 +222,7 @@ def test_second_run_keeps_the_locked_legs(fake, monkeypatch):
     cfg["accumulator"]["min_combined_pct"] = 100         # a re-run that would now pick nothing
     again = run_report.run(DAY, cfg)
     assert [(r["home"], r["away"]) for r in again["accas"]["o15"]["legs"]] == legs
-    assert "locked" in render.html(again)
+    page = render.html(again)
+    assert "locked" in page and "Chance all " in page and "if the percentages are right" in page
     fresh = run_report.run(DAY, cfg, repick=True)
     assert fresh["accas"]["o15"].get("locked") is None and not fresh["accas"]["o15"]["legs"]
