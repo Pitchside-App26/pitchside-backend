@@ -1,0 +1,253 @@
+{
+"north": [
+{
+"home": "AFC Telford United",
+"away": "Darlington",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 2,
+"ftag": 1,
+"hthg": 1,
+"htag": 1
+},
+{
+"home": "Buxton",
+"away": "Worksop Town",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 2,
+"ftag": 2,
+"hthg": 0,
+"htag": 2
+},
+{
+"home": "Hebburn Town",
+"away": "Scarborough Athletic",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 0,
+"ftag": 2,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "Hednesford",
+"away": "Brackley Town",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 3,
+"ftag": 2,
+"hthg": 3,
+"htag": 1
+},
+{
+"home": "Merthyr Town",
+"away": "King's Lynn Town",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 1,
+"hthg": 1,
+"htag": 0
+},
+{
+"home": "Southport",
+"away": "Radcliffe",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 0,
+"ftag": 2,
+"hthg": 0,
+"htag": 1
+}
+],
+"south": [
+{
+"home": "Ebbsfleet United",
+"away": "Weston Super Mare",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 6,
+"ftag": 1,
+"hthg": 4,
+"htag": 0
+},
+{
+"home": "Farnborough",
+"away": "Dagenham & Redbridge",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 2,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Folkestone Invicta",
+"away": "AFC Totton",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 2,
+"ftag": 1,
+"hthg": 2,
+"htag": 0
+},
+{
+"home": "Maidstone United",
+"away": "Maidenhead United",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 2,
+"ftag": 1,
+"hthg": 1,
+"htag": 0
+},
+{
+"home": "Slough Town",
+"away": "Horsham",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 2,
+"hthg": 1,
+"htag": 1
+},
+{
+"home": "Tonbridge Angels",
+"away": "Hemel Hempstead",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 0,
+"hthg": 1,
+"htag": 0
+}
+],
+"national": [],
+"sco3": [
+{
+"home": "East Fife",
+"away": "Alloa Athletic",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 0,
+"ftag": 3,
+"hthg": 0,
+"htag": 1
+},
+{
+"home": "East Kilbride",
+"away": "Montrose",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 1,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Peterhead",
+"away": "Cove Rangers",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 2,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Queen of the South",
+"away": "Ross County",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 7,
+"hthg": 0,
+"htag": 5
+},
+{
+"home": "Airdrieonians",
+"away": "Hamilton Academical",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "17:30",
+"fthg": 1,
+"ftag": 2,
+"hthg": 0,
+"htag": 1
+}
+],
+"sco4": [
+{
+"home": "Clyde",
+"away": "Annan Athletic",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 4,
+"ftag": 1,
+"hthg": 1,
+"htag": 0
+},
+{
+"home": "Dumbarton",
+"away": "Stirling Albion",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 1,
+"ftag": 1,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Elgin City",
+"away": "Edinburgh City",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 0,
+"ftag": 0,
+"hthg": 0,
+"htag": 0
+},
+{
+"home": "Kelty Hearts",
+"away": "Forfar Athletic",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 2,
+"ftag": 1,
+"hthg": 1,
+"htag": 1
+},
+{
+"home": "Spartans",
+"away": "Stranraer",
+"status": "FT",
+"date": "2026-10-17",
+"kickoff": "15:00",
+"fthg": 0,
+"ftag": 2,
+"hthg": 0,
+"htag": 1
+}
+]
+}

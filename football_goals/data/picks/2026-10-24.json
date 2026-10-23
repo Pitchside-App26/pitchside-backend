@@ -1,0 +1,177 @@
+{
+ "locked_at": "2026-10-23T12:30+00:00",
+ "o15": {
+  "legs": [
+   [
+    "ENG5",
+    "Boreham Wood",
+    "Fylde"
+   ],
+   [
+    "ENG6N",
+    "Chorley",
+    "Buxton"
+   ],
+   [
+    "ENG5",
+    "Solihull",
+    "Carlisle"
+   ],
+   [
+    "ENG5",
+    "Barrow",
+    "Forest Green"
+   ],
+   [
+    "ENG3",
+    "Cambridge",
+    "Plymouth"
+   ],
+   [
+    "ENG6S",
+    "Farnham Town",
+    "Braintree Town"
+   ],
+   [
+    "ENG6N",
+    "Darlington",
+    "Spennymoor Town"
+   ],
+   [
+    "ENG4",
+    "Barnet",
+    "Oldham"
+   ],
+   [
+    "ENG5",
+    "Yeovil",
+    "Altrincham"
+   ],
+   [
+    "ENG5",
+    "Southend",
+    "Halifax"
+   ],
+   [
+    "ENG6S",
+    "Horsham",
+    "Walton and Hersham"
+   ],
+   [
+    "ENG6S",
+    "Torquay United",
+    "Maidstone United"
+   ],
+   [
+    "ENG6S",
+    "Folkestone Invicta",
+    "Farnborough"
+   ],
+   [
+    "ENG6N",
+    "Brackley Town",
+    "Radcliffe"
+   ],
+   [
+    "ENG6N",
+    "King's Lynn Town",
+    "Southport"
+   ],
+   [
+    "ENG3",
+    "Blackpool",
+    "Mansfield"
+   ],
+   [
+    "ENG2",
+    "Blackburn",
+    "Wrexham"
+   ],
+   [
+    "ENG2",
+    "Cardiff",
+    "Birmingham"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG4",
+    "Crawley Town",
+    "Tranmere"
+   ],
+   [
+    "ENG3",
+    "Notts County",
+    "Stockport"
+   ],
+   [
+    "ENG6S",
+    "Hampton & Richmond",
+    "Truro City"
+   ],
+   [
+    "ENG3",
+    "Bromley",
+    "Peterboro"
+   ],
+   [
+    "ENG5",
+    "Aldershot",
+    "Wealdstone"
+   ],
+   [
+    "ENG5",
+    "Scunthorpe",
+    "Woking"
+   ]
+  ],
+  "below_line": []
+ },
+ "gibh": {
+  "legs": [
+   [
+    "ENG2",
+    "West Ham",
+    "Southampton"
+   ],
+   [
+    "ENG2",
+    "Cardiff",
+    "Birmingham"
+   ],
+   [
+    "ENG2",
+    "Lincoln",
+    "Burnley"
+   ],
+   [
+    "ENG5",
+    "Solihull",
+    "Carlisle"
+   ],
+   [
+    "ENG5",
+    "Yeovil",
+    "Altrincham"
+   ],
+   [
+    "ENG4",
+    "Barnet",
+    "Oldham"
+   ]
+  ],
+  "reserves": [
+   [
+    "SCO1",
+    "Dundee United",
+    "Aberdeen"
+   ],
+   [
+    "SCO1",
+    "Falkirk",
+    "Kilmarnock"
+   ]
+  ],
+  "below_line": []
+ }
+}

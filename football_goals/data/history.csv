@@ -1,199 +1,281 @@
 report_date,league,home,away,league_name,kickoff,o15_combined,o15_venue,o15_league_rate,gibh_combined,gibh_venue,gibh_league_rate,acca,gibh_acca,price,flags,status,fthg,ftag,hthg,htag,o15_hit,gibh_hit,graded_at,result_source
-2026-10-03,ENG3,Burton,Huddersfield,League One,15:00,81.0,87.5,78.2,53.2,62.5,55.2,leg,,,,graded,1,3,1,2,True,True,2026-10-04T20:33:00+00:00,ESPN
-2026-10-03,ENG3,Leyton Orient,Plymouth,League One,15:00,81.0,87.5,78.2,59.4,75.0,55.2,leg,leg,,,graded,0,2,0,0,True,False,2026-10-04T20:33:00+00:00,ESPN
-2026-10-03,ENG3,Reading,Bradford,League One,15:00,73.8,62.5,78.2,50.9,50.0,55.2,,,,,graded,1,1,0,1,True,True,2026-10-04T20:33:00+00:00,ESPN
-2026-10-03,ENG4,Chesterfield,Tranmere,League Two,12:30,81.2,75.0,76.6,62.5,50.0,53.2,,,,data check failed - see top,graded,4,2,1,0,True,True,2026-10-04T20:33:03+00:00,ESPN
-2026-10-03,ENG4,Accrington,Cheltenham,League Two,15:00,82.6,87.5,76.6,58.5,75.0,53.2,leg,leg,,data check failed - see top,graded,2,0,0,0,True,False,2026-10-04T20:33:03+00:00,ESPN
-2026-10-03,ENG4,Crewe,Bristol Rvs,League Two,15:00,73.9,87.5,76.6,47.9,25.0,53.2,,,,data check failed - see top,graded,3,1,2,0,True,True,2026-10-04T20:33:03+00:00,ESPN
-2026-10-03,ENG4,Exeter,Rotherham,League Two,15:00,69.5,50.0,76.6,47.9,25.0,53.2,,,,data check failed - see top,graded,1,0,0,0,False,False,2026-10-04T20:33:03+00:00,ESPN
-2026-10-03,ENG4,Gillingham,Newport County,League Two,15:00,78.2,75.0,76.6,50.9,12.5,53.2,leg,,,data check failed - see top,graded,0,0,0,0,False,False,2026-10-04T20:33:03+00:00,ESPN
-2026-10-03,ENG4,Grimsby,Shrewsbury,League Two,15:00,78.2,87.5,76.6,52.4,50.0,53.2,leg,,,data check failed - see top,graded,1,2,0,1,True,True,2026-10-04T20:33:03+00:00,ESPN
-2026-10-03,ENG4,Rochdale,Swindon,League Two,15:00,76.0,75.0,76.6,55.5,75.0,53.2,,,,data check failed - see top,graded,1,0,0,0,False,False,2026-10-04T20:33:03+00:00,ESPN
-2026-10-03,ENG4,Salford,Fleetwood Town,League Two,15:00,71.7,50.0,76.6,52.4,37.5,53.2,,,,data check failed - see top,graded,1,0,0,0,False,False,2026-10-04T20:33:03+00:00,ESPN
-2026-10-03,ENG5,Aldershot,Carlisle,National League,15:00,79.0,70.0,80.3,61.0,60.0,59.8,below_line,,,,graded,1,3,0,2,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Barrow,Wealdstone,National League,15:00,80.9,81.7,80.3,56.8,35.0,59.8,leg,,,,graded,2,1,1,1,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Boreham Wood,Altrincham,National League,15:00,82.9,75.0,80.3,61.0,48.3,59.8,leg,,,,graded,3,1,0,1,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Eastleigh,Woking,National League,15:00,77.1,71.7,80.3,59.6,45.0,59.8,,,,,graded,1,3,1,1,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Gateshead,Worthing,National League,15:00,79.0,80.0,80.3,59.6,60.0,59.8,below_line,,,,graded,1,2,1,1,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Harrogate,Hornchurch,National League,15:00,79.0,91.7,80.3,59.6,66.7,59.8,below_line,,,,graded,3,0,1,0,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Hartlepool,Tamworth,National League,15:00,79.0,70.0,80.3,59.6,61.7,59.8,below_line,,,,graded,0,1,0,1,False,False,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Kidderminster,Sutton,National League,15:00,77.1,65.0,80.3,56.8,36.7,59.8,,,,,graded,1,1,1,0,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Solihull,Halifax,National League,15:00,80.9,71.7,80.3,62.4,61.7,59.8,leg,reserve,,,graded,0,2,0,0,True,False,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Southend,Fylde,National League,15:00,84.8,81.7,80.3,59.6,45.0,59.8,leg,,,,graded,3,1,2,1,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,ENG5,Yeovil,Boston Utd,National League,15:00,80.9,100.0,80.3,63.7,100.0,59.8,leg,leg,,,graded,6,0,4,0,True,True,2026-10-04T20:33:05+00:00,ESPN
-2026-10-03,SCO2,Livingston,Ayr,Scottish Championship,15:00,69.6,75.0,66.7,41.7,37.5,41.0,,,,,graded,1,2,1,2,True,False,2026-10-04T20:33:07+00:00,ESPN
-2026-10-03,SCO2,Morton,Raith Rvs,Scottish Championship,15:00,69.6,50.0,66.7,43.2,50.0,41.0,,,,,graded,1,2,0,1,True,True,2026-10-04T20:33:07+00:00,ESPN
-2026-10-03,SCO2,Partick,Arbroath,Scottish Championship,15:00,59.9,50.0,66.7,39.2,37.5,41.0,,,,,graded,3,0,2,0,True,True,2026-10-04T20:33:07+00:00,ESPN
-2026-10-03,SCO3,Airdrie Utd,Montrose,Scottish League One,15:00,76.8,75.0,74.4,58.9,62.5,53.8,leg,leg,,data check failed - see top,graded,1,0,0,0,False,False,2026-10-09T11:01:53+00:00,football-data.co.uk
-2026-10-03,SCO3,East Fife,East Kilbride,Scottish League One,15:00,74.6,87.5,74.4,49.8,50.0,53.8,below_line,,,data check failed - see top,graded,0,3,0,1,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
-2026-10-03,SCO3,Queen of Sth,Cove Rangers,Scottish League One,15:00,76.8,75.0,74.4,52.9,25.0,53.8,leg,,,data check failed - see top,graded,4,3,2,0,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
-2026-10-03,SCO3,Ross County,Alloa,Scottish League One,15:00,74.1,75.0,74.4,55.3,62.5,53.8,,,,data check failed - see top,graded,4,1,1,0,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
-2026-10-03,SCO3,Hamilton,Peterhead,Scottish League One,17:30,58.9,62.5,74.4,46.4,50.0,53.8,,,,data check failed - see top,graded,2,1,0,0,True,False,2026-10-09T11:01:53+00:00,football-data.co.uk
-2026-10-03,SCO4,Annan Athletic,Stirling,Scottish League Two,15:00,83.7,100.0,85.0,69.7,87.5,70.0,leg,reserve,,data check failed - see top,graded,0,1,0,0,False,False,2026-10-09T11:01:54+00:00,football-data.co.uk
-2026-10-03,SCO4,Dumbarton,Forfar,Scottish League Two,15:00,83.7,87.5,85.0,68.2,62.5,70.0,leg,,,data check failed - see top,graded,2,1,0,1,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
-2026-10-03,SCO4,Elgin,Clyde,Scottish League Two,15:00,88.0,87.5,85.0,71.2,62.5,70.0,leg,leg,,data check failed - see top,graded,6,2,0,1,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
-2026-10-03,SCO4,Spartans,Kelty Hearts,Scottish League Two,15:00,85.9,87.5,85.0,72.7,75.0,70.0,leg,leg,,data check failed - see top,graded,0,2,0,1,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
-2026-10-03,SCO4,Stranraer,Edinburgh City,Scottish League Two,15:00,83.7,75.0,85.0,68.2,62.5,70.0,reserve,,,data check failed - see top,graded,0,0,0,0,False,False,2026-10-09T11:01:54+00:00,football-data.co.uk
-2026-10-10,ENG1,Arsenal,Leeds,Premier League,12:30,70.0,75.0,72.0,60.0,75.0,52.0,,,,Arsenal: only 5 games; Leeds: only 5 games,graded,2,1,0,0,True,False,2026-10-11T21:08:14+00:00,ESPN
-2026-10-10,ENG1,Aston Villa,Brentford,Premier League,15:00,74.0,75.0,72.0,50.0,50.0,52.0,,,,Aston Villa: only 5 games; Brentford: only 5 games,graded,2,2,1,1,True,True,2026-10-11T21:08:14+00:00,ESPN
-2026-10-10,ENG1,Chelsea,Bournemouth,Premier League,15:00,76.5,100.0,72.0,56.7,100.0,52.0,,,,Chelsea: only 5 games; Bournemouth: only 5 games,graded,5,1,2,0,True,True,2026-10-11T21:08:14+00:00,ESPN
-2026-10-10,ENG1,Ipswich,Fulham,Premier League,15:00,71.5,50.0,72.0,51.7,25.0,52.0,,,,Ipswich: only 5 games; Fulham: only 5 games,graded,2,1,0,0,True,False,2026-10-11T21:08:14+00:00,ESPN
-2026-10-10,ENG1,Sunderland,Brighton,Premier League,15:00,76.5,75.0,72.0,53.3,50.0,52.0,,,,Sunderland: only 5 games; Brighton: only 5 games,graded,0,2,0,0,True,False,2026-10-11T21:08:14+00:00,ESPN
-2026-10-10,ENG1,Man United,Tottenham,Premier League,17:30,70.0,50.0,72.0,30.0,50.0,52.0,,,,Man United: only 5 games; Tottenham: only 5 games,graded,1,1,0,0,True,False,2026-10-11T21:08:14+00:00,ESPN
-2026-10-10,ENG2,Charlton,Bristol City,Championship,12:30,68.8,62.5,80.0,50.0,50.0,64.2,,,,,graded,1,1,1,1,True,False,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,Swansea,Norwich,Championship,12:30,81.2,62.5,80.0,68.8,50.0,64.2,,,,,graded,2,1,0,1,True,True,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,West Brom,Birmingham,Championship,12:30,75.0,75.0,80.0,43.8,50.0,64.2,,,,,graded,0,1,0,1,False,False,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,Blackburn,Cardiff,Championship,15:00,82.6,87.5,80.0,65.3,62.5,64.2,leg,,,,graded,2,1,2,0,True,True,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,Bolton,Stoke,Championship,15:00,78.3,75.0,80.0,63.8,75.0,64.2,,,,,graded,1,2,0,1,True,True,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,Derby,Wrexham,Championship,15:00,82.6,75.0,80.0,68.3,75.0,64.2,leg,leg,,,graded,1,1,1,0,True,True,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,Middlesbrough,Wolves,Championship,15:00,79.9,87.5,80.0,64.7,62.5,64.2,,,,,graded,1,0,0,0,False,False,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,Preston,Millwall,Championship,15:00,82.6,87.5,80.0,69.8,87.5,64.2,leg,leg,,,graded,0,1,0,0,False,False,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,Sheffield United,Lincoln,Championship,15:00,71.7,37.5,80.0,57.7,37.5,64.2,,,,,graded,3,0,1,0,True,True,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG2,Watford,Burnley,Championship,15:00,82.6,100.0,80.0,63.8,87.5,64.2,leg,,,,graded,0,4,0,3,True,True,2026-10-11T21:08:17+00:00,ESPN
-2026-10-10,ENG3,Notts County,Oxford,League One,12:30,92.9,83.3,78.9,46.4,33.3,55.6,,,,,graded,1,2,0,1,True,True,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Plymouth,AFC Wimbledon,League One,12:30,69.4,87.5,78.9,58.3,87.5,55.6,,,,,graded,2,1,1,1,True,True,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Bradford,Leyton Orient,League One,15:00,75.4,83.3,78.9,52.7,33.3,55.6,,,,,graded,0,0,0,0,False,False,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Cambridge,Blackpool,League One,15:00,85.9,100.0,78.9,59.7,70.8,55.6,leg,reserve,,,graded,1,0,0,0,False,False,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Doncaster,Burton,League One,15:00,79.6,70.8,78.9,55.8,45.8,55.6,,,,,graded,1,0,1,0,False,False,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Huddersfield,Sheffield Weds,League One,15:00,76.9,100.0,78.9,53.5,50.0,55.6,,,,,graded,2,2,0,0,True,False,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Leicester,Peterboro,League One,15:00,79.3,87.5,78.9,53.5,41.7,55.6,,,,,graded,1,3,0,3,True,True,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Mansfield,Bromley,League One,15:00,78.8,66.7,78.9,57.5,66.7,55.6,,,,,graded,2,1,1,1,True,True,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Milton Keynes Dons,Reading,League One,15:00,79.2,66.7,78.9,58.2,50.0,55.6,,,,,graded,1,5,0,1,True,True,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Stevenage,Wigan,League One,15:00,74.2,66.7,78.9,52.8,33.3,55.6,,,,,graded,1,0,0,0,False,False,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Stockport,Barnsley,League One,15:00,77.0,70.8,78.9,56.6,70.8,55.6,,,,,graded,3,1,0,1,True,True,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG3,Wycombe,Luton,League One,15:00,81.5,100.0,78.9,56.6,75.0,55.6,leg,,,,graded,1,4,0,2,True,True,2026-10-11T21:08:21+00:00,ESPN
-2026-10-10,ENG4,Oldham,Accrington,League Two,12:30,94.4,100.0,74.5,71.5,62.5,52.0,,,,,graded,0,0,0,0,False,False,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Swindon,Crewe,League Two,12:30,66.7,75.0,74.5,44.4,50.0,52.0,,,,,graded,0,1,0,0,False,False,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Bristol Rvs,Barnet,League Two,15:00,79.2,75.0,74.5,54.7,58.3,52.0,leg,,,,graded,1,3,1,0,True,True,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Cheltenham,Salford,League Two,15:00,73.6,87.5,74.5,52.9,87.5,52.0,,,,,graded,0,2,0,0,True,False,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Crawley Town,Chesterfield,League Two,15:00,76.9,70.8,74.5,54.5,54.2,52.0,,,,,graded,2,2,0,1,True,True,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Fleetwood Town,Walsall,League Two,15:00,70.9,75.0,74.5,50.7,37.5,52.0,,,,,graded,1,1,0,0,True,False,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Newport County,Colchester,League Two,15:00,75.3,100.0,74.5,53.8,87.5,52.0,,,,,graded,1,0,0,0,False,False,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Port Vale,Grimsby,League Two,15:00,72.4,54.2,74.5,50.0,41.7,52.0,,,,,graded,1,0,1,0,False,False,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Rotherham,Gillingham,League Two,15:00,73.6,87.5,74.5,48.5,62.5,52.0,,,,,graded,1,4,1,1,True,True,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Shrewsbury,Exeter,League Two,15:00,69.5,50.0,74.5,48.5,37.5,52.0,,,,,graded,0,1,0,0,False,False,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,Tranmere,Rochdale,League Two,15:00,75.7,75.0,74.5,54.4,50.0,52.0,,,,,graded,1,1,1,0,True,True,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG4,York,Northampton,League Two,15:00,73.9,83.3,74.5,49.1,50.0,52.0,,,,,graded,1,1,0,1,True,True,2026-10-11T21:08:24+00:00,ESPN
-2026-10-10,ENG5,Altrincham,Aldershot,National League,12:30,70.8,83.3,81.1,58.3,75.0,61.5,,,,,graded,3,1,1,0,True,True,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Carlisle,Kidderminster,National League,12:30,79.2,90.0,81.1,62.5,71.7,61.5,,,,,graded,0,0,0,0,False,False,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Boston Utd,Southend,National League,15:00,82.1,75.0,81.1,65.9,75.0,61.5,,leg,,,graded,1,2,1,1,True,True,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Fylde,Scunthorpe,National League,15:00,83.6,83.3,81.1,58.6,45.0,61.5,leg,,,,graded,2,0,1,0,True,True,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Halifax,Gateshead,National League,15:00,78.4,83.3,81.1,57.8,66.7,61.5,,,,,graded,4,1,0,1,True,True,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Hornchurch,Eastleigh,National League,15:00,76.5,50.0,81.1,59.1,40.0,61.5,,,,,graded,2,0,1,0,True,True,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Tamworth,Barrow,National League,15:00,83.9,91.7,81.1,59.1,55.0,61.5,leg,,,,graded,1,2,0,0,True,False,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Wealdstone,Yeovil,National League,15:00,83.9,80.0,81.1,64.5,60.0,61.5,leg,,,,graded,0,6,0,1,True,True,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Woking,Harrogate,National League,15:00,82.1,81.7,81.1,64.5,81.7,61.5,reserve,,,,graded,0,1,0,1,False,False,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Worthing,Solihull,National League,15:00,83.9,83.3,81.1,65.9,65.0,61.5,leg,leg,,,graded,5,0,3,0,True,True,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG5,Forest Green,Hartlepool,National League,17:30,70.5,83.3,81.1,48.1,58.3,61.5,,,,,graded,2,4,0,1,True,True,2026-10-11T21:08:27+00:00,ESPN
-2026-10-10,ENG6N,Brackley Town,Spennymoor Town,National League North,15:00,84.5,90.0,77.5,70.0,70.0,55.8,leg,,,,graded,2,1,1,1,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Chester FC,Bedford Town,National League North,15:00,72.5,50.0,77.5,50.0,40.0,55.8,,,,,graded,1,0,0,0,False,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Chorley,AFC Telford United,National League North,15:00,78.5,80.0,77.5,55.0,60.0,55.8,,,,,graded,2,1,1,0,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Darlington,Merthyr Town,National League North,15:00,78.5,70.0,77.5,60.0,50.0,55.8,,,,,graded,1,1,0,1,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Harborough Town FC,Southport,National League North,15:00,76.5,80.0,77.5,55.0,60.0,55.8,,,,,graded,1,0,1,0,False,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Hebburn Town,Oxford City,National League North,15:00,76.5,60.0,77.5,55.0,50.0,55.8,,,,,graded,0,3,0,1,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Hereford FC,Hednesford,National League North,15:00,80.5,90.0,77.5,45.0,40.0,55.8,reserve,,,,graded,0,1,0,1,False,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,King's Lynn Town,Buxton,National League North,15:00,86.5,100.0,77.5,90.0,90.0,55.8,leg,,,,graded,1,0,1,0,False,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Macclesfield FC,South Shields,National League North,15:00,72.5,50.0,77.5,45.0,40.0,55.8,,,,,graded,4,3,2,3,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Marine,Spalding United,National League North,15:00,74.5,70.0,77.5,50.0,30.0,55.8,,,,,graded,1,0,0,0,False,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Radcliffe,Scarborough Athletic,National League North,15:00,74.5,80.0,77.5,45.0,50.0,55.8,,,,,graded,4,1,1,0,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6N,Worksop Town,Morecambe,National League North,15:00,74.5,70.0,77.5,50.0,40.0,55.8,,,,,graded,2,1,2,0,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,AFC Totton,Walton and Hersham,National League South,15:00,80.0,80.0,77.6,62.2,70.0,56.9,reserve,,,,graded,0,1,0,0,False,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Billericay,Farnborough,National League South,15:00,78.1,100.0,77.6,62.2,80.0,56.9,,,,,graded,4,0,2,0,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Braintree Town,Truro City,National League South,15:00,80.6,80.0,77.6,60.0,53.3,56.9,reserve,,,,graded,1,2,1,1,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Chesham United,Chelmsford City,National League South,15:00,78.0,100.0,77.6,61.7,80.0,56.9,,,,,graded,0,5,0,5,True,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Dagenham & Redbridge,Hemel Hempstead,National League South,15:00,72.6,60.0,77.6,45.0,50.0,56.9,,,,,graded,0,0,0,0,False,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Dover Athletic,Dorking Wanderers,National League South,15:00,74.6,80.0,77.6,65.0,70.0,56.9,,,,,graded,1,1,0,0,True,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Farnham Town,Salisbury FC,National League South,15:00,76.6,70.0,77.6,50.0,50.0,56.9,,,,,graded,1,2,1,0,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Hampton & Richmond,Ebbsfleet United,National League South,15:00,78.5,100.0,77.6,51.7,54.2,56.9,,,,,graded,0,2,0,0,True,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Horsham,Maidstone United,National League South,15:00,78.1,80.0,77.6,57.8,50.0,56.9,,,,,graded,1,2,0,1,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Maidenhead United,Tonbridge Angels,National League South,15:00,76.6,80.0,77.6,45.0,50.0,56.9,,,,,graded,0,1,0,0,False,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Torquay United,Slough Town,National League South,15:00,78.6,70.0,77.6,55.0,60.0,56.9,,,,,graded,5,1,0,0,True,False,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,ENG6S,Weston Super Mare,Folkestone Invicta,National League South,15:00,78.6,81.7,77.6,60.0,43.3,56.9,,,,,graded,1,1,0,1,True,True,2026-10-11T21:08:28+00:00,LiveScore
-2026-10-10,SCO1,Dundee United,Hibernian,Scottish Premiership,15:00,79.9,100.0,73.8,63.7,83.3,59.5,leg,leg,,,graded,1,0,1,0,False,False,2026-10-11T21:08:31+00:00,ESPN
-2026-10-10,SCO1,Falkirk,Dundee,Scottish Premiership,15:00,77.6,83.3,73.8,60.5,83.3,59.5,reserve,,,,graded,1,2,1,0,True,True,2026-10-11T21:08:31+00:00,ESPN
-2026-10-10,SCO1,Hearts,St Mirren,Scottish Premiership,15:00,75.3,66.7,73.8,62.1,66.7,59.5,,,,,graded,5,0,2,0,True,True,2026-10-11T21:08:31+00:00,ESPN
-2026-10-10,SCO1,Rangers,Kilmarnock,Scottish Premiership,15:00,66.2,33.3,73.8,57.4,33.3,59.5,,,,,graded,3,1,3,0,True,True,2026-10-11T21:08:31+00:00,ESPN
-2026-10-10,SCO2,Arbroath,Morton,Scottish Championship,15:00,70.2,75.0,69.0,47.7,50.0,42.9,,,,,graded,1,2,0,1,True,True,2026-10-11T21:08:33+00:00,ESPN
-2026-10-10,SCO2,Ayr,Dunfermline,Scottish Championship,15:00,68.8,62.5,69.0,40.0,50.0,42.9,,,,,graded,1,1,0,0,True,False,2026-10-11T21:08:33+00:00,ESPN
-2026-10-10,SCO2,Inverness C,Stenhousemuir,Scottish Championship,15:00,66.7,62.5,69.0,43.1,37.5,42.9,,,,,graded,2,0,2,0,True,False,2026-10-11T21:08:33+00:00,ESPN
-2026-10-10,SCO2,Livingston,Partick,Scottish Championship,15:00,65.2,56.7,69.0,39.5,36.7,42.9,,,,,graded,1,2,1,1,True,True,2026-10-11T21:08:33+00:00,ESPN
-2026-10-10,SCO2,Raith Rvs,Queens Park,Scottish Championship,15:00,73.9,87.5,69.0,44.0,25.0,42.9,,,,,graded,2,0,1,0,True,True,2026-10-11T21:08:33+00:00,ESPN
-2026-10-10,SCO3,Alloa,Hamilton,Scottish League One,15:00,69.1,54.2,75.0,52.6,54.2,54.5,,,,,graded,0,3,0,3,True,False,2026-10-11T21:08:34+00:00,LiveScore
-2026-10-10,SCO3,Cove Rangers,East Fife,Scottish League One,15:00,74.0,62.5,75.0,48.9,25.0,54.5,,,,,graded,1,1,1,0,True,True,2026-10-11T21:08:34+00:00,LiveScore
-2026-10-10,SCO3,East Kilbride,Airdrie Utd,Scottish League One,15:00,74.0,75.0,75.0,54.8,62.5,54.5,,,,,graded,2,2,2,1,True,True,2026-10-11T21:08:34+00:00,LiveScore
-2026-10-10,SCO3,Montrose,Ross County,Scottish League One,15:00,79.8,87.5,75.0,61.5,75.0,54.5,leg,leg,,,graded,0,5,0,3,True,True,2026-10-11T21:08:34+00:00,LiveScore
-2026-10-10,SCO3,Peterhead,Queen of Sth,Scottish League One,15:00,78.1,87.5,75.0,54.8,75.0,54.5,reserve,,,,graded,0,1,0,0,False,False,2026-10-11T21:08:34+00:00,LiveScore
-2026-10-10,SCO4,Annan Athletic,Stranraer,Scottish League Two,15:00,74.3,90.0,82.2,62.4,67.5,68.9,,,,,graded,1,6,0,2,True,True,2026-10-11T21:08:35+00:00,LiveScore
-2026-10-10,SCO4,Clyde,Dumbarton,Scottish League Two,15:00,84.7,100.0,82.2,69.8,75.0,68.9,leg,reserve,,,graded,2,1,2,0,True,True,2026-10-11T21:08:35+00:00,LiveScore
-2026-10-10,SCO4,Edinburgh City,Spartans,Scottish League Two,15:00,82.6,75.0,82.2,71.2,62.5,68.9,,leg,,,graded,1,3,1,1,True,True,2026-10-11T21:08:35+00:00,LiveScore
-2026-10-10,SCO4,Forfar,Elgin,Scottish League Two,15:00,84.7,75.0,82.2,69.8,75.0,68.9,leg,,,,graded,1,2,0,1,True,True,2026-10-11T21:08:35+00:00,LiveScore
-2026-10-10,SCO4,Stirling,Kelty Hearts,Scottish League Two,15:00,84.7,90.0,82.2,71.2,67.5,68.9,leg,leg,,,graded,2,1,0,1,True,True,2026-10-11T21:08:35+00:00,LiveScore
-2026-10-17,ENG1,Everton,Chelsea,Premier League,12:30,83.3,83.3,76.7,58.3,50.0,50.0,,,,,graded,0,2,0,0,True,False,2026-10-18T19:45:45+00:00,ESPN
-2026-10-17,ENG1,Brentford,Liverpool,Premier League,15:00,78.6,83.3,76.7,50.0,33.3,50.0,leg,,,,graded,1,2,1,0,True,True,2026-10-18T19:45:45+00:00,ESPN
-2026-10-17,ENG1,Fulham,Hull,Premier League,15:00,73.8,83.3,76.7,46.8,66.7,50.0,,,,,graded,1,0,1,0,False,False,2026-10-18T19:45:45+00:00,ESPN
-2026-10-17,ENG1,Man City,Ipswich,Premier League,15:00,76.2,66.7,76.7,50.0,66.7,50.0,,,,,graded,3,2,2,1,True,True,2026-10-18T19:45:45+00:00,ESPN
-2026-10-17,ENG1,Newcastle,Aston Villa,Premier League,17:30,83.3,83.3,76.7,58.3,66.7,50.0,,,,,graded,0,1,0,1,False,False,2026-10-18T19:45:45+00:00,ESPN
-2026-10-17,ENG2,Middlesbrough,Cardiff,Championship,12:30,85.0,80.0,78.2,70.0,70.0,63.0,,,,,graded,2,2,0,2,True,True,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Millwall,Lincoln,Championship,12:30,70.0,60.0,78.2,70.0,60.0,63.0,,,,,graded,2,2,0,2,True,True,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Watford,Charlton,Championship,12:30,75.0,100.0,78.2,45.0,70.0,63.0,,,,,graded,2,0,0,0,True,False,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Birmingham,QPR,Championship,15:00,76.9,90.0,78.2,60.7,50.0,63.0,,,,,graded,3,0,1,0,True,True,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Bristol City,Sheffield United,Championship,15:00,74.9,60.0,78.2,57.9,30.0,63.0,,,,,graded,0,1,0,1,False,False,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Derby,Stoke,Championship,15:00,82.9,90.0,78.2,66.4,90.0,63.0,leg,leg,,,graded,0,1,0,0,False,False,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Norwich,Portsmouth,Championship,15:00,78.5,65.0,78.2,64.5,55.0,63.0,,,,,graded,0,1,0,0,False,False,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Southampton,Bolton,Championship,15:00,76.9,80.0,78.2,66.4,80.0,63.0,,leg,,,graded,0,0,0,0,False,False,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Swansea,West Ham,Championship,15:00,80.9,80.0,78.2,66.4,60.0,63.0,leg,leg,,,graded,0,1,0,1,False,False,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,West Brom,Blackburn,Championship,15:00,74.9,60.0,78.2,55.0,40.0,63.0,,,,,graded,3,2,1,2,True,True,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG2,Wrexham,Preston,Championship,15:00,78.9,90.0,78.2,65.0,70.0,63.0,reserve,,,,graded,4,1,2,1,True,True,2026-10-18T19:45:49+00:00,ESPN
-2026-10-17,ENG3,Milton Keynes Dons,Luton,League One,12:30,81.2,87.5,77.5,68.8,87.5,55.9,,,,,graded,2,1,1,0,True,True,2026-10-18T19:45:51+00:00,ESPN
-2026-10-17,ENG3,Peterboro,Burton,League One,12:30,78.9,67.5,77.5,52.8,35.0,55.9,,,,,graded,2,2,1,1,True,True,2026-10-18T19:45:51+00:00,ESPN
-2026-10-17,ENG3,Barnsley,Cambridge,League One,15:00,79.2,87.5,77.5,56.7,50.0,55.9,leg,,,,graded,1,2,1,0,True,True,2026-10-18T19:45:51+00:00,ESPN
-2026-10-17,ENG3,Bradford,Stevenage,League One,15:00,68.7,50.0,77.5,47.7,12.5,55.9,,,,,graded,2,0,0,0,True,False,2026-10-18T19:45:51+00:00,ESPN
-2026-10-17,ENG3,Leicester,Doncaster,League One,15:00,76.6,87.5,77.5,54.5,50.0,55.9,,,,,graded,2,1,1,0,True,True,2026-10-18T19:45:51+00:00,ESPN
-2026-10-17,ENG3,Leyton Orient,Blackpool,League One,15:00,79.3,77.5,77.5,58.2,55.0,55.9,leg,,,,graded,2,0,1,0,True,True,2026-10-18T19:45:51+00:00,ESPN
-2026-10-17,ENG3,Plymouth,Huddersfield,League One,15:00,82.1,80.0,77.5,56.4,70.0,55.9,leg,,,,graded,0,2,0,1,True,True,2026-10-18T19:45:51+00:00,ESPN
-2026-10-17,ENG3,Sheffield Weds,AFC Wimbledon,League One,15:00,70.8,62.5,77.5,53.6,62.5,55.9,,,,,graded,5,0,3,0,True,True,2026-10-18T19:45:51+00:00,ESPN
-2026-10-17,ENG3,Stockport,Bromley,League One,15:00,79.3,77.5,77.5,59.6,77.5,55.9,leg,reserve,,,graded,1,0,1,0,False,False,2026-10-18T19:45:52+00:00,ESPN
-2026-10-17,ENG3,Wigan,Reading,League One,15:00,74.9,75.0,77.5,56.6,62.5,55.9,,,,,graded,1,0,0,0,False,False,2026-10-18T19:45:52+00:00,ESPN
-2026-10-17,ENG3,Wycombe,Notts County,League One,15:00,81.4,100.0,77.5,56.6,55.0,55.9,leg,,,,graded,2,0,1,0,True,True,2026-10-18T19:45:52+00:00,ESPN
-2026-10-17,ENG4,Fleetwood Town,Rotherham,League Two,12:30,70.0,60.0,72.8,50.0,40.0,50.9,,,,,graded,2,0,0,0,True,False,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Shrewsbury,Bristol Rvs,League Two,12:30,80.0,80.0,72.8,55.0,40.0,50.9,,,,,graded,1,0,0,0,False,False,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Accrington,Gillingham,League Two,15:00,75.7,80.0,72.8,49.2,70.0,50.9,,,,,graded,3,1,2,1,True,True,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Colchester,Exeter,League Two,15:00,65.2,47.5,72.8,47.1,35.0,50.9,,,,,graded,0,0,0,0,False,False,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Crewe,Rochdale,League Two,15:00,69.7,70.0,72.8,49.2,40.0,50.9,,,,,graded,3,2,2,0,True,True,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Grimsby,Northampton,League Two,15:00,68.3,77.5,72.8,46.2,32.5,50.9,,,,,graded,0,2,0,1,True,True,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Newport County,York,League Two,15:00,75.3,90.0,72.8,51.4,42.5,50.9,reserve,,,,graded,1,1,0,1,True,True,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Oldham,Cheltenham,League Two,15:00,81.3,90.0,72.8,57.2,60.0,50.9,leg,leg,,,graded,4,1,3,1,True,True,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Port Vale,Chesterfield,League Two,15:00,70.3,52.5,72.8,52.0,52.5,50.9,,,,,graded,1,0,1,0,False,False,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Salford,Crawley Town,League Two,15:00,70.8,60.0,72.8,49.3,37.5,50.9,,,,,graded,2,1,1,0,True,True,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Swindon,Walsall,League Two,15:00,69.1,80.0,72.8,48.4,40.0,50.9,,,,,graded,1,1,1,0,True,True,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG4,Tranmere,Barnet,League Two,15:00,81.0,100.0,72.8,58.1,77.5,50.9,leg,leg,,,graded,1,2,1,0,True,True,2026-10-18T19:45:55+00:00,ESPN
-2026-10-17,ENG6N,AFC Telford United,Darlington,National League North,15:00,74.5,70.0,75.8,63.6,50.0,56.1,,,,,graded,2,1,1,1,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6N,Buxton,Worksop Town,National League North,15:00,78.3,80.0,75.8,72.7,80.0,56.1,reserve,,,,graded,2,2,0,2,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6N,Hebburn Town,Scarborough Athletic,National League North,15:00,76.4,83.3,75.8,59.1,66.7,56.1,,,,,graded,0,2,0,1,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6N,Hednesford,Brackley Town,National League North,15:00,80.3,90.0,75.8,54.5,70.0,56.1,leg,,,,graded,3,2,3,1,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6N,Merthyr Town,King's Lynn Town,National League North,15:00,80.3,100.0,75.8,63.6,70.0,56.1,leg,,,,graded,1,1,1,0,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6N,Southport,Radcliffe,National League North,15:00,78.3,80.0,75.8,63.6,70.0,56.1,reserve,,,,graded,0,2,0,1,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6S,Ebbsfleet United,Weston Super Mare,National League South,15:00,76.1,50.0,77.5,44.3,37.5,55.0,,,,,graded,6,1,4,0,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6S,Farnborough,Dagenham & Redbridge,National League South,15:00,71.2,55.0,77.5,38.6,22.5,55.0,,,,,graded,2,0,0,0,True,False,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6S,Folkestone Invicta,AFC Totton,National League South,15:00,77.4,90.0,77.5,50.0,60.0,55.0,,,,,graded,2,1,2,0,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6S,Maidstone United,Maidenhead United,National League South,15:00,75.5,70.0,77.5,45.5,50.0,55.0,,,,,graded,2,1,1,0,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,ENG6S,Slough Town,Horsham,National League South,15:00,77.0,77.5,77.5,52.7,57.5,55.0,,,,,graded,1,2,1,1,True,True,2026-10-18T19:45:56+00:00,LiveScore
-2026-10-17,SCO1,Aberdeen,St Mirren,Scottish Premiership,15:00,69.3,37.5,72.9,57.9,37.5,60.4,,,,,graded,3,1,1,1,True,True,2026-10-18T19:45:58+00:00,ESPN
-2026-10-17,SCO1,Hibernian,Falkirk,Scottish Premiership,15:00,75.8,75.0,72.9,62.4,62.5,60.4,reserve,,,,graded,1,2,1,2,True,False,2026-10-18T19:45:58+00:00,ESPN
-2026-10-17,SCO1,Kilmarnock,Motherwell,Scottish Premiership,15:00,71.5,75.0,72.9,60.9,62.5,60.4,,,,,graded,3,2,1,1,True,True,2026-10-18T19:45:58+00:00,ESPN
-2026-10-17,SCO1,St Johnstone,Dundee United,Scottish Premiership,15:00,73.6,87.5,72.9,57.9,50.0,60.4,,,,,graded,1,1,1,0,True,True,2026-10-18T19:45:58+00:00,ESPN
-2026-10-17,SCO1,Dundee,Rangers,Scottish Premiership,20:00,68.8,75.0,72.9,56.2,50.0,60.4,,,,,graded,2,2,1,1,True,True,2026-10-18T19:45:58+00:00,ESPN
-2026-10-17,SCO2,Dunfermline,Livingston,Scottish Championship,15:00,72.5,70.8,72.9,39.5,12.5,43.8,,,,,graded,0,0,0,0,False,False,2026-10-18T19:45:59+00:00,ESPN
-2026-10-17,SCO2,Inverness C,Arbroath,Scottish Championship,15:00,73.7,80.0,72.9,48.4,70.0,43.8,,,,,graded,2,0,2,0,True,False,2026-10-18T19:45:59+00:00,ESPN
-2026-10-17,SCO2,Morton,Queens Park,Scottish Championship,15:00,77.7,70.0,72.9,48.4,50.0,43.8,leg,,,,graded,2,0,2,0,True,False,2026-10-18T19:45:59+00:00,ESPN
-2026-10-17,SCO2,Stenhousemuir,Raith Rvs,Scottish Championship,15:00,71.1,55.0,72.9,40.4,42.5,43.8,,,,,graded,1,1,1,0,True,True,2026-10-18T19:45:59+00:00,ESPN
-2026-10-17,SCO3,East Fife,Alloa,Scottish League One,15:00,73.3,70.0,75.5,50.8,40.0,55.1,,,,,graded,0,3,0,1,True,True,2026-10-18T19:46:01+00:00,LiveScore
-2026-10-17,SCO3,East Kilbride,Montrose,Scottish League One,15:00,81.3,80.0,75.5,62.2,70.0,55.1,leg,leg,,,graded,1,1,0,0,True,False,2026-10-18T19:46:01+00:00,LiveScore
-2026-10-17,SCO3,Peterhead,Cove Rangers,Scottish League One,15:00,75.3,70.0,75.5,52.2,40.0,55.1,,,,,graded,2,0,0,0,True,False,2026-10-18T19:46:01+00:00,LiveScore
-2026-10-17,SCO3,Queen of Sth,Ross County,Scottish League One,15:00,78.9,80.0,75.5,58.8,50.0,55.1,leg,,,,graded,1,7,0,5,True,True,2026-10-18T19:46:01+00:00,LiveScore
-2026-10-17,SCO3,Airdrie Utd,Hamilton,Scottish League One,17:30,57.8,45.0,75.5,41.7,22.5,55.1,,,,,graded,1,2,0,1,True,True,2026-10-18T19:46:01+00:00,LiveScore
-2026-10-17,SCO4,Clyde,Annan Athletic,Scottish League Two,15:00,80.4,62.5,84.0,68.6,52.5,72.0,,,,,graded,4,1,1,0,True,True,2026-10-18T19:46:02+00:00,LiveScore
-2026-10-17,SCO4,Dumbarton,Stirling,Scottish League Two,15:00,86.4,80.0,84.0,74.3,80.0,72.0,leg,leg,,,graded,1,1,0,0,True,False,2026-10-18T19:46:02+00:00,LiveScore
-2026-10-17,SCO4,Elgin,Edinburgh City,Scottish League Two,15:00,86.4,90.0,84.0,74.3,80.0,72.0,leg,leg,,,graded,0,0,0,0,False,False,2026-10-18T19:46:02+00:00,LiveScore
-2026-10-17,SCO4,Kelty Hearts,Forfar,Scottish League Two,15:00,84.4,100.0,84.0,71.4,80.0,72.0,leg,,,,graded,2,1,1,1,True,True,2026-10-18T19:46:02+00:00,LiveScore
-2026-10-17,SCO4,Spartans,Stranraer,Scottish League Two,15:00,82.4,100.0,84.0,71.4,90.0,72.0,reserve,reserve,,,graded,0,2,0,1,True,True,2026-10-18T19:46:02+00:00,LiveScore
+2026-10-03,ENG3,Burton,Huddersfield,League One,15:00,81.0,87.5,78.2,53.2,62.5,55.2,leg,,,,graded,1.0,3.0,1.0,2.0,True,True,2026-10-04T20:33:00+00:00,ESPN
+2026-10-03,ENG3,Leyton Orient,Plymouth,League One,15:00,81.0,87.5,78.2,59.4,75.0,55.2,leg,leg,,,graded,0.0,2.0,0.0,0.0,True,False,2026-10-04T20:33:00+00:00,ESPN
+2026-10-03,ENG3,Reading,Bradford,League One,15:00,73.8,62.5,78.2,50.9,50.0,55.2,,,,,graded,1.0,1.0,0.0,1.0,True,True,2026-10-04T20:33:00+00:00,ESPN
+2026-10-03,ENG4,Chesterfield,Tranmere,League Two,12:30,81.2,75.0,76.6,62.5,50.0,53.2,,,,data check failed - see top,graded,4.0,2.0,1.0,0.0,True,True,2026-10-04T20:33:03+00:00,ESPN
+2026-10-03,ENG4,Accrington,Cheltenham,League Two,15:00,82.6,87.5,76.6,58.5,75.0,53.2,leg,leg,,data check failed - see top,graded,2.0,0.0,0.0,0.0,True,False,2026-10-04T20:33:03+00:00,ESPN
+2026-10-03,ENG4,Crewe,Bristol Rvs,League Two,15:00,73.9,87.5,76.6,47.9,25.0,53.2,,,,data check failed - see top,graded,3.0,1.0,2.0,0.0,True,True,2026-10-04T20:33:03+00:00,ESPN
+2026-10-03,ENG4,Exeter,Rotherham,League Two,15:00,69.5,50.0,76.6,47.9,25.0,53.2,,,,data check failed - see top,graded,1.0,0.0,0.0,0.0,False,False,2026-10-04T20:33:03+00:00,ESPN
+2026-10-03,ENG4,Gillingham,Newport County,League Two,15:00,78.2,75.0,76.6,50.9,12.5,53.2,leg,,,data check failed - see top,graded,0.0,0.0,0.0,0.0,False,False,2026-10-04T20:33:03+00:00,ESPN
+2026-10-03,ENG4,Grimsby,Shrewsbury,League Two,15:00,78.2,87.5,76.6,52.4,50.0,53.2,leg,,,data check failed - see top,graded,1.0,2.0,0.0,1.0,True,True,2026-10-04T20:33:03+00:00,ESPN
+2026-10-03,ENG4,Rochdale,Swindon,League Two,15:00,76.0,75.0,76.6,55.5,75.0,53.2,,,,data check failed - see top,graded,1.0,0.0,0.0,0.0,False,False,2026-10-04T20:33:03+00:00,ESPN
+2026-10-03,ENG4,Salford,Fleetwood Town,League Two,15:00,71.7,50.0,76.6,52.4,37.5,53.2,,,,data check failed - see top,graded,1.0,0.0,0.0,0.0,False,False,2026-10-04T20:33:03+00:00,ESPN
+2026-10-03,ENG5,Aldershot,Carlisle,National League,15:00,79.0,70.0,80.3,61.0,60.0,59.8,below_line,,,,graded,1.0,3.0,0.0,2.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Barrow,Wealdstone,National League,15:00,80.9,81.7,80.3,56.8,35.0,59.8,leg,,,,graded,2.0,1.0,1.0,1.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Boreham Wood,Altrincham,National League,15:00,82.9,75.0,80.3,61.0,48.3,59.8,leg,,,,graded,3.0,1.0,0.0,1.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Eastleigh,Woking,National League,15:00,77.1,71.7,80.3,59.6,45.0,59.8,,,,,graded,1.0,3.0,1.0,1.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Gateshead,Worthing,National League,15:00,79.0,80.0,80.3,59.6,60.0,59.8,below_line,,,,graded,1.0,2.0,1.0,1.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Harrogate,Hornchurch,National League,15:00,79.0,91.7,80.3,59.6,66.7,59.8,below_line,,,,graded,3.0,0.0,1.0,0.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Hartlepool,Tamworth,National League,15:00,79.0,70.0,80.3,59.6,61.7,59.8,below_line,,,,graded,0.0,1.0,0.0,1.0,False,False,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Kidderminster,Sutton,National League,15:00,77.1,65.0,80.3,56.8,36.7,59.8,,,,,graded,1.0,1.0,1.0,0.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Solihull,Halifax,National League,15:00,80.9,71.7,80.3,62.4,61.7,59.8,leg,reserve,,,graded,0.0,2.0,0.0,0.0,True,False,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Southend,Fylde,National League,15:00,84.8,81.7,80.3,59.6,45.0,59.8,leg,,,,graded,3.0,1.0,2.0,1.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,ENG5,Yeovil,Boston Utd,National League,15:00,80.9,100.0,80.3,63.7,100.0,59.8,leg,leg,,,graded,6.0,0.0,4.0,0.0,True,True,2026-10-04T20:33:05+00:00,ESPN
+2026-10-03,SCO2,Livingston,Ayr,Scottish Championship,15:00,69.6,75.0,66.7,41.7,37.5,41.0,,,,,graded,1.0,2.0,1.0,2.0,True,False,2026-10-04T20:33:07+00:00,ESPN
+2026-10-03,SCO2,Morton,Raith Rvs,Scottish Championship,15:00,69.6,50.0,66.7,43.2,50.0,41.0,,,,,graded,1.0,2.0,0.0,1.0,True,True,2026-10-04T20:33:07+00:00,ESPN
+2026-10-03,SCO2,Partick,Arbroath,Scottish Championship,15:00,59.9,50.0,66.7,39.2,37.5,41.0,,,,,graded,3.0,0.0,2.0,0.0,True,True,2026-10-04T20:33:07+00:00,ESPN
+2026-10-03,SCO3,Airdrie Utd,Montrose,Scottish League One,15:00,76.8,75.0,74.4,58.9,62.5,53.8,leg,leg,,data check failed - see top,graded,1.0,0.0,0.0,0.0,False,False,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO3,East Fife,East Kilbride,Scottish League One,15:00,74.6,87.5,74.4,49.8,50.0,53.8,below_line,,,data check failed - see top,graded,0.0,3.0,0.0,1.0,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO3,Queen of Sth,Cove Rangers,Scottish League One,15:00,76.8,75.0,74.4,52.9,25.0,53.8,leg,,,data check failed - see top,graded,4.0,3.0,2.0,0.0,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO3,Ross County,Alloa,Scottish League One,15:00,74.1,75.0,74.4,55.3,62.5,53.8,,,,data check failed - see top,graded,4.0,1.0,1.0,0.0,True,True,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO3,Hamilton,Peterhead,Scottish League One,17:30,58.9,62.5,74.4,46.4,50.0,53.8,,,,data check failed - see top,graded,2.0,1.0,0.0,0.0,True,False,2026-10-09T11:01:53+00:00,football-data.co.uk
+2026-10-03,SCO4,Annan Athletic,Stirling,Scottish League Two,15:00,83.7,100.0,85.0,69.7,87.5,70.0,leg,reserve,,data check failed - see top,graded,0.0,1.0,0.0,0.0,False,False,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-03,SCO4,Dumbarton,Forfar,Scottish League Two,15:00,83.7,87.5,85.0,68.2,62.5,70.0,leg,,,data check failed - see top,graded,2.0,1.0,0.0,1.0,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-03,SCO4,Elgin,Clyde,Scottish League Two,15:00,88.0,87.5,85.0,71.2,62.5,70.0,leg,leg,,data check failed - see top,graded,6.0,2.0,0.0,1.0,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-03,SCO4,Spartans,Kelty Hearts,Scottish League Two,15:00,85.9,87.5,85.0,72.7,75.0,70.0,leg,leg,,data check failed - see top,graded,0.0,2.0,0.0,1.0,True,True,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-03,SCO4,Stranraer,Edinburgh City,Scottish League Two,15:00,83.7,75.0,85.0,68.2,62.5,70.0,reserve,,,data check failed - see top,graded,0.0,0.0,0.0,0.0,False,False,2026-10-09T11:01:54+00:00,football-data.co.uk
+2026-10-10,ENG1,Arsenal,Leeds,Premier League,12:30,70.0,75.0,72.0,60.0,75.0,52.0,,,,Arsenal: only 5 games; Leeds: only 5 games,graded,2.0,1.0,0.0,0.0,True,False,2026-10-11T21:08:14+00:00,ESPN
+2026-10-10,ENG1,Aston Villa,Brentford,Premier League,15:00,74.0,75.0,72.0,50.0,50.0,52.0,,,,Aston Villa: only 5 games; Brentford: only 5 games,graded,2.0,2.0,1.0,1.0,True,True,2026-10-11T21:08:14+00:00,ESPN
+2026-10-10,ENG1,Chelsea,Bournemouth,Premier League,15:00,76.5,100.0,72.0,56.7,100.0,52.0,,,,Chelsea: only 5 games; Bournemouth: only 5 games,graded,5.0,1.0,2.0,0.0,True,True,2026-10-11T21:08:14+00:00,ESPN
+2026-10-10,ENG1,Ipswich,Fulham,Premier League,15:00,71.5,50.0,72.0,51.7,25.0,52.0,,,,Ipswich: only 5 games; Fulham: only 5 games,graded,2.0,1.0,0.0,0.0,True,False,2026-10-11T21:08:14+00:00,ESPN
+2026-10-10,ENG1,Sunderland,Brighton,Premier League,15:00,76.5,75.0,72.0,53.3,50.0,52.0,,,,Sunderland: only 5 games; Brighton: only 5 games,graded,0.0,2.0,0.0,0.0,True,False,2026-10-11T21:08:14+00:00,ESPN
+2026-10-10,ENG1,Man United,Tottenham,Premier League,17:30,70.0,50.0,72.0,30.0,50.0,52.0,,,,Man United: only 5 games; Tottenham: only 5 games,graded,1.0,1.0,0.0,0.0,True,False,2026-10-11T21:08:14+00:00,ESPN
+2026-10-10,ENG2,Charlton,Bristol City,Championship,12:30,68.8,62.5,80.0,50.0,50.0,64.2,,,,,graded,1.0,1.0,1.0,1.0,True,False,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,Swansea,Norwich,Championship,12:30,81.2,62.5,80.0,68.8,50.0,64.2,,,,,graded,2.0,1.0,0.0,1.0,True,True,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,West Brom,Birmingham,Championship,12:30,75.0,75.0,80.0,43.8,50.0,64.2,,,,,graded,0.0,1.0,0.0,1.0,False,False,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,Blackburn,Cardiff,Championship,15:00,82.6,87.5,80.0,65.3,62.5,64.2,leg,,,,graded,2.0,1.0,2.0,0.0,True,True,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,Bolton,Stoke,Championship,15:00,78.3,75.0,80.0,63.8,75.0,64.2,,,,,graded,1.0,2.0,0.0,1.0,True,True,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,Derby,Wrexham,Championship,15:00,82.6,75.0,80.0,68.3,75.0,64.2,leg,leg,,,graded,1.0,1.0,1.0,0.0,True,True,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,Middlesbrough,Wolves,Championship,15:00,79.9,87.5,80.0,64.7,62.5,64.2,,,,,graded,1.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,Preston,Millwall,Championship,15:00,82.6,87.5,80.0,69.8,87.5,64.2,leg,leg,,,graded,0.0,1.0,0.0,0.0,False,False,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,Sheffield United,Lincoln,Championship,15:00,71.7,37.5,80.0,57.7,37.5,64.2,,,,,graded,3.0,0.0,1.0,0.0,True,True,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG2,Watford,Burnley,Championship,15:00,82.6,100.0,80.0,63.8,87.5,64.2,leg,,,,graded,0.0,4.0,0.0,3.0,True,True,2026-10-11T21:08:17+00:00,ESPN
+2026-10-10,ENG3,Notts County,Oxford,League One,12:30,92.9,83.3,78.9,46.4,33.3,55.6,,,,,graded,1.0,2.0,0.0,1.0,True,True,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Plymouth,AFC Wimbledon,League One,12:30,69.4,87.5,78.9,58.3,87.5,55.6,,,,,graded,2.0,1.0,1.0,1.0,True,True,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Bradford,Leyton Orient,League One,15:00,75.4,83.3,78.9,52.7,33.3,55.6,,,,,graded,0.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Cambridge,Blackpool,League One,15:00,85.9,100.0,78.9,59.7,70.8,55.6,leg,reserve,,,graded,1.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Doncaster,Burton,League One,15:00,79.6,70.8,78.9,55.8,45.8,55.6,,,,,graded,1.0,0.0,1.0,0.0,False,False,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Huddersfield,Sheffield Weds,League One,15:00,76.9,100.0,78.9,53.5,50.0,55.6,,,,,graded,2.0,2.0,0.0,0.0,True,False,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Leicester,Peterboro,League One,15:00,79.3,87.5,78.9,53.5,41.7,55.6,,,,,graded,1.0,3.0,0.0,3.0,True,True,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Mansfield,Bromley,League One,15:00,78.8,66.7,78.9,57.5,66.7,55.6,,,,,graded,2.0,1.0,1.0,1.0,True,True,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Milton Keynes Dons,Reading,League One,15:00,79.2,66.7,78.9,58.2,50.0,55.6,,,,,graded,1.0,5.0,0.0,1.0,True,True,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Stevenage,Wigan,League One,15:00,74.2,66.7,78.9,52.8,33.3,55.6,,,,,graded,1.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Stockport,Barnsley,League One,15:00,77.0,70.8,78.9,56.6,70.8,55.6,,,,,graded,3.0,1.0,0.0,1.0,True,True,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG3,Wycombe,Luton,League One,15:00,81.5,100.0,78.9,56.6,75.0,55.6,leg,,,,graded,1.0,4.0,0.0,2.0,True,True,2026-10-11T21:08:21+00:00,ESPN
+2026-10-10,ENG4,Oldham,Accrington,League Two,12:30,94.4,100.0,74.5,71.5,62.5,52.0,,,,,graded,0.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Swindon,Crewe,League Two,12:30,66.7,75.0,74.5,44.4,50.0,52.0,,,,,graded,0.0,1.0,0.0,0.0,False,False,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Bristol Rvs,Barnet,League Two,15:00,79.2,75.0,74.5,54.7,58.3,52.0,leg,,,,graded,1.0,3.0,1.0,0.0,True,True,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Cheltenham,Salford,League Two,15:00,73.6,87.5,74.5,52.9,87.5,52.0,,,,,graded,0.0,2.0,0.0,0.0,True,False,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Crawley Town,Chesterfield,League Two,15:00,76.9,70.8,74.5,54.5,54.2,52.0,,,,,graded,2.0,2.0,0.0,1.0,True,True,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Fleetwood Town,Walsall,League Two,15:00,70.9,75.0,74.5,50.7,37.5,52.0,,,,,graded,1.0,1.0,0.0,0.0,True,False,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Newport County,Colchester,League Two,15:00,75.3,100.0,74.5,53.8,87.5,52.0,,,,,graded,1.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Port Vale,Grimsby,League Two,15:00,72.4,54.2,74.5,50.0,41.7,52.0,,,,,graded,1.0,0.0,1.0,0.0,False,False,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Rotherham,Gillingham,League Two,15:00,73.6,87.5,74.5,48.5,62.5,52.0,,,,,graded,1.0,4.0,1.0,1.0,True,True,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Shrewsbury,Exeter,League Two,15:00,69.5,50.0,74.5,48.5,37.5,52.0,,,,,graded,0.0,1.0,0.0,0.0,False,False,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,Tranmere,Rochdale,League Two,15:00,75.7,75.0,74.5,54.4,50.0,52.0,,,,,graded,1.0,1.0,1.0,0.0,True,True,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG4,York,Northampton,League Two,15:00,73.9,83.3,74.5,49.1,50.0,52.0,,,,,graded,1.0,1.0,0.0,1.0,True,True,2026-10-11T21:08:24+00:00,ESPN
+2026-10-10,ENG5,Altrincham,Aldershot,National League,12:30,70.8,83.3,81.1,58.3,75.0,61.5,,,,,graded,3.0,1.0,1.0,0.0,True,True,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Carlisle,Kidderminster,National League,12:30,79.2,90.0,81.1,62.5,71.7,61.5,,,,,graded,0.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Boston Utd,Southend,National League,15:00,82.1,75.0,81.1,65.9,75.0,61.5,,leg,,,graded,1.0,2.0,1.0,1.0,True,True,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Fylde,Scunthorpe,National League,15:00,83.6,83.3,81.1,58.6,45.0,61.5,leg,,,,graded,2.0,0.0,1.0,0.0,True,True,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Halifax,Gateshead,National League,15:00,78.4,83.3,81.1,57.8,66.7,61.5,,,,,graded,4.0,1.0,0.0,1.0,True,True,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Hornchurch,Eastleigh,National League,15:00,76.5,50.0,81.1,59.1,40.0,61.5,,,,,graded,2.0,0.0,1.0,0.0,True,True,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Tamworth,Barrow,National League,15:00,83.9,91.7,81.1,59.1,55.0,61.5,leg,,,,graded,1.0,2.0,0.0,0.0,True,False,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Wealdstone,Yeovil,National League,15:00,83.9,80.0,81.1,64.5,60.0,61.5,leg,,,,graded,0.0,6.0,0.0,1.0,True,True,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Woking,Harrogate,National League,15:00,82.1,81.7,81.1,64.5,81.7,61.5,reserve,,,,graded,0.0,1.0,0.0,1.0,False,False,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Worthing,Solihull,National League,15:00,83.9,83.3,81.1,65.9,65.0,61.5,leg,leg,,,graded,5.0,0.0,3.0,0.0,True,True,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG5,Forest Green,Hartlepool,National League,17:30,70.5,83.3,81.1,48.1,58.3,61.5,,,,,graded,2.0,4.0,0.0,1.0,True,True,2026-10-11T21:08:27+00:00,ESPN
+2026-10-10,ENG6N,Brackley Town,Spennymoor Town,National League North,15:00,84.5,90.0,77.5,70.0,70.0,55.8,leg,,,,graded,2.0,1.0,1.0,1.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Chester FC,Bedford Town,National League North,15:00,72.5,50.0,77.5,50.0,40.0,55.8,,,,,graded,1.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Chorley,AFC Telford United,National League North,15:00,78.5,80.0,77.5,55.0,60.0,55.8,,,,,graded,2.0,1.0,1.0,0.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Darlington,Merthyr Town,National League North,15:00,78.5,70.0,77.5,60.0,50.0,55.8,,,,,graded,1.0,1.0,0.0,1.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Harborough Town FC,Southport,National League North,15:00,76.5,80.0,77.5,55.0,60.0,55.8,,,,,graded,1.0,0.0,1.0,0.0,False,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Hebburn Town,Oxford City,National League North,15:00,76.5,60.0,77.5,55.0,50.0,55.8,,,,,graded,0.0,3.0,0.0,1.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Hereford FC,Hednesford,National League North,15:00,80.5,90.0,77.5,45.0,40.0,55.8,reserve,,,,graded,0.0,1.0,0.0,1.0,False,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,King's Lynn Town,Buxton,National League North,15:00,86.5,100.0,77.5,90.0,90.0,55.8,leg,,,,graded,1.0,0.0,1.0,0.0,False,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Macclesfield FC,South Shields,National League North,15:00,72.5,50.0,77.5,45.0,40.0,55.8,,,,,graded,4.0,3.0,2.0,3.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Marine,Spalding United,National League North,15:00,74.5,70.0,77.5,50.0,30.0,55.8,,,,,graded,1.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Radcliffe,Scarborough Athletic,National League North,15:00,74.5,80.0,77.5,45.0,50.0,55.8,,,,,graded,4.0,1.0,1.0,0.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6N,Worksop Town,Morecambe,National League North,15:00,74.5,70.0,77.5,50.0,40.0,55.8,,,,,graded,2.0,1.0,2.0,0.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,AFC Totton,Walton and Hersham,National League South,15:00,80.0,80.0,77.6,62.2,70.0,56.9,reserve,,,,graded,0.0,1.0,0.0,0.0,False,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Billericay,Farnborough,National League South,15:00,78.1,100.0,77.6,62.2,80.0,56.9,,,,,graded,4.0,0.0,2.0,0.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Braintree Town,Truro City,National League South,15:00,80.6,80.0,77.6,60.0,53.3,56.9,reserve,,,,graded,1.0,2.0,1.0,1.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Chesham United,Chelmsford City,National League South,15:00,78.0,100.0,77.6,61.7,80.0,56.9,,,,,graded,0.0,5.0,0.0,5.0,True,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Dagenham & Redbridge,Hemel Hempstead,National League South,15:00,72.6,60.0,77.6,45.0,50.0,56.9,,,,,graded,0.0,0.0,0.0,0.0,False,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Dover Athletic,Dorking Wanderers,National League South,15:00,74.6,80.0,77.6,65.0,70.0,56.9,,,,,graded,1.0,1.0,0.0,0.0,True,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Farnham Town,Salisbury FC,National League South,15:00,76.6,70.0,77.6,50.0,50.0,56.9,,,,,graded,1.0,2.0,1.0,0.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Hampton & Richmond,Ebbsfleet United,National League South,15:00,78.5,100.0,77.6,51.7,54.2,56.9,,,,,graded,0.0,2.0,0.0,0.0,True,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Horsham,Maidstone United,National League South,15:00,78.1,80.0,77.6,57.8,50.0,56.9,,,,,graded,1.0,2.0,0.0,1.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Maidenhead United,Tonbridge Angels,National League South,15:00,76.6,80.0,77.6,45.0,50.0,56.9,,,,,graded,0.0,1.0,0.0,0.0,False,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Torquay United,Slough Town,National League South,15:00,78.6,70.0,77.6,55.0,60.0,56.9,,,,,graded,5.0,1.0,0.0,0.0,True,False,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,ENG6S,Weston Super Mare,Folkestone Invicta,National League South,15:00,78.6,81.7,77.6,60.0,43.3,56.9,,,,,graded,1.0,1.0,0.0,1.0,True,True,2026-10-11T21:08:28+00:00,LiveScore
+2026-10-10,SCO1,Dundee United,Hibernian,Scottish Premiership,15:00,79.9,100.0,73.8,63.7,83.3,59.5,leg,leg,,,graded,1.0,0.0,1.0,0.0,False,False,2026-10-11T21:08:31+00:00,ESPN
+2026-10-10,SCO1,Falkirk,Dundee,Scottish Premiership,15:00,77.6,83.3,73.8,60.5,83.3,59.5,reserve,,,,graded,1.0,2.0,1.0,0.0,True,True,2026-10-11T21:08:31+00:00,ESPN
+2026-10-10,SCO1,Hearts,St Mirren,Scottish Premiership,15:00,75.3,66.7,73.8,62.1,66.7,59.5,,,,,graded,5.0,0.0,2.0,0.0,True,True,2026-10-11T21:08:31+00:00,ESPN
+2026-10-10,SCO1,Rangers,Kilmarnock,Scottish Premiership,15:00,66.2,33.3,73.8,57.4,33.3,59.5,,,,,graded,3.0,1.0,3.0,0.0,True,True,2026-10-11T21:08:31+00:00,ESPN
+2026-10-10,SCO2,Arbroath,Morton,Scottish Championship,15:00,70.2,75.0,69.0,47.7,50.0,42.9,,,,,graded,1.0,2.0,0.0,1.0,True,True,2026-10-11T21:08:33+00:00,ESPN
+2026-10-10,SCO2,Ayr,Dunfermline,Scottish Championship,15:00,68.8,62.5,69.0,40.0,50.0,42.9,,,,,graded,1.0,1.0,0.0,0.0,True,False,2026-10-11T21:08:33+00:00,ESPN
+2026-10-10,SCO2,Inverness C,Stenhousemuir,Scottish Championship,15:00,66.7,62.5,69.0,43.1,37.5,42.9,,,,,graded,2.0,0.0,2.0,0.0,True,False,2026-10-11T21:08:33+00:00,ESPN
+2026-10-10,SCO2,Livingston,Partick,Scottish Championship,15:00,65.2,56.7,69.0,39.5,36.7,42.9,,,,,graded,1.0,2.0,1.0,1.0,True,True,2026-10-11T21:08:33+00:00,ESPN
+2026-10-10,SCO2,Raith Rvs,Queens Park,Scottish Championship,15:00,73.9,87.5,69.0,44.0,25.0,42.9,,,,,graded,2.0,0.0,1.0,0.0,True,True,2026-10-11T21:08:33+00:00,ESPN
+2026-10-10,SCO3,Alloa,Hamilton,Scottish League One,15:00,69.1,54.2,75.0,52.6,54.2,54.5,,,,,graded,0.0,3.0,0.0,3.0,True,False,2026-10-11T21:08:34+00:00,LiveScore
+2026-10-10,SCO3,Cove Rangers,East Fife,Scottish League One,15:00,74.0,62.5,75.0,48.9,25.0,54.5,,,,,graded,1.0,1.0,1.0,0.0,True,True,2026-10-11T21:08:34+00:00,LiveScore
+2026-10-10,SCO3,East Kilbride,Airdrie Utd,Scottish League One,15:00,74.0,75.0,75.0,54.8,62.5,54.5,,,,,graded,2.0,2.0,2.0,1.0,True,True,2026-10-11T21:08:34+00:00,LiveScore
+2026-10-10,SCO3,Montrose,Ross County,Scottish League One,15:00,79.8,87.5,75.0,61.5,75.0,54.5,leg,leg,,,graded,0.0,5.0,0.0,3.0,True,True,2026-10-11T21:08:34+00:00,LiveScore
+2026-10-10,SCO3,Peterhead,Queen of Sth,Scottish League One,15:00,78.1,87.5,75.0,54.8,75.0,54.5,reserve,,,,graded,0.0,1.0,0.0,0.0,False,False,2026-10-11T21:08:34+00:00,LiveScore
+2026-10-10,SCO4,Annan Athletic,Stranraer,Scottish League Two,15:00,74.3,90.0,82.2,62.4,67.5,68.9,,,,,graded,1.0,6.0,0.0,2.0,True,True,2026-10-11T21:08:35+00:00,LiveScore
+2026-10-10,SCO4,Clyde,Dumbarton,Scottish League Two,15:00,84.7,100.0,82.2,69.8,75.0,68.9,leg,reserve,,,graded,2.0,1.0,2.0,0.0,True,True,2026-10-11T21:08:35+00:00,LiveScore
+2026-10-10,SCO4,Edinburgh City,Spartans,Scottish League Two,15:00,82.6,75.0,82.2,71.2,62.5,68.9,,leg,,,graded,1.0,3.0,1.0,1.0,True,True,2026-10-11T21:08:35+00:00,LiveScore
+2026-10-10,SCO4,Forfar,Elgin,Scottish League Two,15:00,84.7,75.0,82.2,69.8,75.0,68.9,leg,,,,graded,1.0,2.0,0.0,1.0,True,True,2026-10-11T21:08:35+00:00,LiveScore
+2026-10-10,SCO4,Stirling,Kelty Hearts,Scottish League Two,15:00,84.7,90.0,82.2,71.2,67.5,68.9,leg,leg,,,graded,2.0,1.0,0.0,1.0,True,True,2026-10-11T21:08:35+00:00,LiveScore
+2026-10-17,ENG1,Everton,Chelsea,Premier League,12:30,83.3,83.3,76.7,58.3,50.0,50.0,,,,,graded,0.0,2.0,0.0,0.0,True,False,2026-10-18T19:45:45+00:00,ESPN
+2026-10-17,ENG1,Brentford,Liverpool,Premier League,15:00,78.6,83.3,76.7,50.0,33.3,50.0,leg,,,,graded,1.0,2.0,1.0,0.0,True,True,2026-10-18T19:45:45+00:00,ESPN
+2026-10-17,ENG1,Fulham,Hull,Premier League,15:00,73.8,83.3,76.7,46.8,66.7,50.0,,,,,graded,1.0,0.0,1.0,0.0,False,False,2026-10-18T19:45:45+00:00,ESPN
+2026-10-17,ENG1,Man City,Ipswich,Premier League,15:00,76.2,66.7,76.7,50.0,66.7,50.0,,,,,graded,3.0,2.0,2.0,1.0,True,True,2026-10-18T19:45:45+00:00,ESPN
+2026-10-17,ENG1,Newcastle,Aston Villa,Premier League,17:30,83.3,83.3,76.7,58.3,66.7,50.0,,,,,graded,0.0,1.0,0.0,1.0,False,False,2026-10-18T19:45:45+00:00,ESPN
+2026-10-17,ENG2,Middlesbrough,Cardiff,Championship,12:30,85.0,80.0,78.2,70.0,70.0,63.0,,,,,graded,2.0,2.0,0.0,2.0,True,True,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Millwall,Lincoln,Championship,12:30,70.0,60.0,78.2,70.0,60.0,63.0,,,,,graded,2.0,2.0,0.0,2.0,True,True,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Watford,Charlton,Championship,12:30,75.0,100.0,78.2,45.0,70.0,63.0,,,,,graded,2.0,0.0,0.0,0.0,True,False,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Birmingham,QPR,Championship,15:00,76.9,90.0,78.2,60.7,50.0,63.0,,,,,graded,3.0,0.0,1.0,0.0,True,True,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Bristol City,Sheffield United,Championship,15:00,74.9,60.0,78.2,57.9,30.0,63.0,,,,,graded,0.0,1.0,0.0,1.0,False,False,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Derby,Stoke,Championship,15:00,82.9,90.0,78.2,66.4,90.0,63.0,leg,leg,,,graded,0.0,1.0,0.0,0.0,False,False,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Norwich,Portsmouth,Championship,15:00,78.5,65.0,78.2,64.5,55.0,63.0,,,,,graded,0.0,1.0,0.0,0.0,False,False,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Southampton,Bolton,Championship,15:00,76.9,80.0,78.2,66.4,80.0,63.0,,leg,,,graded,0.0,0.0,0.0,0.0,False,False,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Swansea,West Ham,Championship,15:00,80.9,80.0,78.2,66.4,60.0,63.0,leg,leg,,,graded,0.0,1.0,0.0,1.0,False,False,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,West Brom,Blackburn,Championship,15:00,74.9,60.0,78.2,55.0,40.0,63.0,,,,,graded,3.0,2.0,1.0,2.0,True,True,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG2,Wrexham,Preston,Championship,15:00,78.9,90.0,78.2,65.0,70.0,63.0,reserve,,,,graded,4.0,1.0,2.0,1.0,True,True,2026-10-18T19:45:49+00:00,ESPN
+2026-10-17,ENG3,Milton Keynes Dons,Luton,League One,12:30,81.2,87.5,77.5,68.8,87.5,55.9,,,,,graded,2.0,1.0,1.0,0.0,True,True,2026-10-18T19:45:51+00:00,ESPN
+2026-10-17,ENG3,Peterboro,Burton,League One,12:30,78.9,67.5,77.5,52.8,35.0,55.9,,,,,graded,2.0,2.0,1.0,1.0,True,True,2026-10-18T19:45:51+00:00,ESPN
+2026-10-17,ENG3,Barnsley,Cambridge,League One,15:00,79.2,87.5,77.5,56.7,50.0,55.9,leg,,,,graded,1.0,2.0,1.0,0.0,True,True,2026-10-18T19:45:51+00:00,ESPN
+2026-10-17,ENG3,Bradford,Stevenage,League One,15:00,68.7,50.0,77.5,47.7,12.5,55.9,,,,,graded,2.0,0.0,0.0,0.0,True,False,2026-10-18T19:45:51+00:00,ESPN
+2026-10-17,ENG3,Leicester,Doncaster,League One,15:00,76.6,87.5,77.5,54.5,50.0,55.9,,,,,graded,2.0,1.0,1.0,0.0,True,True,2026-10-18T19:45:51+00:00,ESPN
+2026-10-17,ENG3,Leyton Orient,Blackpool,League One,15:00,79.3,77.5,77.5,58.2,55.0,55.9,leg,,,,graded,2.0,0.0,1.0,0.0,True,True,2026-10-18T19:45:51+00:00,ESPN
+2026-10-17,ENG3,Plymouth,Huddersfield,League One,15:00,82.1,80.0,77.5,56.4,70.0,55.9,leg,,,,graded,0.0,2.0,0.0,1.0,True,True,2026-10-18T19:45:51+00:00,ESPN
+2026-10-17,ENG3,Sheffield Weds,AFC Wimbledon,League One,15:00,70.8,62.5,77.5,53.6,62.5,55.9,,,,,graded,5.0,0.0,3.0,0.0,True,True,2026-10-18T19:45:51+00:00,ESPN
+2026-10-17,ENG3,Stockport,Bromley,League One,15:00,79.3,77.5,77.5,59.6,77.5,55.9,leg,reserve,,,graded,1.0,0.0,1.0,0.0,False,False,2026-10-18T19:45:52+00:00,ESPN
+2026-10-17,ENG3,Wigan,Reading,League One,15:00,74.9,75.0,77.5,56.6,62.5,55.9,,,,,graded,1.0,0.0,0.0,0.0,False,False,2026-10-18T19:45:52+00:00,ESPN
+2026-10-17,ENG3,Wycombe,Notts County,League One,15:00,81.4,100.0,77.5,56.6,55.0,55.9,leg,,,,graded,2.0,0.0,1.0,0.0,True,True,2026-10-18T19:45:52+00:00,ESPN
+2026-10-17,ENG4,Fleetwood Town,Rotherham,League Two,12:30,70.0,60.0,72.8,50.0,40.0,50.9,,,,,graded,2.0,0.0,0.0,0.0,True,False,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Shrewsbury,Bristol Rvs,League Two,12:30,80.0,80.0,72.8,55.0,40.0,50.9,,,,,graded,1.0,0.0,0.0,0.0,False,False,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Accrington,Gillingham,League Two,15:00,75.7,80.0,72.8,49.2,70.0,50.9,,,,,graded,3.0,1.0,2.0,1.0,True,True,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Colchester,Exeter,League Two,15:00,65.2,47.5,72.8,47.1,35.0,50.9,,,,,graded,0.0,0.0,0.0,0.0,False,False,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Crewe,Rochdale,League Two,15:00,69.7,70.0,72.8,49.2,40.0,50.9,,,,,graded,3.0,2.0,2.0,0.0,True,True,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Grimsby,Northampton,League Two,15:00,68.3,77.5,72.8,46.2,32.5,50.9,,,,,graded,0.0,2.0,0.0,1.0,True,True,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Newport County,York,League Two,15:00,75.3,90.0,72.8,51.4,42.5,50.9,reserve,,,,graded,1.0,1.0,0.0,1.0,True,True,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Oldham,Cheltenham,League Two,15:00,81.3,90.0,72.8,57.2,60.0,50.9,leg,leg,,,graded,4.0,1.0,3.0,1.0,True,True,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Port Vale,Chesterfield,League Two,15:00,70.3,52.5,72.8,52.0,52.5,50.9,,,,,graded,1.0,0.0,1.0,0.0,False,False,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Salford,Crawley Town,League Two,15:00,70.8,60.0,72.8,49.3,37.5,50.9,,,,,graded,2.0,1.0,1.0,0.0,True,True,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Swindon,Walsall,League Two,15:00,69.1,80.0,72.8,48.4,40.0,50.9,,,,,graded,1.0,1.0,1.0,0.0,True,True,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG4,Tranmere,Barnet,League Two,15:00,81.0,100.0,72.8,58.1,77.5,50.9,leg,leg,,,graded,1.0,2.0,1.0,0.0,True,True,2026-10-18T19:45:55+00:00,ESPN
+2026-10-17,ENG6N,AFC Telford United,Darlington,National League North,15:00,74.5,70.0,75.8,63.6,50.0,56.1,,,,,graded,2.0,1.0,1.0,1.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6N,Buxton,Worksop Town,National League North,15:00,78.3,80.0,75.8,72.7,80.0,56.1,reserve,,,,graded,2.0,2.0,0.0,2.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6N,Hebburn Town,Scarborough Athletic,National League North,15:00,76.4,83.3,75.8,59.1,66.7,56.1,,,,,graded,0.0,2.0,0.0,1.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6N,Hednesford,Brackley Town,National League North,15:00,80.3,90.0,75.8,54.5,70.0,56.1,leg,,,,graded,3.0,2.0,3.0,1.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6N,Merthyr Town,King's Lynn Town,National League North,15:00,80.3,100.0,75.8,63.6,70.0,56.1,leg,,,,graded,1.0,1.0,1.0,0.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6N,Southport,Radcliffe,National League North,15:00,78.3,80.0,75.8,63.6,70.0,56.1,reserve,,,,graded,0.0,2.0,0.0,1.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6S,Ebbsfleet United,Weston Super Mare,National League South,15:00,76.1,50.0,77.5,44.3,37.5,55.0,,,,,graded,6.0,1.0,4.0,0.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6S,Farnborough,Dagenham & Redbridge,National League South,15:00,71.2,55.0,77.5,38.6,22.5,55.0,,,,,graded,2.0,0.0,0.0,0.0,True,False,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6S,Folkestone Invicta,AFC Totton,National League South,15:00,77.4,90.0,77.5,50.0,60.0,55.0,,,,,graded,2.0,1.0,2.0,0.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6S,Maidstone United,Maidenhead United,National League South,15:00,75.5,70.0,77.5,45.5,50.0,55.0,,,,,graded,2.0,1.0,1.0,0.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,ENG6S,Slough Town,Horsham,National League South,15:00,77.0,77.5,77.5,52.7,57.5,55.0,,,,,graded,1.0,2.0,1.0,1.0,True,True,2026-10-18T19:45:56+00:00,LiveScore
+2026-10-17,SCO1,Aberdeen,St Mirren,Scottish Premiership,15:00,69.3,37.5,72.9,57.9,37.5,60.4,,,,,graded,3.0,1.0,1.0,1.0,True,True,2026-10-18T19:45:58+00:00,ESPN
+2026-10-17,SCO1,Hibernian,Falkirk,Scottish Premiership,15:00,75.8,75.0,72.9,62.4,62.5,60.4,reserve,,,,graded,1.0,2.0,1.0,2.0,True,False,2026-10-18T19:45:58+00:00,ESPN
+2026-10-17,SCO1,Kilmarnock,Motherwell,Scottish Premiership,15:00,71.5,75.0,72.9,60.9,62.5,60.4,,,,,graded,3.0,2.0,1.0,1.0,True,True,2026-10-18T19:45:58+00:00,ESPN
+2026-10-17,SCO1,St Johnstone,Dundee United,Scottish Premiership,15:00,73.6,87.5,72.9,57.9,50.0,60.4,,,,,graded,1.0,1.0,1.0,0.0,True,True,2026-10-18T19:45:58+00:00,ESPN
+2026-10-17,SCO1,Dundee,Rangers,Scottish Premiership,20:00,68.8,75.0,72.9,56.2,50.0,60.4,,,,,graded,2.0,2.0,1.0,1.0,True,True,2026-10-18T19:45:58+00:00,ESPN
+2026-10-17,SCO2,Dunfermline,Livingston,Scottish Championship,15:00,72.5,70.8,72.9,39.5,12.5,43.8,,,,,graded,0.0,0.0,0.0,0.0,False,False,2026-10-18T19:45:59+00:00,ESPN
+2026-10-17,SCO2,Inverness C,Arbroath,Scottish Championship,15:00,73.7,80.0,72.9,48.4,70.0,43.8,,,,,graded,2.0,0.0,2.0,0.0,True,False,2026-10-18T19:45:59+00:00,ESPN
+2026-10-17,SCO2,Morton,Queens Park,Scottish Championship,15:00,77.7,70.0,72.9,48.4,50.0,43.8,leg,,,,graded,2.0,0.0,2.0,0.0,True,False,2026-10-18T19:45:59+00:00,ESPN
+2026-10-17,SCO2,Stenhousemuir,Raith Rvs,Scottish Championship,15:00,71.1,55.0,72.9,40.4,42.5,43.8,,,,,graded,1.0,1.0,1.0,0.0,True,True,2026-10-18T19:45:59+00:00,ESPN
+2026-10-17,SCO3,East Fife,Alloa,Scottish League One,15:00,73.3,70.0,75.5,50.8,40.0,55.1,,,,,graded,0.0,3.0,0.0,1.0,True,True,2026-10-18T19:46:01+00:00,LiveScore
+2026-10-17,SCO3,East Kilbride,Montrose,Scottish League One,15:00,81.3,80.0,75.5,62.2,70.0,55.1,leg,leg,,,graded,1.0,1.0,0.0,0.0,True,False,2026-10-18T19:46:01+00:00,LiveScore
+2026-10-17,SCO3,Peterhead,Cove Rangers,Scottish League One,15:00,75.3,70.0,75.5,52.2,40.0,55.1,,,,,graded,2.0,0.0,0.0,0.0,True,False,2026-10-18T19:46:01+00:00,LiveScore
+2026-10-17,SCO3,Queen of Sth,Ross County,Scottish League One,15:00,78.9,80.0,75.5,58.8,50.0,55.1,leg,,,,graded,1.0,7.0,0.0,5.0,True,True,2026-10-18T19:46:01+00:00,LiveScore
+2026-10-17,SCO3,Airdrie Utd,Hamilton,Scottish League One,17:30,57.8,45.0,75.5,41.7,22.5,55.1,,,,,graded,1.0,2.0,0.0,1.0,True,True,2026-10-18T19:46:01+00:00,LiveScore
+2026-10-17,SCO4,Clyde,Annan Athletic,Scottish League Two,15:00,80.4,62.5,84.0,68.6,52.5,72.0,,,,,graded,4.0,1.0,1.0,0.0,True,True,2026-10-18T19:46:02+00:00,LiveScore
+2026-10-17,SCO4,Dumbarton,Stirling,Scottish League Two,15:00,86.4,80.0,84.0,74.3,80.0,72.0,leg,leg,,,graded,1.0,1.0,0.0,0.0,True,False,2026-10-18T19:46:02+00:00,LiveScore
+2026-10-17,SCO4,Elgin,Edinburgh City,Scottish League Two,15:00,86.4,90.0,84.0,74.3,80.0,72.0,leg,leg,,,graded,0.0,0.0,0.0,0.0,False,False,2026-10-18T19:46:02+00:00,LiveScore
+2026-10-17,SCO4,Kelty Hearts,Forfar,Scottish League Two,15:00,84.4,100.0,84.0,71.4,80.0,72.0,leg,,,,graded,2.0,1.0,1.0,1.0,True,True,2026-10-18T19:46:02+00:00,LiveScore
+2026-10-17,SCO4,Spartans,Stranraer,Scottish League Two,15:00,82.4,100.0,84.0,71.4,90.0,72.0,reserve,reserve,,,graded,0.0,2.0,0.0,1.0,True,True,2026-10-18T19:46:02+00:00,LiveScore
+2026-10-24,ENG1,Aston Villa,Man City,Premier League,12:30,72.1,74.2,75.7,49.6,49.5,51.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG1,Arsenal,Everton,Premier League,15:00,74.4,77.0,75.7,48.0,51.3,51.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG1,Coventry,Fulham,Premier League,15:00,69.8,71.4,75.7,49.6,49.5,51.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG1,Chelsea,Tottenham,Premier League,17:30,78.9,77.0,75.7,52.7,53.1,51.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Charlton,Norwich,Championship,12:30,74.9,72.4,76.5,57.9,59.5,61.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Portsmouth,Millwall,Championship,12:30,76.8,79.9,76.5,63.4,64.5,61.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Sheffield United,Derby,Championship,12:30,74.9,77.4,76.5,60.7,64.5,61.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Blackburn,Wrexham,Championship,15:00,80.7,79.9,76.5,63.4,62.8,61.4,leg,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Cardiff,Birmingham,Championship,15:00,80.7,77.4,76.5,66.2,62.8,61.4,leg,leg,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Lincoln,Burnley,Championship,15:00,78.8,79.9,76.5,66.2,66.1,61.4,,leg,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Preston,West Brom,Championship,15:00,73.0,72.4,76.5,56.5,56.1,61.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,QPR,Swansea,Championship,15:00,73.0,74.9,76.5,57.9,62.8,61.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Stoke,Bristol City,Championship,15:00,74.9,79.9,76.5,57.9,57.8,61.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,West Ham,Southampton,Championship,15:00,78.8,79.9,76.5,66.2,66.1,61.4,,leg,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG2,Wolves,Watford,Championship,15:00,76.8,74.9,76.5,57.9,57.8,61.4,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Huddersfield,Wigan,League One,12:30,75.5,76.4,78.6,56.8,55.6,58.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Luton,Leicester,League One,12:30,83.1,78.9,78.6,60.5,57.3,58.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,AFC Wimbledon,Wycombe,League One,15:00,78.0,71.4,78.6,61.6,57.3,58.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Blackpool,Mansfield,League One,15:00,81.1,81.4,78.6,62.0,60.6,58.7,leg,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Bromley,Peterboro,League One,15:00,79.5,81.9,78.6,61.1,61.3,58.7,reserve,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Burton,Leyton Orient,League One,15:00,76.5,76.9,78.6,56.7,57.9,58.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Cambridge,Plymouth,League One,15:00,84.1,82.3,78.6,62.1,60.3,58.7,leg,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Doncaster,Sheffield Weds,League One,15:00,75.1,78.9,78.6,56.2,57.3,58.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Notts County,Stockport,League One,15:00,79.6,78.9,78.6,58.3,57.3,58.7,reserve,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Oxford,Bradford,League One,15:00,75.6,74.4,78.6,53.6,57.4,58.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Reading,Barnsley,League One,15:00,77.6,79.4,78.6,59.7,61.3,58.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG3,Stevenage,Milton Keynes Dons,League One,15:00,77.1,78.9,78.6,56.2,57.3,58.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Bristol Rvs,Swindon,League Two,12:30,72.9,70.0,74.6,54.8,55.7,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Cheltenham,Newport County,League Two,12:30,78.5,74.7,74.6,57.5,55.7,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Northampton,Colchester,League Two,12:30,69.3,69.1,74.6,52.8,54.9,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Barnet,Oldham,League Two,15:00,83.2,81.0,74.6,64.1,62.6,55.1,leg,leg,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Chesterfield,Crewe,League Two,15:00,72.9,72.4,74.6,54.8,54.1,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Crawley Town,Tranmere,League Two,15:00,79.6,74.2,74.6,59.1,55.0,55.1,reserve,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Exeter,Fleetwood Town,League Two,15:00,65.5,70.0,74.6,48.0,52.5,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Gillingham,Grimsby,League Two,15:00,76.7,74.7,74.6,53.4,50.9,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Rochdale,Accrington,League Two,15:00,76.7,77.1,74.6,56.1,55.7,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,Rotherham,Shrewsbury,League Two,15:00,74.8,81.9,74.6,54.8,58.9,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG4,York,Port Vale,League Two,15:00,75.1,78.9,74.6,54.2,58.2,55.1,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Eastleigh,Boston Utd,National League,12:30,79.3,84.7,81.3,64.4,65.1,61.9,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Harrogate,Sutton,National League,12:30,82.8,84.6,81.3,61.8,61.8,61.9,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Aldershot,Wealdstone,National League,15:00,79.3,79.9,81.3,63.1,61.9,61.9,reserve,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Barrow,Forest Green,National League,15:00,84.4,81.4,81.3,57.3,57.3,61.9,leg,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Boreham Wood,Fylde,National League,15:00,88.2,84.7,81.3,61.8,63.5,61.9,leg,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Hartlepool,Hornchurch,National League,15:00,72.1,75.1,81.3,57.9,60.2,61.9,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Scunthorpe,Woking,National League,15:00,78.9,81.5,81.3,61.3,60.6,61.9,reserve,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Solihull,Carlisle,National League,15:00,84.6,82.3,81.3,65.7,63.4,61.9,leg,leg,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Southend,Halifax,National League,15:00,82.8,79.5,81.3,63.1,58.0,61.9,leg,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Yeovil,Altrincham,National League,15:00,82.8,80.4,81.3,64.4,62.4,61.9,leg,leg,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG5,Kidderminster,Worthing,National League,17:30,77.5,80.1,81.3,61.8,63.5,61.9,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,ENG6N,AFC Telford United,Hebburn Town,National League North,15:00,77.9,78.3,76.8,59.4,57.4,58.0,,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Brackley Town,Radcliffe,National League North,15:00,81.6,78.7,76.8,60.8,59.7,58.0,leg,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Chorley,Buxton,National League North,15:00,85.0,81.1,76.8,64.3,59.7,58.0,leg,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Darlington,Spennymoor Town,National League North,15:00,83.2,81.1,76.8,64.3,62.9,58.0,leg,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Harborough Town FC,Worksop Town,National League North,15:00,71.7,71.5,76.8,54.7,56.4,58.0,,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Hednesford,Spalding United,National League North,15:00,75.5,76.3,76.8,52.0,54.8,58.0,,,,,pending,,,,,,,,
+2026-10-24,ENG6N,King's Lynn Town,Southport,National League North,15:00,81.6,78.7,76.8,64.8,61.3,58.0,leg,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Macclesfield FC,Hereford FC,National League North,15:00,73.2,75.8,76.8,54.1,55.7,58.0,,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Marine,Oxford City,National League North,15:00,71.2,69.2,76.8,55.5,54.8,58.0,,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Merthyr Town,Morecambe,National League North,15:00,77.4,78.7,76.8,54.8,56.4,58.0,,,,,pending,,,,,,,,
+2026-10-24,ENG6N,Scarborough Athletic,Bedford Town,National League North,15:00,71.8,68.4,76.8,56.2,54.0,58.0,,,,,pending,,,,,,,,
+2026-10-24,ENG6N,South Shields,Chester FC,National League North,15:00,71.2,80.1,76.8,54.1,58.3,58.0,,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Chelmsford City,Tonbridge Angels,National League South,15:00,73.8,70.8,77.9,51.2,53.1,55.9,,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Dagenham & Redbridge,Chesham United,National League South,15:00,74.5,72.3,77.9,54.8,56.4,55.9,,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Ebbsfleet United,Maidenhead United,National League South,15:00,75.8,74.7,77.9,50.0,54.7,55.9,,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Farnham Town,Braintree Town,National League South,15:00,83.4,81.0,77.9,59.6,60.0,55.9,leg,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Folkestone Invicta,Farnborough,National League South,15:00,81.8,84.2,77.9,56.0,61.2,55.9,leg,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Hampton & Richmond,Truro City,National League South,15:00,79.6,79.1,77.9,55.5,55.7,55.9,reserve,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Hemel Hempstead,AFC Totton,National League South,15:00,72.9,79.0,77.9,52.6,54.0,55.9,,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Horsham,Walton and Hersham,National League South,15:00,81.9,79.5,77.9,60.2,56.4,55.9,leg,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Salisbury FC,Dover Athletic,National League South,15:00,75.7,76.0,77.9,55.5,56.6,55.9,,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Slough Town,Dorking Wanderers,National League South,15:00,76.2,79.5,77.9,56.1,56.4,55.9,,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Torquay United,Maidstone United,National League South,15:00,81.9,79.5,77.9,57.4,56.4,55.9,leg,,,,pending,,,,,,,,
+2026-10-24,ENG6S,Weston Super Mare,Billericay,National League South,15:00,78.1,76.9,77.9,61.6,57.9,55.9,,,,,pending,,,,,,,,
+2026-10-24,SCO1,Dundee United,Aberdeen,Scottish Premiership,15:00,76.6,78.4,75.9,63.9,64.6,63.0,,reserve,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,SCO1,Falkirk,Kilmarnock,Scottish Premiership,15:00,76.6,75.7,75.9,63.9,64.6,63.0,,reserve,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,SCO1,Rangers,St Johnstone,Scottish Premiership,15:00,70.4,70.5,75.9,58.1,59.5,63.0,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,SCO1,St Mirren,Dundee,Scottish Premiership,15:00,76.6,75.7,75.9,62.5,62.9,63.0,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,SCO2,Livingston,Arbroath,Scottish Championship,15:00,72.4,75.4,72.2,42.2,44.1,40.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,SCO2,Morton,Ayr,Scottish Championship,15:00,74.4,72.4,72.2,43.6,39.9,40.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,SCO2,Partick,Stenhousemuir,Scottish Championship,15:00,64.1,66.7,72.2,35.7,35.6,40.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,SCO2,Queens Park,Dunfermline,Scottish Championship,15:00,73.7,74.2,72.2,37.1,40.6,40.7,,,,listed by ESPN only,pending,,,,,,,,
+2026-10-24,SCO2,Raith Rvs,Inverness C,Scottish Championship,15:00,76.3,76.7,72.2,45.0,42.3,40.7,,,,listed by ESPN only,pending,,,,,,,,
