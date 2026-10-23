@@ -71,6 +71,8 @@ def fake(monkeypatch, tmp_path):
         return rows, {"source": "LiveScore", "latest_result": max(r["date"] for r in rows), "last_modified": None}
 
     def ls_fixtures(region, on):
+        if region not in region_key:                     # Scottish League One/Two: the file's list stands
+            return [], []
         t = data[region_key[region]][0]
         return [{"home": t[i], "away": t[i + 1], "kickoff": "15:00"} for i in range(2, len(t), 2)], \
                [{"home": t[0], "away": t[1], "status": "Postp."}]

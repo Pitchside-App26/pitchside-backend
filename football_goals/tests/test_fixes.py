@@ -265,3 +265,22 @@ def test_acca_chance_uses_the_track_record(tmp_path, monkeypatch):
 def test_gibh_fold_is_a_six_fold():
     a = run_report.load_config()["gibh_accumulator"]
     assert (a["min_legs"], a["max_legs"]) == (6, 6)
+
+
+# 24 Oct: fixtures.csv had no Scottish games, so League One showed none at all.
+def test_livescore_fills_scottish_fixtures(monkeypatch):
+    from football_goals.leagues import LEAGUES
+    from football_goals.sources import livescore
+    lg = next(x for x in LEAGUES if x.key == "SCO3")
+    monkeypatch.setattr(livescore, "fixtures_on", lambda stage, on: (
+        [{"home": "Alloa Athletic", "away": "Queen of the South", "kickoff": "15:00"}],
+        [{"home": "Cove Rangers", "away": "East Kilbride", "status": "Postp."}]))
+    clubs = {"Alloa", "Queen of Sth", "Cove Rangers", "East Kilbride", "Hamilton"}
+    notes, problems = [], []
+    fx, off = run_report._livescore_crosscheck(lg, date(2026, 10, 24), [], clubs, notes, problems)
+    assert fx == [{"home": "Alloa", "away": "Queen of Sth", "kickoff": "15:00", "note": "listed by LiveScore only"}]
+    assert off == [{"home": "Cove Rangers", "away": "East Kilbride", "status": "Postp."}] and not problems
+    # a game only in the file, with LiveScore listing others, is flagged for checking
+    fx, _ = run_report._livescore_crosscheck(lg, date(2026, 10, 24), [{"home": "Hamilton", "away": "Alloa",
+                                             "kickoff": "15:00"}], clubs, notes, problems)
+    assert any(f.get("note", "").startswith("not on LiveScore") for f in fx)

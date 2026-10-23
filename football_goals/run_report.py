@@ -89,6 +89,33 @@ def _espn_crosscheck(league, on, fixtures, clubs, notes, problems):
     return list(by_pair.values()), postponed
 
 
+def _livescore_crosscheck(league, on, fixtures, clubs, notes, problems):
+    """Scottish League One/Two have no ESPN feed: LiveScore's day list fills
+    the same role, adding games the fixtures file lacks (it sometimes has no
+    Scottish fixtures at all) and dropping postponed ones."""
+    fx, off = livescore.fixtures_on(league.livescore_stage, on)
+    by_pair = {(f["home"], f["away"]): f for f in fixtures}
+    postponed, seen = [], set()
+    for ev, is_off in [(e, False) for e in fx] + [(e, True) for e in off]:
+        h, a = best_match(ev["home"], clubs), best_match(ev["away"], clubs)
+        if not h or not a:
+            problems.append(f"LiveScore fixture '{ev['home']} v {ev['away']}' could not be matched to this league's clubs")
+            continue
+        seen.add((h, a))
+        if is_off:
+            postponed.append({"home": h, "away": a, "status": ev["status"]})
+            by_pair.pop((h, a), None)
+        elif (h, a) in by_pair:
+            by_pair[(h, a)]["kickoff"] = by_pair[(h, a)].get("kickoff") or ev["kickoff"]
+        else:
+            by_pair[(h, a)] = {"home": h, "away": a, "kickoff": ev["kickoff"], "note": "listed by LiveScore only"}
+    for pair, f in by_pair.items():
+        if pair not in seen and (fx or off):
+            f["note"] = "not on LiveScore's list - check it's still on"
+    notes.append(f"fixtures cross-checked with LiveScore ({len(fx) + len(off)} listed, {len(postponed)} postponed)")
+    return list(by_pair.values()), postponed
+
+
 LIVESCORE_MIN_AGREEMENT = 0.97
 _ls_check: dict = {}
 
@@ -153,8 +180,15 @@ def analyse_league(league, on, fd_fixtures, cfg):
             fixtures, postponed = _espn_crosscheck(league, on, fixtures, set(stats), notes, problems)
         except FetchError as e:
             problems.append(f"could not cross-check fixtures with ESPN ({e}); postponements may be missed")
+    elif league.fd_code and league.livescore_stage:
+        try:
+            fixtures, postponed = _livescore_crosscheck(league, on, fixtures, set(stats), notes, problems)
+        except (FetchError, livescore.LiveScoreError) as e:
+            notes.append(f"could not cross-check fixtures with LiveScore ({e}); relying on football-data.co.uk's list")
     elif league.fd_code:
         notes.append("no second fixture source for this league; postponements rely on football-data.co.uk's list")
+    if not fixtures:
+        notes.append("no league fixtures listed for this date by any source (e.g. a cup weekend)")
 
     p, n = internal_checks(league, results, stats, fixtures)
     problems += p
