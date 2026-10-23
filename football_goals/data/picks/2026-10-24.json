@@ -1,5 +1,5 @@
 {
- "locked_at": "2026-10-23T12:30+00:00",
+ "locked_at": "2026-10-23T12:36+00:00",
  "o15": {
   "legs": [
    [
@@ -78,6 +78,11 @@
     "Southport"
    ],
    [
+    "SCO3",
+    "Cove Rangers",
+    "East Kilbride"
+   ],
+   [
     "ENG3",
     "Blackpool",
     "Mansfield"
@@ -86,14 +91,14 @@
     "ENG2",
     "Blackburn",
     "Wrexham"
-   ],
+   ]
+  ],
+  "reserves": [
    [
     "ENG2",
     "Cardiff",
     "Birmingham"
-   ]
-  ],
-  "reserves": [
+   ],
    [
     "ENG4",
     "Crawley Town",
@@ -115,14 +120,9 @@
     "Peterboro"
    ],
    [
-    "ENG5",
-    "Aldershot",
-    "Wealdstone"
-   ],
-   [
-    "ENG5",
-    "Scunthorpe",
-    "Woking"
+    "SCO3",
+    "Montrose",
+    "Peterhead"
    ]
   ],
   "below_line": []
