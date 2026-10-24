@@ -28,7 +28,8 @@ permissions:
 
 jobs:
   # A scheduled run skips itself if another run of this workflow from the
-  # last 12 hours -- manual or the other schedule slot -- got past this check
+  # last 30 hours -- manual (a Saturday run counts, so it isn't paid for twice) or
+  # the other schedule slot -- got past this check
   # (its run job isn't skipped) and wasn't cancelled, so the slate is never
   # fetched twice (~150 Odds API credits each time). A red run still counts:
   # it can have fetched the odds and published the page. A manual run
@@ -44,7 +45,7 @@ jobs:
           EVENT: ${{ github.event_name }}
         run: |
           if [ "$EVENT" != "schedule" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          since=$(date -u -d '12 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          since=$(date -u -d '30 hours ago' +%Y-%m-%dT%H:%M:%SZ)
           ids=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/nfl-prop-rankings.yml/runs" \
                   -f created=">=$since" -f per_page=20 \
                   --jq ".workflow_runs[] | select(.id < $GITHUB_RUN_ID and .conclusion != \"cancelled\") | .id")
@@ -57,7 +58,7 @@ jobs:
             if [ "$state" != "skipped" ]; then n=$((n + 1)); fi
           done
           if [ "$n" -gt 0 ]; then
-            echo "Another run in the last 12 hours already covers this slate; skipping to save Odds API credits."
+            echo "Another run in the last 30 hours already covers this slate; skipping to save Odds API credits."
             echo "go=false" >> "$GITHUB_OUTPUT"
           else
             echo "go=true" >> "$GITHUB_OUTPUT"

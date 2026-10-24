@@ -53,14 +53,14 @@ def test_the_main_line_sits_where_the_books_price_it():
 
 def test_milestones_are_bettable_steps_at_or_below_the_line():
     assert milestones("receptions", 4.5) == [1, 2, 3, 4, 5]
-    assert milestones("passing_yards", 45.5) == [10, 20, 30, 40]
-    assert milestones("receiving_yards", 22.5) == [5, 10, 15, 20]
+    assert milestones("passing_yards", 230.5)[-3:] == [175, 200, 225]
+    assert milestones("receiving_yards", 52.5) == [10, 20, 30, 40, 50]
 
 
 def test_a_six_fold_is_built_to_land_about_one_time_in_twenty():
     games = [f"T{i} @ H{i}" for i in range(8)]
-    stats = [("receptions", 5.5), ("receiving_yards", 60.5), ("passing_yards", 230.5), ("completions", 21.5),
-             ("carries", 15.5), ("def_tackles", 6.5)]
+    stats = [("receptions", 5.5), ("receiving_yards", 60.5), ("passing_yards", 230.5), ("carries", 15.5),
+             ("def_tackles", 6.5)]
     contexts, rows = [], []
     for i, game in enumerate(games):
         for stat, line in stats:
@@ -118,3 +118,12 @@ def test_a_role_settles_after_a_few_games():
                            "st_snaps": 0} for w, pct in enumerate(weeks)])
     assert season_roles(snaps, 5).lookup("GordOl00", None, None).swing > 0.15  # week 5: just changed
     assert season_roles(snaps, 6).lookup("GordOl00", None, None).swing < 0.15  # week 6: settled
+
+
+def test_completions_are_never_a_leg():
+    # bet365 has no completions milestones (Dan, 18 Oct: no "18+ completions").
+    from acca_report import consensus_by_prop
+    ctx = _ctx("QB", "completions")
+    excluded = Exclusions()
+    assert candidates_for([ctx], consensus_by_prop(_books(ctx, 21.5)), _model(), lambda c: STEADY, excluded) == []
+    assert excluded.counts == {"not a milestone market": 1}
