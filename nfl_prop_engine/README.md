@@ -30,7 +30,9 @@ Checked on weeks it wasn't built from (weeks 4-5, before any slip existed):
 - random six-folds of them, given 1 in 19, landed 1 in 15.
 
 So realistically a slip lands about 1 time in 20-25. Rushing-yard
-milestones are left out: they hit 53% when given 61%.
+milestones are left out: they hit 53% when given 61%. Completions are left
+out too: bet365 offers no completions milestones (18 Oct). Passing yards go
+in 25s and receiving yards in 10s, until bet365's real grid is confirmed.
 
 **Left out:** players on the injury report (Questionable or worse), anyone
 under 60% of his unit's snaps in his last game (45% for carries), anyone

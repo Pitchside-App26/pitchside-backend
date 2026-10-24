@@ -63,10 +63,10 @@ ALL_MARKETS = {**OFFENSE_MARKETS, **DEFENSE_MARKETS}
 # slips' milestone markets plus rushing yards for the props list. Sacks,
 # interceptions and passing TDs are 0.5/1.5 lines priced too short or too
 # swingy for a milestone, and cost credits for nothing. With only the early
-# and late games fetched this is about 7 x 12 = 84 credits a run, inside the
+# and late games fetched this is about 6 x 12 = 72 credits a run, inside the
 # free 500 a month.
 FETCH_MARKETS = [m for m, info in ALL_MARKETS.items()
-                 if info["stat_col"] in {"passing_yards", "completions", "rushing_yards", "carries", "receptions",
+                 if info["stat_col"] in {"passing_yards", "rushing_yards", "carries", "receptions",
                                          "receiving_yards", "def_tackles"}]
 
 # CONFIRMED BUG, found running against a real live week: The Odds API
@@ -296,9 +296,11 @@ FUN_SLIPS = {
     # milestones hit 53% when the estimate said 61% -- the biggest miss of
     # any stat, and in line with rushing yards going under its line 60% of
     # the time.
-    "stats": ["passing_yards", "completions", "carries", "receptions", "receiving_yards", "def_tackles"],
-    # Milestones are shown in steps bet365 is likely to offer; counts go 1 at a time.
-    "yard_steps": {"passing_yards": 10, "receiving_yards": 5},
+    # No completions: bet365 has no completions milestones (Dan, 18 Oct).
+    "stats": ["passing_yards", "carries", "receptions", "receiving_yards", "def_tackles"],
+    # Milestones in round steps (bet365's real grid isn't confirmed yet;
+    # 18+ completions didn't exist). Counts go 1 at a time.
+    "yard_steps": {"passing_yards": 25, "receiving_yards": 10},
     "leg_chance_window": (0.54, 0.69),  # a leg's chance must land in here to be used
     "min_graded_props": 40,  # per stat, before its chances are trusted
     # Role: share of his unit's snaps. Part-timers and anyone whose share
