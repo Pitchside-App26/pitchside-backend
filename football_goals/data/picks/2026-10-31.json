@@ -1,0 +1,177 @@
+{
+ "locked_at": "2026-10-30T12:54+00:00",
+ "o15": {
+  "legs": [
+   [
+    "ENG6S",
+    "Braintree Town",
+    "Hampton & Richmond"
+   ],
+   [
+    "SCO4",
+    "Kelty Hearts",
+    "Elgin"
+   ],
+   [
+    "ENG6S",
+    "Chesham United",
+    "Folkestone Invicta"
+   ],
+   [
+    "ENG6N",
+    "Spennymoor Town",
+    "Chorley"
+   ],
+   [
+    "SCO4",
+    "Stirling",
+    "Forfar"
+   ],
+   [
+    "ENG5",
+    "Wealdstone",
+    "Southend"
+   ],
+   [
+    "ENG5",
+    "Worthing",
+    "Sutton"
+   ],
+   [
+    "SCO3",
+    "East Kilbride",
+    "Ross County"
+   ],
+   [
+    "SCO4",
+    "Edinburgh City",
+    "Dumbarton"
+   ],
+   [
+    "SCO4",
+    "Stranraer",
+    "Clyde"
+   ],
+   [
+    "ENG3",
+    "Peterboro",
+    "Luton"
+   ],
+   [
+    "ENG5",
+    "Tamworth",
+    "Woking"
+   ],
+   [
+    "ENG5",
+    "Barrow",
+    "Eastleigh"
+   ],
+   [
+    "ENG4",
+    "Oldham",
+    "Crawley Town"
+   ],
+   [
+    "ENG3",
+    "Mansfield",
+    "Notts County"
+   ],
+   [
+    "ENG6S",
+    "Walton and Hersham",
+    "Torquay United"
+   ],
+   [
+    "ENG4",
+    "Tranmere",
+    "Cheltenham"
+   ],
+   [
+    "ENG3",
+    "Wycombe",
+    "Burton"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG2",
+    "Burnley",
+    "Portsmouth"
+   ],
+   [
+    "ENG5",
+    "Boreham Wood",
+    "Hartlepool"
+   ],
+   [
+    "ENG5",
+    "Altrincham",
+    "Carlisle"
+   ],
+   [
+    "SCO4",
+    "Spartans",
+    "Annan Athletic"
+   ],
+   [
+    "ENG6S",
+    "Maidstone United",
+    "Slough Town"
+   ],
+   [
+    "ENG6S",
+    "Farnborough",
+    "Horsham"
+   ]
+  ],
+  "below_line": []
+ },
+ "gibh": {
+  "legs": [
+   [
+    "SCO4",
+    "Kelty Hearts",
+    "Elgin"
+   ],
+   [
+    "SCO4",
+    "Spartans",
+    "Annan Athletic"
+   ],
+   [
+    "SCO4",
+    "Stirling",
+    "Forfar"
+   ],
+   [
+    "SCO4",
+    "Edinburgh City",
+    "Dumbarton"
+   ],
+   [
+    "ENG2",
+    "Millwall",
+    "Derby"
+   ],
+   [
+    "SCO4",
+    "Stranraer",
+    "Clyde"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG5",
+    "Wealdstone",
+    "Southend"
+   ],
+   [
+    "ENG2",
+    "Burnley",
+    "Portsmouth"
+   ]
+  ],
+  "below_line": []
+ }
+}
