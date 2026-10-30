@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "paper": {
+      "type": "stdio",
+      "command": ".venv/bin/python",
+      "args": ["server.py"],
+      "env": { "PAPER_ROUND_ID": "${PAPER_ROUND_ID:-manual}" }
+    }
+  }
+}
