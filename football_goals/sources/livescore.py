@@ -38,6 +38,17 @@ def _is_off(status: str) -> bool:
     return any(k in s for k in ("post", "canc", "aband", "susp", "award", "delay"))
 
 
+def _is_void(r: dict, today: date | None = None) -> bool:
+    """Settled as void: postponed, abandoned and so on, or still "Int."
+    (interrupted) after its match day, i.e. abandoned part-way, as Cove Rangers
+    v East Kilbride was at 0-1 on 24 Oct 2026. Bookmakers void those unless the
+    result was already decided. On the day itself an interruption may resume."""
+    if _is_off(r["status"]):
+        return True
+    today = today or datetime.now(UK).date()
+    return r["status"].lower().startswith("int") and r["date"] < today.isoformat()
+
+
 def _parse(feed: dict) -> dict[str, list[dict]]:
     """Keep only the English stages we use, as plain match rows."""
     out = {k: [] for k in STAGES}
@@ -123,7 +134,7 @@ def fixtures_on(region: str, on: date):
 def result_on(region: str, on: date, home: str, away: str):
     for r in day(on, refresh=True).get(region, []):
         if r["home"] == home and r["away"] == away:
-            if _is_off(r["status"]):
+            if _is_void(r):
                 return "void"
             return {k: r[k] for k in ("fthg", "ftag", "hthg", "htag")} if _complete(r) else None
     return None
@@ -164,7 +175,7 @@ def results_by_name(stage: str, on: date, clubs) -> dict:
         h, a = best_match(r["home"], clubs), best_match(r["away"], clubs)
         if not h or not a:
             continue
-        if _is_off(r["status"]):
+        if _is_void(r):
             out[(h, a)] = "void"
         elif _complete(r):
             out[(h, a)] = {k: r[k] for k in ("fthg", "ftag", "hthg", "htag")}

@@ -60,3 +60,13 @@ def test_results_fixtures_and_agreement(monkeypatch):
     assert livescore.result_on("north", date(2026, 9, 26), "Chester", "Spalding United") == "void"
     assert livescore.result_on("south", date(2026, 9, 26), "Billericay", "Torquay United") == \
         {"fthg": 3, "ftag": 0, "hthg": 2, "htag": 0}
+
+
+# Cove Rangers v East Kilbride, 24 Oct 2026: "Int." at 0-1 and never finished.
+def test_interrupted_match_is_void_once_its_day_has_passed():
+    from datetime import date
+    r = {"status": "Int.", "date": "2026-10-24"}
+    assert not livescore._is_void(r, today=date(2026, 10, 24))      # may still resume
+    assert livescore._is_void(r, today=date(2026, 10, 25))
+    assert livescore._is_void({"status": "Postp.", "date": "2026-10-24"}, today=date(2026, 10, 24))
+    assert not livescore._is_void({"status": "FT", "date": "2026-10-24"}, today=date(2026, 10, 30))
