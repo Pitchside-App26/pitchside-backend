@@ -1,0 +1,177 @@
+{
+ "locked_at": "2026-11-06T13:04+00:00",
+ "o15": {
+  "legs": [
+   [
+    "SCO4",
+    "Elgin",
+    "Dumbarton"
+   ],
+   [
+    "SCO4",
+    "Clyde",
+    "Spartans"
+   ],
+   [
+    "ENG6S",
+    "Ebbsfleet United",
+    "Chesham United"
+   ],
+   [
+    "ENG2",
+    "Blackburn",
+    "West Ham"
+   ],
+   [
+    "ENG2",
+    "Cardiff",
+    "Burnley"
+   ],
+   [
+    "ENG6N",
+    "Merthyr Town",
+    "Hebburn Town"
+   ],
+   [
+    "ENG6N",
+    "King's Lynn Town",
+    "Spennymoor Town"
+   ],
+   [
+    "ENG6S",
+    "Folkestone Invicta",
+    "Truro City"
+   ],
+   [
+    "ENG6S",
+    "Weston Super Mare",
+    "Braintree Town"
+   ],
+   [
+    "SCO3",
+    "Ross County",
+    "Peterhead"
+   ],
+   [
+    "SCO3",
+    "Montrose",
+    "East Fife"
+   ],
+   [
+    "ENG6N",
+    "Chorley",
+    "Hereford FC"
+   ],
+   [
+    "ENG6S",
+    "Slough Town",
+    "Walton and Hersham"
+   ],
+   [
+    "SCO3",
+    "Queen of Sth",
+    "East Kilbride"
+   ],
+   [
+    "SCO4",
+    "Forfar",
+    "Edinburgh City"
+   ],
+   [
+    "SCO4",
+    "Stranraer",
+    "Stirling"
+   ],
+   [
+    "SCO1",
+    "Dundee United",
+    "Motherwell"
+   ],
+   [
+    "SCO1",
+    "St Johnstone",
+    "Dundee"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG6S",
+    "Hemel Hempstead",
+    "Maidstone United"
+   ],
+   [
+    "ENG6N",
+    "Scarborough Athletic",
+    "Buxton"
+   ],
+   [
+    "ENG6S",
+    "Chelmsford City",
+    "Farnborough"
+   ],
+   [
+    "SCO4",
+    "Annan Athletic",
+    "Kelty Hearts"
+   ],
+   [
+    "ENG6S",
+    "Hampton & Richmond",
+    "Maidenhead United"
+   ],
+   [
+    "ENG6S",
+    "Farnham Town",
+    "Tonbridge Angels"
+   ]
+  ],
+  "below_line": []
+ },
+ "gibh": {
+  "legs": [
+   [
+    "SCO4",
+    "Clyde",
+    "Spartans"
+   ],
+   [
+    "SCO4",
+    "Elgin",
+    "Dumbarton"
+   ],
+   [
+    "ENG2",
+    "Cardiff",
+    "Burnley"
+   ],
+   [
+    "ENG2",
+    "Blackburn",
+    "West Ham"
+   ],
+   [
+    "SCO4",
+    "Annan Athletic",
+    "Kelty Hearts"
+   ],
+   [
+    "SCO4",
+    "Forfar",
+    "Edinburgh City"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG2",
+    "Preston",
+    "Southampton"
+   ],
+   [
+    "SCO4",
+    "Stranraer",
+    "Stirling"
+   ]
+  ],
+  "below_line": []
+ }
+}

@@ -1,0 +1,53 @@
+{
+"north": [],
+"south": [
+{
+"home": "Farnborough",
+"away": "Weston Super Mare",
+"status": "FT",
+"date": "2026-10-28",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 1,
+"hthg": 0,
+"htag": 1
+}
+],
+"national": [
+{
+"home": "Carlisle United",
+"away": "Harrogate Town",
+"status": "FT",
+"date": "2026-10-28",
+"kickoff": "19:45",
+"fthg": 3,
+"ftag": 0,
+"hthg": 1,
+"htag": 0
+},
+{
+"home": "Forest Green Rovers",
+"away": "Eastleigh",
+"status": "FT",
+"date": "2026-10-28",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 0,
+"hthg": 1,
+"htag": 0
+},
+{
+"home": "Sutton United",
+"away": "Aldershot Town",
+"status": "FT",
+"date": "2026-10-28",
+"kickoff": "19:45",
+"fthg": 2,
+"ftag": 0,
+"hthg": 2,
+"htag": 0
+}
+],
+"sco3": [],
+"sco4": []
+}
