@@ -1,0 +1,177 @@
+{
+ "locked_at": "2026-11-13T12:50+00:00",
+ "o15": {
+  "legs": [
+   [
+    "ENG5",
+    "Yeovil",
+    "Boreham Wood"
+   ],
+   [
+    "ENG5",
+    "Sutton",
+    "Solihull"
+   ],
+   [
+    "SCO4",
+    "Stirling",
+    "Elgin"
+   ],
+   [
+    "SCO4",
+    "Forfar",
+    "Spartans"
+   ],
+   [
+    "ENG5",
+    "Eastleigh",
+    "Fylde"
+   ],
+   [
+    "ENG5",
+    "Scunthorpe",
+    "Worthing"
+   ],
+   [
+    "ENG5",
+    "Carlisle",
+    "Boston Utd"
+   ],
+   [
+    "ENG4",
+    "Rochdale",
+    "York"
+   ],
+   [
+    "SCO3",
+    "Cove Rangers",
+    "Montrose"
+   ],
+   [
+    "SCO4",
+    "Edinburgh City",
+    "Clyde"
+   ],
+   [
+    "SCO4",
+    "Dumbarton",
+    "Annan Athletic"
+   ],
+   [
+    "ENG5",
+    "Harrogate",
+    "Altrincham"
+   ],
+   [
+    "ENG5",
+    "Hornchurch",
+    "Tamworth"
+   ],
+   [
+    "ENG5",
+    "Gateshead",
+    "Barrow"
+   ],
+   [
+    "SCO3",
+    "East Kilbride",
+    "Alloa"
+   ],
+   [
+    "ENG3",
+    "Sheffield Weds",
+    "Plymouth"
+   ],
+   [
+    "ENG5",
+    "Southend",
+    "Aldershot"
+   ],
+   [
+    "SCO4",
+    "Kelty Hearts",
+    "Stranraer"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG3",
+    "AFC Wimbledon",
+    "Blackpool"
+   ],
+   [
+    "SCO3",
+    "East Fife",
+    "Peterhead"
+   ],
+   [
+    "ENG3",
+    "Milton Keynes Dons",
+    "Burton"
+   ],
+   [
+    "ENG4",
+    "Colchester",
+    "Gillingham"
+   ],
+   [
+    "ENG4",
+    "Shrewsbury",
+    "Oldham"
+   ],
+   [
+    "ENG5",
+    "Kidderminster",
+    "Halifax"
+   ]
+  ],
+  "below_line": []
+ },
+ "gibh": {
+  "legs": [
+   [
+    "SCO4",
+    "Stirling",
+    "Elgin"
+   ],
+   [
+    "SCO4",
+    "Forfar",
+    "Spartans"
+   ],
+   [
+    "SCO4",
+    "Dumbarton",
+    "Annan Athletic"
+   ],
+   [
+    "SCO4",
+    "Kelty Hearts",
+    "Stranraer"
+   ],
+   [
+    "SCO4",
+    "Edinburgh City",
+    "Clyde"
+   ],
+   [
+    "ENG5",
+    "Carlisle",
+    "Boston Utd"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG5",
+    "Yeovil",
+    "Boreham Wood"
+   ],
+   [
+    "ENG5",
+    "Scunthorpe",
+    "Worthing"
+   ]
+  ],
+  "below_line": []
+ }
+}
