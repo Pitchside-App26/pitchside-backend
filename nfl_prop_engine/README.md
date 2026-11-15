@@ -23,7 +23,17 @@ ESPN's public NFL scoreboard and game summary JSON, fetched by the phone
 (no key; the API allows cross-origin requests), every 30 seconds while a
 game is on.
 
-- Bets are listed in `site/bets.json` (public, like the rest of the page):
+- **A confirmed bet slip goes on the tracker by itself** (since 15 Nov):
+  replying **confirm** on a bet-slip issue also runs `tracker_bets.py`, which
+  writes the slip to `bets.json` and republishes the page (no odds credits).
+  Each leg's game comes from the game written on the slip, the team backed,
+  or the player's roster team. Legs the tracker can't follow (spreads, first
+  TD scorer, a game it can't find) are kept and shown as "not tracked". A
+  re-confirmed slip replaces its earlier version; bets drop off 10 days
+  after their last game. The slip reader also handles moneylines, game
+  totals, milestones ("60+ yards" = over 59.5) and any bookmaker.
+- Bets are listed in `site/bets.json` (public, like the rest of the page;
+  never a bet reference, terminal, barcode or placed time):
   moneylines, game totals, player stat over/unders and anytime TDs. Each leg
   names its game as ESPN's `AWAY@HOME` abbreviations (Rams `LAR`,
   Commanders `WSH`); stat names are in `site/tracker-core.js`.
@@ -727,8 +737,9 @@ often differ from what the report recommended.
 
 1. On GitHub, open a new issue with the **Bet slip** template, or any issue
    titled "Bet slip…". Attach a screenshot of the placed bet (bet365 → My
-   Bets). Several screenshots are fine, and you can add them in a comment
-   instead of the issue itself.
+   Bets, or any bookmaker) or a photo of a paper slip. Several images are
+   fine, and you can add them in a comment instead of the issue itself.
+   Crop out the bet reference and barcode: the issue is public.
 2. `.github/workflows/bet-slip.yml` reads the screenshots with the Claude API
    and comments with what it found: each bet's type, stake, odds and
    returns, plus each leg. It also lists anything that looks misread. Leg odds

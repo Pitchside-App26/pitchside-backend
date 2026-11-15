@@ -1,5 +1,7 @@
-"""Bet-slip intake: turns screenshots of a placed bet365 slip into a draft
-Dan checks before anything is logged.
+"""Bet-slip intake: turns screenshots or photos of a placed slip (bet365,
+Ladbrokes or any other book, app or paper) into a draft Dan checks before
+anything is logged. Once confirmed it is also put on the live bet tracker
+(tracker_bets.py).
 
 The model only transcribes what the image shows. Everything that can be
 done deterministically happens here instead: odds conversion, matching
@@ -29,7 +31,10 @@ BOT_LOGIN = "github-actions[bot]"
 DRAFT_MARKER_RE = re.compile(r"<!-- bet-slip-draft:([A-Za-z0-9+/=]+) -->")
 STATUS_MARKER = "<!-- bet-slip-status -->"
 
-MARKET_KEYS = [*ALL_MARKETS.keys(), "player_anytime_td", "other"]
+# moneyline and game_total are whole-game bets (player ""): the tracker
+# follows them live; they aren't player props, so they're never graded as one.
+TEAM_MARKETS = ("moneyline", "game_total")
+MARKET_KEYS = [*ALL_MARKETS.keys(), "player_anytime_td", *TEAM_MARKETS, "other"]
 LEG_SIDES = ["over", "under", "yes", "no", "other"]
 BET_TYPES = ["single", "accumulator", "bet_builder", "other"]
 
@@ -69,12 +74,13 @@ SLIP_SCHEMA = {
     "type": "object",
     "properties": {
         "bet_type": {"type": "string", "enum": BET_TYPES},
+        "bookmaker": _nullable("string"),
         "stake_gbp": _nullable("number"),
         "total_odds": _nullable("string"),
         "potential_returns_gbp": _nullable("number"),
         "legs": {"type": "array", "items": LEG_SCHEMA},
     },
-    "required": ["bet_type", "stake_gbp", "total_odds", "potential_returns_gbp", "legs"],
+    "required": ["bet_type", "bookmaker", "stake_gbp", "total_odds", "potential_returns_gbp", "legs"],
     "additionalProperties": False,
 }
 
@@ -94,7 +100,7 @@ _MARKET_GUIDE = "\n".join(
     f"- {key}: {STAT_LABELS.get(spec['stat_col'], spec['stat_col'])}" for key, spec in ALL_MARKETS.items()
 )
 
-SYSTEM_PROMPT = f"""You transcribe screenshots of NFL bets a bettor has already placed with bet365 (UK), so they can be logged for results tracking. Transcribe exactly what the screenshots show. Never guess.
+SYSTEM_PROMPT = f"""You transcribe screenshots or photos of NFL bets a bettor has already placed with a UK bookmaker (bet365, Ladbrokes or another; app screenshots or printed shop slips), so they can be logged for results tracking and followed live. Transcribe exactly what the images show. Never guess.
 
 Rules:
 - Each placed bet is one slip. A single, an accumulator, and a bet builder are each one slip. Several screenshots may show different parts of the same long slip: merge them, and list a selection that appears in two screenshots only once.
@@ -104,9 +110,14 @@ Rules:
 - market_text is the market name as shown on the slip. market is the closest match from this list:
 {_MARKET_GUIDE}
 - player_anytime_td: anytime touchdown scorer
-- other: anything else (match result, spread, totals, first TD scorer, longest reception, and so on)
+- moneyline: the match result / moneyline / to win. player is "", team is the team backed, side is other, line null.
+- game_total: total points in the game (over/under). player is "", side over/under, line the number.
+- other: anything else (spread or handicap, team totals, first TD scorer, longest reception, and so on)
 - side is over/under for line markets, yes/no for yes/no markets such as anytime TD, other otherwise. line is the number for over/under markets, null otherwise.
-- team and event: fill them in only if the slip shows them.
+- A milestone such as "60+ receiving yards" or "5+ receptions" is side over with line 0.5 below the number (59.5, 4.5).
+- team and event: fill them in only if the slip shows them. event is the game as written, e.g. "San Francisco 49ers @ Dallas Cowboys"; for a bet builder, the game shown for the group.
+- bookmaker: the brand on the slip (bet365, Ladbrokes, ...), null if not shown.
+- Never transcribe a bet reference, receipt number, terminal number or barcode.
 - If any part is cut off or unreadable, use null for that value and say what in "unclear". A null is far better than a guess.
 - If the screenshots show no placed bet at all, set is_bet_slip to false and slips to [].
 - week: null, unless the bettor's correction states the NFL week.
@@ -207,9 +218,9 @@ def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, ov
     for slip_no, slip in enumerate(parsed.get("slips", []), start=1):
         legs = []
         for leg_no, leg in enumerate(slip["legs"], start=1):
-            raw_name = leg["player"].strip()
+            raw_name = (leg["player"] or "").strip()
             player = raw_name
-            if roster_names:
+            if roster_names and raw_name and leg["market"] not in TEAM_MARKETS:
                 matched, _, _ = match_name(raw_name, roster_names, overrides)
                 if matched:
                     player = matched
@@ -225,6 +236,7 @@ def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, ov
             legs.append({
                 "player": player,
                 "player_raw": raw_name,
+                "team": leg.get("team"),
                 "game": leg["event"],
                 "market": leg["market"],
                 "market_text": leg["market_text"],
@@ -261,6 +273,7 @@ def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, ov
 
         slips.append({
             "bet_type": slip["bet_type"],
+            "bookmaker": slip.get("bookmaker"),
             "stake_gbp": stake,
             "total_odds_text": slip["total_odds"],
             "total_odds_decimal": total,
@@ -280,6 +293,10 @@ def _market_label(leg: dict) -> str:
         return STAT_LABELS.get(spec["stat_col"], spec["stat_col"])
     if leg["market"] == "player_anytime_td":
         return "Anytime TD"
+    if leg["market"] == "game_total":
+        return "Total points"
+    if leg["market"] == "moneyline":
+        return "To win"
     return leg["market_text"]
 
 
@@ -322,7 +339,7 @@ def render_draft_comment(draft: dict) -> str:
         )
         lines += ["", "| # | Player | Bet | Odds |", "|---|---|---|---|"]
         for leg_no, leg in enumerate(slip["legs"], start=1):
-            player = leg["player"]
+            player = leg["player"] or leg.get("team") or leg.get("game") or ""
             if leg["player_raw"] != leg["player"]:
                 player += f" (slip: {leg['player_raw']})"
             if leg["bet_builder_group"]:

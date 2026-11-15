@@ -47,7 +47,7 @@
           padding: 3px 8px; border-radius: 3px; white-space: nowrap; }
   .pill.won { background: var(--won-soft); color: var(--won); }
   .pill.lost { background: var(--lost-soft); color: var(--lost); }
-  .pill.live, .pill.pending { background: var(--live-soft); color: var(--live); }
+  .pill.live, .pill.pending, .pill.check { background: var(--live-soft); color: var(--live); }
   .tally { display: flex; gap: 3px; padding: 0 12px 10px; margin-top: -2px; }
   .tally span { flex: 1; height: 5px; background: var(--track); border-radius: 2px; }
   .tally span.won { background: var(--won); }
@@ -111,6 +111,7 @@
   }
 
   function legTitle(leg) {
+    if (leg.type === "other") return leg.label || "Other selection";
     if (leg.type === "moneyline") return `${leg.team} to win`;
     if (leg.type === "total") return `${leg.game.replace("@", " @ ")} ${leg.side} ${fmt(leg.line)} pts`;
     if (leg.type === "anytime_td") return `${leg.player} anytime TD`;
@@ -138,7 +139,7 @@
   }
 
   const MARK = { won: "✓", lost: "✕", void: "–", winning: "•", losing: "•", pending: "○", unknown: "?" };
-  const PILL = { won: "Won", lost: "Lost", live: "Live", pending: "Not started" };
+  const PILL = { won: "Won", lost: "Lost", live: "Live", pending: "Not started", check: "Check legs" };
 
   function betHtml(result) {
     const b = result.bet;
@@ -162,7 +163,7 @@
             <span class="mark ${l.status}" aria-label="${l.status}">${MARK[l.status] || "?"}</span>
             <span class="leg-name">${esc(legTitle(l.leg))}</span>
             <span class="leg-now">${esc(nowText(l.leg, l))}</span>
-            ${l.leg.type === "moneyline" ? "" : `<span class="bar"><i class="${l.status}" style="width:${barWidth(l.leg, l)}%"></i></span>`}
+            ${l.leg.type === "moneyline" || l.leg.type === "other" ? "" : `<span class="bar"><i class="${l.status}" style="width:${barWidth(l.leg, l)}%"></i></span>`}
             <span class="leg-need">${esc(need)}${note}</span>
             <span class="leg-game">${esc(gameText(l.game))}</span>
           </li>`;
@@ -174,7 +175,7 @@
     const meta = document.getElementById("meta");
     const el = document.getElementById("bets");
     try {
-      const dates = [...new Set(bets.map(b => b.date).filter(Boolean))];
+      const dates = [...new Set(bets.flatMap(b => b.dates || (b.date ? [b.date] : [])))];
       const boards = await Promise.all((dates.length ? dates : [""]).map(d =>
         getJson(`${ESPN}/scoreboard${d ? `?dates=${d}` : ""}`)));
       const games = Object.assign({}, ...boards.map(T.parseScoreboard));
@@ -192,7 +193,7 @@
       }));
 
       const results = bets.map(b => T.evaluateBet(b, games, boxscores));
-      const order = { live: 0, pending: 1, won: 2, lost: 3 };
+      const order = { live: 0, pending: 1, check: 2, won: 3, lost: 4 };
       results.sort((a, b) => order[a.status] - order[b.status]);
       el.innerHTML = results.length ? results.map(betHtml).join("") : '<div class="empty">No bets to track yet.</div>';
       const anyLive = Object.values(games).some(g => g.state === "in");
