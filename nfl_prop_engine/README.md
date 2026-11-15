@@ -14,6 +14,26 @@ lines for the early and late games from The Odds API, build the fun slips,
 publish the page, and log everything to SQLite so Tuesday's grading can
 check it. The projection and ranking still run and are logged, for interest.
 
+## Live bet tracker (site/tracker.html)
+
+A page that follows placed bets in real time, leg by leg: each leg's live
+figure against its line with a progress bar, the game's score and clock,
+and the bet settled as legs land or fail. Live data comes straight from
+ESPN's public NFL scoreboard and game summary JSON, fetched by the phone
+(no key; the API allows cross-origin requests), every 30 seconds while a
+game is on.
+
+- Bets are listed in `site/bets.json` (public, like the rest of the page):
+  moneylines, game totals, player stat over/unders and anytime TDs. Each leg
+  names its game as ESPN's `AWAY@HOME` abbreviations (Rams `LAR`,
+  Commanders `WSH`); stat names are in `site/tracker-core.js`.
+- `site/tracker-core.js` holds the logic (matching players, including
+  initials like "J. Williams"; settling legs; a total landing exactly on a
+  whole-number line is a push). Tests: `node --test
+  nfl_prop_engine/site/tests/tracker-core.test.cjs`.
+- Publish a change to `bets.json` with the "Publish site (no new data)"
+  workflow: no odds credits.
+
 ## Fun slips (milestone_slips.py)
 
 Main-line props are coin flips, so six of them land about 1 time in 64.
