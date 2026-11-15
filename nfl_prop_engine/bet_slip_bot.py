@@ -18,6 +18,7 @@ import sys
 import requests
 
 import bet_slips
+import tracker_bets
 from config import BET_SLIP, RESULTS_DB_PATH, get_current_nfl_season
 from prop_bets_log import AlreadySettledError, replace_slips_for_issue
 
@@ -136,6 +137,38 @@ def roster_names() -> list[str] | None:
     except Exception:
         logger.exception("Couldn't load the roster; player names will be kept as written on the slip")
         return None
+
+
+def tracker_context(week: int) -> tuple[tracker_bets.Schedule, dict[str, str]]:
+    """The week's games and every rostered player's team, for placing a
+    confirmed slip's legs on the live tracker."""
+    import nfl_data_py as nfl
+    from fetch_schedule import fetch_week_games
+
+    season = get_current_nfl_season()
+    schedule = tracker_bets.Schedule(fetch_week_games(season, week))
+    roster = nfl.import_seasonal_rosters([season])[["player_name", "team"]].dropna()
+    return schedule, dict(zip(roster["player_name"], roster["team"]))
+
+
+def tracker_url() -> str:
+    owner, repo = os.environ["GITHUB_REPOSITORY"].split("/")
+    return f"https://{owner.lower()}.github.io/{repo}/tracker.html"
+
+
+def put_on_tracker(number: int, draft: dict) -> str:
+    """Adds the confirmed slip to site/bets.json; returns a line for the
+    reply. Never stops the logging: a failure here is reported, not raised."""
+    try:
+        schedule, team_of_player = tracker_context(draft["week"])
+        followed = tracker_bets.publish(number, draft, schedule, team_of_player)
+    except Exception:
+        logger.exception("Couldn't put the slip on the tracker")
+        return "It couldn't be added to the live tracker this time (it's still logged)."
+    total = sum(len(slip["legs"]) for slip in draft["slips"])
+    _set_output("tracker", "true")
+    return (f"It's on the live tracker in a couple of minutes, with {followed} of {total} "
+            f"leg{'s' if total != 1 else ''} followed live: {tracker_url()}")
 
 
 def slip_image_urls(issue: dict, comments: list[dict]) -> list[str]:
@@ -266,11 +299,12 @@ def cmd_comment(number: int, comment_id: int, reply_file: str) -> None:
         ))
         return
 
+    tracker_line = put_on_tracker(number, draft)
     with open(reply_file, "w") as f:
         f.write(bet_slips.status_comment(
             f"Logged {n_slips} bet{'s' if n_slips != 1 else ''} ({n_legs} leg{'s' if n_legs != 1 else ''}) "
-            f"to Week {draft['week']}. If something's wrong, reply with a correction and confirm again; "
-            "it replaces what was logged."
+            f"to Week {draft['week']}. {tracker_line} If something's wrong, reply with a correction and confirm "
+            "again; it replaces what was logged."
         ))
     _set_output("logged", "true")
 

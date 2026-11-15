@@ -67,6 +67,14 @@ def gh(monkeypatch, tmp_path):
     monkeypatch.setattr(bet_slip_bot, "replace_slips_for_issue",
                         lambda n, w, s: prop_bets_log.replace_slips_for_issue(n, w, s, db_path=db))
     monkeypatch.setattr(bet_slips, "parse_slip_images", lambda images, **kw: PARSED)
+    import pandas as pd
+    import tracker_bets
+    games = pd.DataFrame([{"away_team": "NE", "home_team": "NYJ", "gameday": "2026-10-04"}])
+    monkeypatch.setattr(bet_slip_bot, "tracker_context",
+                        lambda week: (tracker_bets.Schedule(games), {"Drake Maye": "NE"}))
+    fake.bets_path = str(tmp_path / "bets.json")
+    monkeypatch.setattr(tracker_bets, "BETS_PATH", fake.bets_path)
+    monkeypatch.setenv("GITHUB_REPOSITORY", "Pitchside-App26/pitchside-backend")
     fake.db = db
     return fake
 
@@ -107,6 +115,27 @@ def test_confirm_logs_and_hands_the_reply_to_the_workflow(gh, tmp_path, monkeypa
     ]
     conn.close()
     assert len(gh.posted) == 1  # the workflow posts the reply only after the commit is pushed
+    assert "tracker=true" in out.read_text()
+    assert "1 of 1 leg followed live: https://pitchside-app26.github.io/pitchside-backend/tracker.html" in reply.read_text()
+    import json
+    [bet] = json.load(open(gh.bets_path))["bets"]
+    assert bet["legs"] == [{"type": "player", "game": "NE@NYJ", "player": "Drake Maye", "stat": "passingYards",
+                            "side": "over", "line": 214.5}]
+
+
+def test_a_tracker_failure_never_stops_the_logging(gh, tmp_path, monkeypatch):
+    def boom(week):
+        raise RuntimeError("schedule down")
+
+    monkeypatch.setattr(bet_slip_bot, "tracker_context", boom)
+    out = tmp_path / "out.txt"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+    bet_slip_bot.cmd_intake(5)
+    cid = gh.add_comment(DAN, "confirm", comment_id=100)
+    reply = tmp_path / "reply.md"
+    bet_slip_bot.cmd_comment(5, cid, str(reply))
+    assert "logged=true" in out.read_text() and "tracker=true" not in out.read_text()
+    assert "couldn't be added to the live tracker" in reply.read_text()
 
 
 def test_a_strangers_confirm_is_ignored(gh, tmp_path):

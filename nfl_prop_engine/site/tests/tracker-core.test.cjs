@@ -96,3 +96,12 @@ test("a bet is lost on its first lost leg and won when every leg lands", () => {
   const r = T.evaluateBet(live, games, boxes);
   assert.deepEqual([r.status, r.won, r.total], ["live", 1, 2]);
 });
+
+test("legs the tracker can't follow are shown, and a bet waits on them", () => {
+  const other = { type: "other", label: "Purdy first TD scorer", note: "can't be followed live" };
+  assert.deepEqual([leg(other).status, leg(other).note], ["unknown", "can't be followed live"]);
+  const bet = { legs: [{ type: "moneyline", game: "KC@ATL", team: "KC" }, other] };
+  assert.equal(T.evaluateBet(bet, games, boxes).status, "check");
+  const lost = { legs: [{ type: "total", game: "MIN@GB", side: "over", line: 42 }, other] };
+  assert.equal(T.evaluateBet(lost, games, boxes).status, "lost");
+});

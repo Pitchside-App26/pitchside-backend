@@ -9,6 +9,7 @@
      { type: "total", game: "HOU@CLE", side: "over"|"under", line: 41 }
      { type: "player", game: "SF@DAL", player: "Brock Purdy", stat: "passingYards", side: "over"|"under", line: 260.5 }
      { type: "anytime_td", game: "SF@DAL", player: "Christian McCaffrey" }
+     { type: "other", label: "...", note: "can't be followed live" }  (spreads, first TD, ...)
    game is ESPN's "AWAY@HOME" abbreviations (Rams LAR, Commanders WSH).
 */
 (function (root) {
@@ -128,6 +129,7 @@
   }
 
   function evaluateLeg(leg, games, boxscores) {
+    if (leg.type === "other") return { game: games[leg.game], status: "unknown", note: leg.note || "can't be followed live" };
     const game = games[leg.game];
     if (!game) return { status: "unknown", note: `${leg.game} isn't on the scoreboard` };
     const base = { game };
@@ -165,9 +167,12 @@
   function evaluateBet(bet, games, boxscores) {
     const legs = bet.legs.map(leg => ({ leg, ...evaluateLeg(leg, games, boxscores) }));
     const counts = s => legs.filter(l => l.status === s).length;
+    const settled = l => l.status === "won" || l.status === "void";
     let status;
     if (counts("lost")) status = "lost";
-    else if (legs.every(l => l.status === "won" || l.status === "void")) status = "won";
+    else if (legs.every(settled)) status = "won";
+    // Everything the tracker can follow has landed; the rest is down to you.
+    else if (legs.every(l => settled(l) || l.leg.type === "other")) status = "check";
     else if (legs.some(l => l.game && l.game.state === "in")) status = "live";
     else status = legs.some(l => l.status === "won") ? "live" : "pending";
     return { bet, legs, status, won: counts("won"), lost: counts("lost"), total: legs.length };
