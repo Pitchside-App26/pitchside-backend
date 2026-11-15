@@ -1,0 +1,41 @@
+{
+  "note": "Bets shown on tracker.html. Each leg's game is ESPN's AWAY@HOME abbreviations; stat names are in tracker-core.js.",
+  "bets": [
+    {
+      "id": "2026-11-15-ladbrokes-sf-dal-bb",
+      "book": "Ladbrokes",
+      "kind": "Bet Builder",
+      "odds": "20/1",
+      "stake": 7.5,
+      "returns": 157.5,
+      "placed": "2026-11-15T16:05:27Z",
+      "date": "20261115",
+      "legs": [
+        {"type": "player", "game": "SF@DAL", "player": "Brock Purdy", "stat": "passingYards", "side": "over", "line": 260.5},
+        {"type": "player", "game": "SF@DAL", "player": "Kaelon Black", "stat": "rushingYards", "side": "over", "line": 36.5},
+        {"type": "player", "game": "SF@DAL", "player": "George Kittle", "stat": "receivingYards", "side": "over", "line": 62.5},
+        {"type": "anytime_td", "game": "SF@DAL", "player": "Christian McCaffrey"},
+        {"type": "player", "game": "SF@DAL", "player": "Javonte Williams", "stat": "rushingYards", "side": "over", "line": 61.5},
+        {"type": "player", "game": "SF@DAL", "player": "Ryan Flournoy", "stat": "receivingYards", "side": "over", "line": 36.5}
+      ]
+    },
+    {
+      "id": "2026-11-15-ladbrokes-early-acca",
+      "book": "Ladbrokes",
+      "kind": "Accumulator",
+      "odds": "",
+      "stake": 7.5,
+      "returns": 238.18,
+      "placed": "2026-11-15T16:03:50Z",
+      "date": "20261115",
+      "legs": [
+        {"type": "moneyline", "game": "KC@ATL", "team": "KC"},
+        {"type": "total", "game": "HOU@CLE", "side": "over", "line": 41},
+        {"type": "total", "game": "MIN@GB", "side": "over", "line": 42},
+        {"type": "total", "game": "BUF@NYJ", "side": "over", "line": 51},
+        {"type": "total", "game": "MIA@IND", "side": "under", "line": 37.5},
+        {"type": "total", "game": "JAX@TEN", "side": "over", "line": 45.5}
+      ]
+    }
+  ]
+}
