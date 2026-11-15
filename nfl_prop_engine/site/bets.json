@@ -8,7 +8,6 @@
       "odds": "20/1",
       "stake": 7.5,
       "returns": 157.5,
-      "placed": "2026-11-15T16:05:27Z",
       "date": "20261115",
       "legs": [
         {"type": "player", "game": "SF@DAL", "player": "Brock Purdy", "stat": "passingYards", "side": "over", "line": 260.5},
@@ -26,7 +25,6 @@
       "odds": "",
       "stake": 7.5,
       "returns": 238.18,
-      "placed": "2026-11-15T16:03:50Z",
       "date": "20261115",
       "legs": [
         {"type": "moneyline", "game": "KC@ATL", "team": "KC"},
