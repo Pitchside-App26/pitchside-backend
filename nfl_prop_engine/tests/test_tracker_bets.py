@@ -91,3 +91,25 @@ def test_publish_reports_how_many_legs_are_followed(tmp_path):
     n = publish(4, _draft(_leg("Brock Purdy", "player_pass_yds", "over", 260.5), _leg("X", "other")),
                 SCHEDULE, ROSTER, str(path), today=date(2026, 11, 15))
     assert n == 1
+
+
+def test_football_competitions_map_to_the_tracker_leagues():
+    from tracker_bets import football_league
+    assert football_league("Sky Bet League One") == "eng.3"
+    assert football_league("Scottish League Two") == "ls:sco4"
+    assert football_league("Vanarama National League") == "eng.5"
+    assert football_league("National League South") == "ls:south"
+    assert football_league("Scottish Premiership") == "sco.1"
+    assert football_league("Serie A") is None and football_league(None) is None
+
+
+def test_football_legs_become_live_legs_or_are_kept_as_not_tracked():
+    from tracker_bets import football_leg
+    base = {"game": "Stockport County v Bolton Wanderers", "competition": None, "date": "2026-11-21",
+            "side": "other", "book_line": None, "market_text": "x"}
+    assert football_leg({**base, "market": "match_result", "team": "Bolton"})[0]["pick"] == "away"
+    assert football_leg({**base, "market": "match_result", "team": "Draw"})[0]["pick"] == "draw"
+    assert football_leg({**base, "market": "goal_both_halves", "side": "yes"})[0]["type"] == "gibh"
+    assert "league" not in football_leg({**base, "market": "btts", "side": "no"})[0]
+    assert football_leg({**base, "market": "other"})[0]["type"] == "other"
+    assert football_leg({**base, "game": "Stockport", "market": "btts", "side": "yes"})[0]["type"] == "other"

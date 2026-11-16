@@ -14,9 +14,12 @@ lines for the early and late games from The Odds API, build the fun slips,
 publish the page, and log everything to SQLite so Tuesday's grading can
 check it. The projection and ranking still run and are logged, for interest.
 
-## Live bet tracker (site/tracker.html)
+## My bets: the live bet tracker (site/tracker.html)
 
-A page that follows placed bets in real time, leg by leg: each leg's live
+Dan's one bookmark for bets. The top of the page has the two ways in:
+**Upload a bet slip** (opens the bet-slip issue form; NFL or football, any
+bookmaker) and **Log an Over 1.5 acca** (the goals report). Below them, a
+page that follows placed bets in real time, leg by leg: each leg's live
 figure against its line with a progress bar, the game's score and clock,
 and the bet settled as legs land or fail. Live data comes straight from
 ESPN's public NFL scoreboard and game summary JSON, fetched by the phone
@@ -41,12 +44,17 @@ game is on.
   Premiership and Championship. National League North/South and Scottish
   League One/Two come from LiveScore through a small Cloudflare Worker relay
   (`relay/`, set up once by Dan; LiveScore refuses requests from web pages).
-  Until `LOWER_LEAGUE_RELAY` is set in `tracker.html`, those legs show as
-  "no live feed". Football settles on 90
+  The relay is live at `pitchside-live.hello-pitchside.workers.dev` (set in
+  `LOWER_LEAGUE_RELAY`; "" switches it off). Football settles on 90
   minutes (extra time is taken off using the half scores); a postponed
-  match is void. The tracker logic also handles both-teams-to-score and
-  match-result legs, ready for football slips from the bet-slip issue.
-  Bets drop off the page 5 days after their date.
+  match is void. Bets drop off the page 5 days after their date.
+- **Football slips (ad-hoc bets, since 16 Nov):** a football slip uploaded on
+  a bet-slip issue (BTTS, over/under goals, match result, goal in both
+  halves; anything else is shown as "not tracked") goes on the tracker only:
+  it is never put in the NFL results log and needs no NFL week. The league
+  written on the slip picks the feed (`tracker_bets.FOOTBALL_LEAGUES`); with
+  no league the tracker looks across every league it follows. With no match
+  date on the slip, the upload date is assumed and the draft says so.
 - Bets are listed in `site/bets.json` (public, like the rest of the page;
   never a bet reference, terminal, barcode or placed time):
   moneylines, game totals, player stat over/unders and anytime TDs. Each leg

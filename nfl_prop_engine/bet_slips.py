@@ -1,7 +1,8 @@
 """Bet-slip intake: turns screenshots or photos of a placed slip (bet365,
-Ladbrokes or any other book, app or paper) into a draft Dan checks before
-anything is logged. Once confirmed it is also put on the live bet tracker
-(tracker_bets.py).
+Ladbrokes, Spreadex or any other book, app or paper) into a draft Dan checks
+before anything is logged. Once confirmed it goes on the live bet tracker
+(tracker_bets.py). NFL slips are also logged for results tracking; football
+(soccer) slips go on the tracker only.
 
 The model only transcribes what the image shows. Everything that can be
 done deterministically happens here instead: odds conversion, matching
@@ -34,7 +35,11 @@ STATUS_MARKER = "<!-- bet-slip-status -->"
 # moneyline and game_total are whole-game bets (player ""): the tracker
 # follows them live; they aren't player props, so they're never graded as one.
 TEAM_MARKETS = ("moneyline", "game_total")
-MARKET_KEYS = [*ALL_MARKETS.keys(), "player_anytime_td", *TEAM_MARKETS, "other"]
+# Football (soccer) markets the tracker can follow live.
+FOOTBALL_MARKETS = ("match_goals", "btts", "match_result", "goal_both_halves")
+MARKET_KEYS = [*ALL_MARKETS.keys(), "player_anytime_td", *TEAM_MARKETS, *FOOTBALL_MARKETS, "other"]
+SPORTS = ["nfl", "football"]
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 LEG_SIDES = ["over", "under", "yes", "no", "other"]
 BET_TYPES = ["single", "accumulator", "bet_builder", "other"]
 
@@ -59,6 +64,8 @@ LEG_SCHEMA = {
         "player": {"type": "string"},
         "team": _nullable("string"),
         "event": _nullable("string"),
+        "competition": _nullable("string"),
+        "match_date": _nullable("string"),
         "market_text": {"type": "string"},
         "market": {"type": "string", "enum": MARKET_KEYS},
         "side": {"type": "string", "enum": LEG_SIDES},
@@ -66,13 +73,14 @@ LEG_SCHEMA = {
         "odds": _nullable("string"),
         "bet_builder_group": _nullable("string"),
     },
-    "required": ["player", "team", "event", "market_text", "market", "side", "line", "odds", "bet_builder_group"],
+    "required": ["player", "team", "event", "competition", "match_date", "market_text", "market", "side", "line", "odds", "bet_builder_group"],
     "additionalProperties": False,
 }
 
 SLIP_SCHEMA = {
     "type": "object",
     "properties": {
+        "sport": {"type": "string", "enum": SPORTS},
         "bet_type": {"type": "string", "enum": BET_TYPES},
         "bookmaker": _nullable("string"),
         "stake_gbp": _nullable("number"),
@@ -80,7 +88,7 @@ SLIP_SCHEMA = {
         "potential_returns_gbp": _nullable("number"),
         "legs": {"type": "array", "items": LEG_SCHEMA},
     },
-    "required": ["bet_type", "bookmaker", "stake_gbp", "total_odds", "potential_returns_gbp", "legs"],
+    "required": ["sport", "bet_type", "bookmaker", "stake_gbp", "total_odds", "potential_returns_gbp", "legs"],
     "additionalProperties": False,
 }
 
@@ -100,14 +108,21 @@ _MARKET_GUIDE = "\n".join(
     f"- {key}: {STAT_LABELS.get(spec['stat_col'], spec['stat_col'])}" for key, spec in ALL_MARKETS.items()
 )
 
-SYSTEM_PROMPT = f"""You transcribe screenshots or photos of NFL bets a bettor has already placed with a UK bookmaker (bet365, Ladbrokes or another; app screenshots or printed shop slips), so they can be logged for results tracking and followed live. Transcribe exactly what the images show. Never guess.
+SYSTEM_PROMPT = f"""You transcribe screenshots or photos of bets a bettor has already placed with a UK bookmaker (bet365, Ladbrokes, Spreadex, Sky Bet or another; app screenshots or printed shop slips), so they can be followed live and, for NFL, logged for results tracking. The bets are on the NFL or on football (soccer). Transcribe exactly what the images show. Never guess.
 
 Rules:
 - Each placed bet is one slip. A single, an accumulator, and a bet builder are each one slip. Several screenshots may show different parts of the same long slip: merge them, and list a selection that appears in two screenshots only once.
+- sport: "nfl" for American football, "football" for soccer.
 - Each selection is one leg. For a bet builder (or a bet builder inside an accumulator), give its selections the same bet_builder_group label ("BB1", "BB2", ...). Set a leg's odds to null when the slip only prices the group as a whole.
 - Copy odds exactly as displayed ("5/6", "evens", "1.83"). Never convert or calculate odds.
 - Stakes and returns are in GBP. Give numbers without the currency symbol.
-- market_text is the market name as shown on the slip. market is the closest match from this list:
+- market_text is the market name as shown on the slip. market is the closest match from the lists below, or other.
+- bookmaker: the brand on the slip (bet365, Ladbrokes, ...), null if not shown.
+- Never transcribe a bet reference, receipt number, terminal number or barcode.
+- If any part is cut off or unreadable, use null for that value and say what in "unclear". A null is far better than a guess.
+- If the screenshots show no placed bet at all, set is_bet_slip to false and slips to [].
+
+NFL markets:
 {_MARKET_GUIDE}
 - player_anytime_td: anytime touchdown scorer
 - moneyline: the match result / moneyline / to win. player is "", team is the team backed, side is other, line null.
@@ -116,16 +131,25 @@ Rules:
 - side is over/under for line markets, yes/no for yes/no markets such as anytime TD, other otherwise. line is the number for over/under markets, null otherwise.
 - A milestone such as "60+ receiving yards" or "5+ receptions" is side over with line 0.5 below the number (59.5, 4.5).
 - team and event: fill them in only if the slip shows them. event is the game as written, e.g. "San Francisco 49ers @ Dallas Cowboys"; for a bet builder, the game shown for the group.
-- bookmaker: the brand on the slip (bet365, Ladbrokes, ...), null if not shown.
-- Never transcribe a bet reference, receipt number, terminal number or barcode.
-- If any part is cut off or unreadable, use null for that value and say what in "unclear". A null is far better than a guess.
-- If the screenshots show no placed bet at all, set is_bet_slip to false and slips to [].
+
+Football (soccer) markets. player is "" for all of them; event is the match as written, home team first ("Stockport County v Bolton Wanderers"):
+- match_goals: total goals in the match, over/under ("Over 2.5 goals", "Over/Under 1.5"). side over/under, line the number.
+- btts: both teams to score. side yes/no, line null.
+- match_result: full-time result / match odds / 1X2. team is the team backed, or "Draw". side other, line null.
+- goal_both_halves: a goal in both halves / score in both halves (match, not one team). side yes/no, line null.
+- other: anything else (handicaps, team goals, first scorer, cards, corners, half markets, double chance, and so on).
+- competition: the league or cup as shown (e.g. "League One", "Scottish League Two", "National League North"), null if not shown.
+- match_date: the match date as YYYY-MM-DD if the slip shows it (e.g. "Sat 21 Nov", using the upload date to pick the year), or if the bettor's notes or correction give it; null otherwise.
+- For NFL legs, competition and match_date are null.
+
 - week: null, unless the bettor's correction states the NFL week.
 """
 
 
-def _correction_text(previous: dict | None, correction: str | None, notes: str | None) -> str:
+def _correction_text(previous: dict | None, correction: str | None, notes: str | None, today: str | None = None) -> str:
     parts = ["Transcribe the placed bet(s) in these screenshots."]
+    if today:
+        parts.append(f"The screenshots were uploaded on {today}.")
     if notes:
         parts.append(f"The bettor's own notes on the issue:\n{notes}")
     if previous is not None:
@@ -147,6 +171,7 @@ def parse_slip_images(
     correction: str | None = None,
     notes: str | None = None,
     api_key: str | None = None,
+    today: str | None = None,
 ) -> dict:
     """images: [(media_type, raw_bytes)]. Returns the model's transcription
     matching RESPONSE_SCHEMA. Raises SlipParseError on any failure, so the
@@ -158,7 +183,7 @@ def parse_slip_images(
         }
         for media_type, data in images
     ]
-    content.append({"type": "text", "text": _correction_text(previous, correction, notes)})
+    content.append({"type": "text", "text": _correction_text(previous, correction, notes, today)})
 
     client = anthropic.Anthropic(api_key=api_key)
     try:
@@ -202,20 +227,31 @@ def _money(value: float | None) -> str:
     return "?" if value is None else f"£{value:,.2f}"
 
 
-def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, overrides: dict | None = None) -> dict:
+def has_nfl(slips: list[dict]) -> bool:
+    return any(slip.get("sport", "nfl") == "nfl" for slip in slips)
+
+
+def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, overrides: dict | None = None,
+              default_date: str | None = None) -> dict:
     """Turns the model's transcription into the draft Dan confirms: decimal
-    odds, roster-matched player names, and warnings for anything that looks
-    misread. The draft is exactly what gets logged on confirm."""
+    odds, roster-matched player names, match dates for football, and warnings
+    for anything that looks misread. The draft is exactly what gets logged on
+    confirm. default_date (YYYY-MM-DD, the day the slip was uploaded) stands
+    in for a football match date the slip doesn't show."""
     warnings = []
     if parsed.get("unclear"):
         warnings.append(f"Hard to read: {parsed['unclear']}")
     if parsed.get("week") is not None:
         week = parsed["week"]
-    if week is None:
+    if week is None and has_nfl(parsed.get("slips", [])):
         warnings.append("Couldn't work out the NFL week. Reply e.g. `week is 4`.")
 
     slips = []
     for slip_no, slip in enumerate(parsed.get("slips", []), start=1):
+        sport = slip.get("sport", "nfl")
+        if sport == "football":
+            slips.append(_football_slip(slip_no, slip, default_date, warnings))
+            continue
         legs = []
         for leg_no, leg in enumerate(slip["legs"], start=1):
             raw_name = (leg["player"] or "").strip()
@@ -272,6 +308,7 @@ def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, ov
             )
 
         slips.append({
+            "sport": "nfl",
             "bet_type": slip["bet_type"],
             "bookmaker": slip.get("bookmaker"),
             "stake_gbp": stake,
@@ -287,6 +324,73 @@ def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, ov
     return {"version": 1, "week": week, "slips": slips, "warnings": warnings}
 
 
+def _football_slip(slip_no: int, slip: dict, default_date: str | None, warnings: list[str]) -> dict:
+    legs, assumed = [], False
+    for leg_no, leg in enumerate(slip["legs"], start=1):
+        price = odds_to_decimal(leg["odds"])
+        if leg["odds"] and price is None:
+            warnings.append(f"Slip {slip_no} leg {leg_no}: couldn't read the odds \"{leg['odds']}\".")
+        if leg["side"] in ("over", "under") and leg["line"] is None:
+            warnings.append(f"Slip {slip_no} leg {leg_no}: over/under bet with no line.")
+        if not leg.get("event"):
+            warnings.append(f"Slip {slip_no} leg {leg_no}: no match shown, so it can't be followed live.")
+        date = leg.get("match_date")
+        if not (date and DATE_RE.match(date)):
+            date, assumed = default_date, True
+        legs.append({
+            "player": "",
+            "player_raw": "",
+            "team": leg.get("team"),
+            "game": leg["event"],
+            "competition": leg.get("competition"),
+            "date": date,
+            "market": leg["market"],
+            "market_text": leg["market_text"],
+            "side": leg["side"],
+            "book_line": leg["line"],
+            "odds_text": leg["odds"],
+            "book_price": price,
+            "bet_builder_group": leg["bet_builder_group"],
+        })
+    if not legs:
+        warnings.append(f"Slip {slip_no}: no selections found.")
+    if assumed and legs:
+        warnings.append(
+            f"Slip {slip_no}: the slip doesn't show the match date, so I've assumed {default_date or '?'}. "
+            "If the games are on another day, reply e.g. `games are on Saturday 21 Nov`."
+        )
+    total = odds_to_decimal(slip["total_odds"])
+    stake, returns = slip["stake_gbp"], slip["potential_returns_gbp"]
+    prices = [leg["book_price"] for leg in legs]
+    if (slip["bet_type"] == "accumulator" and total and legs and all(p is not None for p in prices)
+            and not any(leg["bet_builder_group"] for leg in legs)):
+        combined = prod(prices)
+        if abs(combined - total) / total > 0.05:
+            warnings.append(
+                f"Slip {slip_no}: the leg odds multiply to {combined:.2f} but the slip's total is {total:.2f}. "
+                "One of them is probably misread."
+            )
+    if stake and total and returns and abs(stake * total - returns) / returns > 0.02:
+        warnings.append(
+            f"Slip {slip_no}: {_money(stake)} at {total:.2f} should return {_money(stake * total)}, "
+            f"but the slip shows {_money(returns)}. Check the stake, odds and returns."
+        )
+    return {
+        "sport": "football",
+        "bet_type": slip["bet_type"],
+        "bookmaker": slip.get("bookmaker"),
+        "stake_gbp": stake,
+        "total_odds_text": slip["total_odds"],
+        "total_odds_decimal": total,
+        "potential_returns_gbp": returns,
+        "legs": legs,
+    }
+
+
+FOOTBALL_LABELS = {"match_goals": "Total goals", "btts": "Both teams to score",
+                   "match_result": "Result", "goal_both_halves": "Goal in both halves"}
+
+
 def _market_label(leg: dict) -> str:
     spec = ALL_MARKETS.get(leg["market"])
     if spec:
@@ -297,6 +401,10 @@ def _market_label(leg: dict) -> str:
         return "Total points"
     if leg["market"] == "moneyline":
         return "To win"
+    if leg["market"] == "match_result":
+        return f"Result: {leg.get('team') or '?'}"
+    if leg["market"] in FOOTBALL_LABELS:
+        return FOOTBALL_LABELS[leg["market"]]
     return leg["market_text"]
 
 
@@ -327,16 +435,35 @@ def encode_draft(draft: dict) -> str:
     return f"<!-- bet-slip-draft:{payload} -->"
 
 
+def _football_rows(slip: dict) -> list[str]:
+    lines = ["", "| # | Match | Bet | Odds |", "|---|---|---|---|"]
+    for leg_no, leg in enumerate(slip["legs"], start=1):
+        match = leg.get("game") or "?"
+        extra = ", ".join(x for x in (leg.get("competition"), leg.get("date")) if x)
+        if extra:
+            match += f" ({extra})"
+        if leg["bet_builder_group"]:
+            match += f" [{leg['bet_builder_group']}]"
+        lines.append(f"| {leg_no} | {_cell(match)} | {_cell(_bet_label(leg))} | "
+                     f"{_cell(_odds_label(leg['odds_text'], leg['book_price']))} |")
+    return lines
+
+
 def render_draft_comment(draft: dict) -> str:
     week = "?" if draft["week"] is None else draft["week"]
-    lines = [f"### Bet slip read: Week {week}", ""]
+    lines = [f"### Bet slip read: Week {week}" if has_nfl(draft["slips"]) else "### Bet slip read", ""]
     for slip_no, slip in enumerate(draft["slips"], start=1):
         kind = slip["bet_type"].replace("_", " ").capitalize()
         lines.append(
-            f"**Slip {slip_no}: {kind}**, stake {_money(slip['stake_gbp'])}, "
+            f"**Slip {slip_no}: {'Football ' if slip.get('sport') == 'football' else ''}{kind}**, "
+            f"stake {_money(slip['stake_gbp'])}, "
             f"odds {_odds_label(slip['total_odds_text'], slip['total_odds_decimal'])}, "
             f"returns {_money(slip['potential_returns_gbp'])}"
         )
+        if slip.get("sport") == "football":
+            lines += _football_rows(slip)
+            lines.append("")
+            continue
         lines += ["", "| # | Player | Bet | Odds |", "|---|---|---|---|"]
         for leg_no, leg in enumerate(slip["legs"], start=1):
             player = leg["player"] or leg.get("team") or leg.get("game") or ""
@@ -357,7 +484,8 @@ def render_draft_comment(draft: dict) -> str:
 
     lines.append(
         "Reply **confirm** to log this, **cancel** to discard it, or describe what's wrong "
-        "(e.g. `leg 2 line is 64.5`, `stake was £10`, `week is 5`) and I'll read it again."
+        "(e.g. `leg 2 line is 64.5`, `stake was £10`, `week is 5`, `games are on Saturday 21 Nov`) "
+        "and I'll read it again."
     )
     lines += ["", encode_draft(draft)]
     return "\n".join(lines)

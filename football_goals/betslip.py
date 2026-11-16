@@ -43,7 +43,7 @@ CSS = """
 """
 
 MY_BETS = ("<div id=my-bets><h2 style='margin-top:14px'>My bets</h2>"
-           "<p class=sub style='margin:0 0 8px'><a href='../tracker.html'>Follow them live on the bet tracker →</a></p>"
+           "<p class=sub style='margin:0 0 8px'><a href='../tracker.html'>Follow them live on My bets →</a></p>"
            "<div id=my-bets-list>"
            "<div class=card><p class=sub style='margin:0'>Bets you log from an accumulator card appear here. "
            "They're kept on this phone only.</p></div></div></div>")

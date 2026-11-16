@@ -151,6 +151,12 @@ def tracker_context(week: int) -> tuple[tracker_bets.Schedule, dict[str, str]]:
     return schedule, dict(zip(roster["player_name"], roster["team"]))
 
 
+def _no_games():
+    import pandas as pd
+
+    return pd.DataFrame(columns=["home_team", "away_team", "gameday"])
+
+
 def tracker_url() -> str:
     owner, repo = os.environ["GITHUB_REPOSITORY"].split("/")
     return f"https://{owner.lower()}.github.io/{repo}/tracker.html"
@@ -158,9 +164,13 @@ def tracker_url() -> str:
 
 def put_on_tracker(number: int, draft: dict) -> str:
     """Adds the confirmed slip to site/bets.json; returns a line for the
-    reply. Never stops the logging: a failure here is reported, not raised."""
+    reply. Never stops the logging: a failure here is reported, not raised.
+    Football-only slips don't need the NFL schedule or roster."""
     try:
-        schedule, team_of_player = tracker_context(draft["week"])
+        if bet_slips.has_nfl(draft["slips"]):
+            schedule, team_of_player = tracker_context(draft["week"])
+        else:
+            schedule, team_of_player = tracker_bets.Schedule(_no_games()), {}
         followed = tracker_bets.publish(number, draft, schedule, team_of_player)
     except Exception:
         logger.exception("Couldn't put the slip on the tracker")
@@ -200,16 +210,19 @@ def read_slip(number: int, previous: dict | None, correction: str | None) -> str
             + "\n\nFix the attachment, then reply **retry**."
         )
 
+    uploaded = str(issue.get("created_at") or "")[:10] or None
     try:
         parsed = bet_slips.parse_slip_images(
             images, previous=previous, correction=correction, notes=bet_slips.strip_images(issue.get("body")),
+            today=uploaded,
         )
     except bet_slips.SlipParseError as exc:
         logger.exception("Slip parse failed")
         return bet_slips.status_comment(f"Reading the slip failed ({exc}). Nothing was logged. Reply **retry** to try again.")
 
-    week = previous["week"] if previous and previous.get("week") is not None else current_week()
-    draft = bet_slips.normalize(parsed, week, roster_names())
+    nfl = bet_slips.has_nfl(parsed.get("slips", []))
+    week = previous["week"] if previous and previous.get("week") is not None else (current_week() if nfl else None)
+    draft = bet_slips.normalize(parsed, week, roster_names() if nfl else None, default_date=uploaded)
     draft["warnings"] = problems + draft["warnings"]
     return bet_slips.render_draft_comment(draft)
 
@@ -281,7 +294,8 @@ def cmd_comment(number: int, comment_id: int, reply_file: str) -> None:
     if not draft["slips"]:
         post_comment(number, bet_slips.status_comment("The last reading found no bets, so there's nothing to log."))
         return
-    if draft["week"] is None:
+    nfl_slips = [slip for slip in draft["slips"] if slip.get("sport", "nfl") == "nfl"]
+    if nfl_slips and draft["week"] is None:
         post_comment(number, bet_slips.status_comment("I need the NFL week before logging. Reply e.g. `week is 4`."))
         return
     if bet_slips.unprocessed_change_before(comments, os.environ["GITHUB_REPOSITORY_OWNER"], comment_id):
@@ -291,20 +305,25 @@ def cmd_comment(number: int, comment_id: int, reply_file: str) -> None:
         ))
         return
 
-    try:
-        n_slips, n_legs = replace_slips_for_issue(number, draft["week"], draft["slips"])
-    except AlreadySettledError:
-        post_comment(number, bet_slips.status_comment(
-            "These bets have already been settled, so the logged version can't be changed."
-        ))
-        return
+    # NFL slips are logged for results tracking; football slips go on the
+    # tracker only.
+    logged_line = ""
+    if nfl_slips:
+        try:
+            n_slips, n_legs = replace_slips_for_issue(number, draft["week"], nfl_slips)
+        except AlreadySettledError:
+            post_comment(number, bet_slips.status_comment(
+                "These bets have already been settled, so the logged version can't be changed."
+            ))
+            return
+        logged_line = (f"Logged {n_slips} NFL bet{'s' if n_slips != 1 else ''} "
+                       f"({n_legs} leg{'s' if n_legs != 1 else ''}) to Week {draft['week']}. ")
 
     tracker_line = put_on_tracker(number, draft)
     with open(reply_file, "w") as f:
         f.write(bet_slips.status_comment(
-            f"Logged {n_slips} bet{'s' if n_slips != 1 else ''} ({n_legs} leg{'s' if n_legs != 1 else ''}) "
-            f"to Week {draft['week']}. {tracker_line} If something's wrong, reply with a correction and confirm "
-            "again; it replaces what was logged."
+            f"{logged_line}{tracker_line} If something's wrong, reply with a correction and confirm "
+            "again; it replaces what was there."
         ))
     _set_output("logged", "true")
 

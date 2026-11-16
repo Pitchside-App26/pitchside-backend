@@ -108,7 +108,7 @@ def test_confirm_logs_and_hands_the_reply_to_the_workflow(gh, tmp_path, monkeypa
     bet_slip_bot.cmd_comment(5, cid, str(reply))
 
     assert "logged=true" in out.read_text()
-    assert "Logged 1 bet (1 leg) to Week 4" in reply.read_text()
+    assert "Logged 1 NFL bet (1 leg) to Week 4" in reply.read_text()
     conn = sqlite3.connect(gh.db)
     assert conn.execute("SELECT player, book_line, book_price FROM prop_bets").fetchall() == [
         ("Drake Maye", 214.5, pytest.approx(1.8333, abs=1e-4))
@@ -248,3 +248,53 @@ def test_parse_failure_is_reported_not_swallowed(gh, monkeypatch):
     monkeypatch.setattr(bet_slips, "parse_slip_images", fail)
     bet_slip_bot.cmd_intake(5)
     assert "Reading the slip failed" in gh.posted[0] and "max_tokens" in gh.posted[0]
+
+
+FOOTBALL = {
+    "is_bet_slip": True, "week": None, "unclear": None,
+    "slips": [{
+        "sport": "football", "bet_type": "accumulator", "bookmaker": "Spreadex", "stake_gbp": 5.0,
+        "total_odds": "4/1", "potential_returns_gbp": 25.0,
+        "legs": [
+            {"player": "", "team": None, "event": "Forfar Athletic v Spartans", "competition": "Scottish League Two",
+             "match_date": None, "market_text": "Over 2.5 Goals", "market": "match_goals", "side": "over",
+             "line": 2.5, "odds": "11/10", "bet_builder_group": None},
+            {"player": "", "team": None, "event": "Stockport County v Bolton Wanderers", "competition": "League One",
+             "match_date": "2026-11-21", "market_text": "Both Teams To Score", "market": "btts", "side": "yes",
+             "line": None, "odds": "4/6", "bet_builder_group": None},
+        ],
+    }],
+}
+
+
+def test_a_football_slip_needs_no_nfl_week_and_goes_on_the_tracker_only(gh, tmp_path, monkeypatch):
+    import json
+
+    monkeypatch.setattr(bet_slips, "parse_slip_images", lambda images, **kw: FOOTBALL)
+    monkeypatch.setattr(bet_slip_bot, "current_week", lambda: pytest.fail("NFL week looked up for a football slip"))
+    monkeypatch.setattr(bet_slip_bot, "tracker_context", lambda week: pytest.fail("NFL schedule loaded"))
+    gh.issue["created_at"] = "2026-11-21T09:30:00Z"
+    out = tmp_path / "out.txt"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+
+    bet_slip_bot.cmd_intake(5)
+    draft = bet_slips.latest_draft(gh.comments)
+    assert "Week" not in gh.posted[0] and "NFL week" not in gh.posted[0]
+    assert "assumed 2026-11-21" in gh.posted[0]
+    assert [leg["date"] for leg in draft["slips"][0]["legs"]] == ["2026-11-21", "2026-11-21"]
+
+    cid = gh.add_comment(DAN, "confirm", comment_id=100)
+    reply = tmp_path / "reply.md"
+    bet_slip_bot.cmd_comment(5, cid, str(reply))
+    assert "logged=true" in out.read_text() and "tracker=true" in out.read_text()
+    assert "Logged" not in reply.read_text() and "2 of 2 legs followed live" in reply.read_text()
+    conn = sqlite3.connect(gh.db)
+    try:
+        assert conn.execute("SELECT COUNT(*) FROM prop_bets").fetchone()[0] == 0
+    except sqlite3.OperationalError:
+        pass  # table never created: nothing logged, as intended
+    bet = json.load(open(gh.bets_path))["bets"][0]
+    assert bet["kind"] == "Football Accumulator" and bet["book"] == "Spreadex" and bet["dates"] == ["20261121"]
+    assert bet["legs"][0] == {"sport": "soccer", "date": "20261121", "home": "Forfar Athletic", "away": "Spartans",
+                              "league": "ls:sco4", "type": "goals", "side": "over", "line": 2.5}
+    assert bet["legs"][1]["type"] == "btts" and bet["legs"][1]["league"] == "eng.3"
