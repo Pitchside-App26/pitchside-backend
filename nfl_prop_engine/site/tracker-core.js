@@ -413,10 +413,22 @@
     });
   }
 
+  // How a bet's legs are laid out: what's still to be decided at the top (in
+  // play and short of the line, then in play and there, then not started),
+  // then lost legs, then won, then void. Slip order within each group.
+  const LEG_GROUP = { lost: "lost", won: "won", void: "void" };
+  const OPEN_RANK = { losing: 0, winning: 1, unknown: 2, pending: 3 };
+  function groupLegs(legs) {
+    const groups = { open: [], lost: [], won: [], void: [] };
+    for (const l of legs) groups[LEG_GROUP[l.status] || "open"].push(l);
+    groups.open.sort((a, b) => (OPEN_RANK[a.status] ?? 2) - (OPEN_RANK[b.status] ?? 2));
+    return groups;
+  }
+
   const api = { STATS, nameKey, parseScoreboard, parseBoxscore, findPlayer, statValue, touchdowns,
     evaluateLeg, evaluateBet, progressText,
     GOALS_LEAGUES, RELAY_LEAGUES, SEARCH_LEAGUES, parseRelay, clubScore, parseSoccerBoard, findMatch, soccerHalves, soccerLegNeedsSummary,
-    evaluateSoccerLeg, soccerProgress, goalsPageBets };
+    evaluateSoccerLeg, soccerProgress, goalsPageBets, groupLegs };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.TrackerCore = api;
 })(typeof window !== "undefined" ? window : globalThis);

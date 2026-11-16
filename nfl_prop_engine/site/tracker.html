@@ -66,6 +66,11 @@
   .bar i { display: block; height: 100%; background: var(--live); }
   .bar i.won { background: var(--won); } .bar i.lost { background: var(--lost); }
   .leg-need { grid-column: 2 / 4; font-size: 0.78rem; color: var(--sub); }
+  .group, .won-group > summary { padding: 7px 12px; border-top: 1px solid var(--rule); font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--sub); background: var(--bg); }
+  .group.lost { color: var(--lost); }
+  .won-group > summary { color: var(--won); cursor: pointer; list-style-position: inside; }
+  .won-group > summary:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
   .empty, .error { text-align: center; color: var(--sub); padding: 40px 16px; line-height: 1.5; }
   footer { font-size: 0.75rem; color: var(--sub); line-height: 1.5; border-top: 1px solid var(--rule-strong); padding-top: 12px; margin-top: 24px; }
   @media (prefers-reduced-motion: no-preference) { .bar i { transition: width 0.6s ease; } }
@@ -166,10 +171,47 @@
   const MARK = { won: "✓", lost: "✕", void: "–", winning: "•", losing: "•", pending: "○", unknown: "?" };
   const PILL = { won: "Won", lost: "Lost", live: "Live", pending: "Not started", check: "Check legs" };
 
+  function legHtml(l) {
+    const settledLeg = l.status === "won" || l.status === "lost" || l.status === "void";
+    const need = isSoccer(l.leg) ? (settledLeg && l.leg.type !== "gibh" ? "" : T.soccerProgress(l.leg, l))
+      : settledLeg ? "" : T.progressText(l.leg, l);
+    const note = l.note ? `${need ? " · " : ""}${esc(l.note)}` : "";
+    return `
+          <li class="leg">
+            <span class="mark ${l.status}" aria-label="${l.status}">${MARK[l.status] || "?"}</span>
+            <span class="leg-name">${esc(legTitle(l.leg))}</span>
+            <span class="leg-now">${esc(nowText(l.leg, l))}</span>
+            ${["moneyline", "other", "btts", "result"].includes(l.leg.type) ? "" : `<span class="bar"><i class="${l.status}" style="width:${barWidth(l.leg, l)}%"></i></span>`}
+            <span class="leg-need">${esc(need)}${note}</span>
+            <span class="leg-game">${esc(l.match ? matchText(l.match) : gameText(l.game))}</span>
+          </li>`;
+  }
+
+  // Won legs sit in their own section at the bottom of each bet, which can be
+  // folded away; folding is remembered across refreshes while the page is open.
+  const foldedWon = new Set();
+  document.addEventListener("toggle", e => {
+    const id = e.target.dataset && e.target.dataset.bet;
+    if (id === undefined) return;
+    if (e.target.open) foldedWon.delete(id); else foldedWon.add(id);
+  }, true);
+
   function betHtml(result) {
     const b = result.bet;
     const settledText = result.status === "won" ? `Returns ${money(b.returns)}`
       : result.status === "lost" ? "Lost" : `To return ${money(b.returns)}`;
+    const g = T.groupLegs(result.legs);
+    const shown = [...g.open, ...g.lost, ...g.won, ...g.void];
+    const sections = ["open", "lost", "won", "void"].filter(k => g[k].length).length;
+    const heading = (cls, text) => `<li class="group ${cls}">${text}</li>`;
+    const top = g.open.map(legHtml).join("")
+      + (g.lost.length ? (sections > 1 ? heading("lost", `Lost · ${g.lost.length}`) : "") + g.lost.map(legHtml).join("") : "");
+    const won = !g.won.length ? "" : sections === 1 ? `<ol class="legs">${g.won.map(legHtml).join("")}</ol>`
+      : `<details class="won-group" data-bet="${esc(b.id)}"${foldedWon.has(String(b.id)) ? "" : " open"}>
+          <summary>Won · ${g.won.length} leg${g.won.length === 1 ? "" : "s"}</summary>
+          <ol class="legs">${g.won.map(legHtml).join("")}</ol>
+        </details>`;
+    const voids = g.void.length ? `<ol class="legs">${heading("void", `Void · ${g.void.length}`)}${g.void.map(legHtml).join("")}</ol>` : "";
     return `
       <article class="bet">
         <div class="bet-head">
@@ -179,22 +221,8 @@
           </div>
           <span class="pill ${result.status}">${PILL[result.status] || result.status}</span>
         </div>
-        <div class="tally">${result.legs.map(l => `<span class="${l.status}"></span>`).join("")}</div>
-        <ol class="legs">${result.legs.map(l => {
-          const settledLeg = l.status === "won" || l.status === "lost" || l.status === "void";
-          const need = isSoccer(l.leg) ? (settledLeg && l.leg.type !== "gibh" ? "" : T.soccerProgress(l.leg, l))
-            : settledLeg ? "" : T.progressText(l.leg, l);
-          const note = l.note ? `${need ? " · " : ""}${esc(l.note)}` : "";
-          return `
-          <li class="leg">
-            <span class="mark ${l.status}" aria-label="${l.status}">${MARK[l.status] || "?"}</span>
-            <span class="leg-name">${esc(legTitle(l.leg))}</span>
-            <span class="leg-now">${esc(nowText(l.leg, l))}</span>
-            ${["moneyline", "other", "btts", "result"].includes(l.leg.type) ? "" : `<span class="bar"><i class="${l.status}" style="width:${barWidth(l.leg, l)}%"></i></span>`}
-            <span class="leg-need">${esc(need)}${note}</span>
-            <span class="leg-game">${esc(l.match ? matchText(l.match) : gameText(l.game))}</span>
-          </li>`;
-        }).join("")}</ol>
+        <div class="tally">${shown.map(l => `<span class="${l.status}"></span>`).join("")}</div>
+        ${top ? `<ol class="legs">${top}</ol>` : ""}${won}${voids}
       </article>`;
   }
 
