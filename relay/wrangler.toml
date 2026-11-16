@@ -1,0 +1,7 @@
+# Lets Cloudflare build the relay straight from this repo (Workers &
+# Pages -> Create -> Import a repository, root directory "relay"), so
+# nothing has to be pasted into the dashboard. See README.md.
+name = "pitchside-live"
+main = "lower-leagues-worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = true

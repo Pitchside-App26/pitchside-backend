@@ -12,7 +12,23 @@ cached for 30 seconds, so LiveScore sees at most two requests a minute however
 often the page refreshes. The free plan allows 100,000 requests a day; a busy
 Saturday uses a few hundred.
 
-## Setting it up (about 10 minutes, works on a phone)
+## Setting it up from GitHub (no pasting; best on a phone)
+
+1. Sign up at <https://dash.cloudflare.com/sign-up> (free, no card).
+2. Menu -> **Compute** -> **Workers & Pages** -> **Create** -> **Import a
+   repository** (or "Continue with GitHub"). Connect GitHub and allow access
+   to `Pitchside-App26/pitchside-backend`.
+3. Pick that repository. In the setup screen:
+   - Project name: `pitchside-live`
+   - Root directory (under Advanced / Build settings): `relay`
+   - Deploy command: `npx wrangler deploy` (usually filled in already)
+   - Build command: leave empty
+   - Build watch paths, if offered: `relay/*`, so only changes to the relay
+     redeploy it.
+   Tap **Create and deploy** / **Deploy**.
+4. Check and send the address as in steps 4-5 below.
+
+## Setting it up by pasting (easier on a computer)
 
 1. **Sign up.** Go to <https://dash.cloudflare.com/sign-up> and create a free
    account (email and password; no card needed). Verify the email.
