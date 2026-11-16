@@ -11,7 +11,8 @@
 // the answer. Each date is cached for 30 seconds, so however often the page
 // refreshes, LiveScore sees at most two requests a minute.
 //
-// Setup: see relay/README.md. Paste this whole file over the Worker's code.
+// Setup: see relay/README.md. Cloudflare rebuilds the Worker from this folder
+// whenever it changes on main; no pasting needed.
 
 const ALLOWED_ORIGIN = "https://pitchside-app26.github.io";
 const CACHE_SECONDS = 30;
