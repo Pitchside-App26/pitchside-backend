@@ -6,18 +6,17 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
     steps:
-      - name: Wait for the relay code, then check it
+      - name: LiveScore stage names for English non-league and Scottish leagues
         run: |
-          URL="https://pitchside-live.hello-pitchside.workers.dev/?date=20261114"
-          for i in $(seq 1 20); do
-            curl -sS -m 30 -H "Origin: https://pitchside-app26.github.io" -D head.txt "$URL" -o body.json || true
-            if ! grep -q "Hello World" body.json; then break; fi
-            echo "attempt $i: still Hello World"; sleep 30
+          for d in 20261114 20261107 20261031 20261110 20261115; do
+            curl -sS -m 30 "https://prod-public-api.livescore.com/v1/api/app/date/soccer/$d/0" -o f.json || true
+            python3 -c "
+          import json,sys
+          f=json.load(open('f.json'))
+          for s in f.get('Stages',[]):
+              c,n=s.get('Cnm',''),s.get('Snm','')
+              if (c=='England' and ('National' in n or 'Trophy' in n or 'FA Cup' in n)) or (c=='Scotland' and 'League' in n):
+                  print('$d',repr(c),repr(n),len(s.get('Events',[])))
+          "
           done
-          cat head.txt; head -c 1500 body.json; echo
-          python3 -c "import json,collections;d=json.load(open('body.json'));m=d.get('matches',[]);print(len(m),'matches',collections.Counter(x['league'] for x in m))"
-      - name: Another origin gets no CORS header
-        run: |
-          curl -sS -m 30 -D - -o /dev/null -H "Origin: https://example.com" "https://pitchside-live.hello-pitchside.workers.dev/?date=20261114"
