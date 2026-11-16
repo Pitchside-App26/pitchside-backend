@@ -17,24 +17,23 @@ jobs:
           def get(u):
               try: return json.load(urllib.request.urlopen(u, timeout=20))
               except Exception as e: print("FAIL", u, e); return None
-          for slug in ["eng.1","eng.2","eng.3","eng.4","eng.5","sco.1","sco.2","sco.3","sco.4","all"]:
-              for d in ["20261114","20261116"]:
-                  j = get(f"{B}/{slug}/scoreboard?dates={d}")
-                  if not j: continue
-                  ev = j.get("events", [])
-                  print(slug, d, "events", len(ev), "league", (j.get("leagues") or [{}])[0].get("slug"))
-              if j and j.get("events"):
-                  e = j["events"][0]; c = e["competitions"][0]
-                  print("  status", json.dumps(e["status"])[:400])
-                  for t in c["competitors"]:
-                      tm = t["team"]
-                      print("  ", t["homeAway"], tm.get("displayName"), "|", tm.get("shortDisplayName"), "|", tm.get("abbreviation"), "|", tm.get("name"), "score", t.get("score"), "linescores", t.get("linescores"))
-                  if slug == "eng.3":
-                      s = get(f"{B}/{slug}/summary?event={e['id']}")
-                      if s:
-                          print("  summary keys", list(s))
-                          hc = s["header"]["competitions"][0]
-                          for t in hc["competitors"]:
-                              print("   header", t["homeAway"], t["team"].get("displayName"), t.get("score"), t.get("linescores"))
-                          print("   keyEvents", json.dumps((s.get("keyEvents") or [{}])[0])[:500])
+          j = get(f"{B}/eng.3/scoreboard?dates=20261114")
+          e = j["events"][0]; c = e["competitions"][0]
+          print("status", json.dumps(e["status"])[:400]); print("event keys", list(e)); print("comp keys", list(c))
+          for t in c["competitors"]:
+              tm = t["team"]
+              print(" ", t["homeAway"], tm.get("displayName"), "|", tm.get("shortDisplayName"), "|", tm.get("abbreviation"), "| score", t.get("score"), "| linescores", t.get("linescores"))
+          s = get(f"{B}/eng.3/summary?event={e['id']}")
+          print("summary keys", list(s))
+          for t in s["header"]["competitions"][0]["competitors"]:
+              print(" header", t["homeAway"], t["team"].get("displayName"), t.get("score"), t.get("linescores"))
+          print(" header status", json.dumps(s["header"]["competitions"][0].get("status"))[:300])
+          ke = s.get("keyEvents") or []
+          print(" keyEvents", len(ke)); [print("  ", json.dumps({k: x.get(k) for k in ("type","text","clock","period","team","scoringPlay")})[:300]) for x in ke[:4]]
+          a = get(f"{B}/all/scoreboard?dates=20261114")
+          ea = a["events"][0]
+          print("ALL event keys", list(ea)); print("ALL comp keys", list(ea["competitions"][0]))
+          print("ALL league hints", json.dumps({k: ea.get(k) for k in ("league","season","uid")})[:300], json.dumps(ea["competitions"][0].get("league") or ea["competitions"][0].get("uid"))[:200])
+          names = sorted({c["team"]["displayName"] for ev in a["events"] for c in ev["competitions"][0]["competitors"]})
+          print("ALL teams sample", [n for n in names if any(k in n for k in ("Bolton","Stockport","Wrexham","Falkirk","Partick","Notts","Salford","Chesterfield"))])
           PY
