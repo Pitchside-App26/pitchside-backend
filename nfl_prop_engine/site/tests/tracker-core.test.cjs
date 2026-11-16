@@ -211,3 +211,12 @@ test("goals-page legs in those leagues are followed once the relay is set up", (
   assert.deepEqual(T.goalsPageBets(stored, true)[0].legs[0], { sport: "soccer", league: "ls:sco3", date: "20261114",
     home: "Airdrieonians", away: "Queen of the South", type: "goals", side: "over", line: 1.5 });
 });
+
+test("groupLegs: undecided legs first, then lost, won and void, slip order kept within each", () => {
+  const legs = ["won", "pending", "winning", "lost", "losing", "void", "won", "pending"].map((status, i) => ({ status, i }));
+  const g = T.groupLegs(legs);
+  assert.deepEqual(g.open.map(l => l.i), [4, 2, 1, 7]);
+  assert.deepEqual(g.lost.map(l => l.i), [3]);
+  assert.deepEqual(g.won.map(l => l.i), [0, 6]);
+  assert.deepEqual(g.void.map(l => l.i), [5]);
+});
