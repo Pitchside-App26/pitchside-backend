@@ -14,4 +14,5 @@ jobs:
           echo; head -c 1200 body.json; echo
           python3 -c "import json;d=json.load(open('body.json'));m=d.get('matches',[]);print(len(m),'matches');from collections import Counter;print(Counter(x['league'] for x in m))"
       - name: Relay with another origin (should have no CORS header)
-        run: curl -sS -m 30 -D - -o /dev/null -H "Origin: https://example.com" "https://pitchside-live.hello-pitchside.workers.dev/?date=20261114"
+        run: |
+          curl -sS -m 30 -D - -o /dev/null -H "Origin: https://example.com" "https://pitchside-live.hello-pitchside.workers.dev/?date=20261114"
