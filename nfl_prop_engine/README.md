@@ -38,8 +38,11 @@ game is on.
   they never go into the public repo. Over 1.5 legs follow the match goals;
   goal-in-both-halves legs read the half scores from ESPN's match summary.
   ESPN covers the Premier League to the National League and the Scottish
-  Premiership and Championship; legs in National League North/South and
-  Scottish League One/Two show as "no live feed". Football settles on 90
+  Premiership and Championship. National League North/South and Scottish
+  League One/Two come from LiveScore through a small Cloudflare Worker relay
+  (`relay/`, set up once by Dan; LiveScore refuses requests from web pages).
+  Until `LOWER_LEAGUE_RELAY` is set in `tracker.html`, those legs show as
+  "no live feed". Football settles on 90
   minutes (extra time is taken off using the half scores); a postponed
   match is void. The tracker logic also handles both-teams-to-score and
   match-result legs, ready for football slips from the bet-slip issue.

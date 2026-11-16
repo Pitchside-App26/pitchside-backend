@@ -96,6 +96,10 @@
   const T = window.TrackerCore;
   const ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
   const ESPN_SOCCER = "https://site.api.espn.com/apis/site/v2/sports/soccer";
+  // The Cloudflare relay for National League North/South and Scottish League
+  // One/Two (relay/README.md). Empty until it's set up: those legs then show
+  // "no live feed".
+  const LOWER_LEAGUE_RELAY = "";
   const POLL_MS = 30000;
   const SHOW_DAYS = 5;  // settled bets older than this drop off the page
   const isSoccer = leg => leg.sport === "soccer";
@@ -202,13 +206,21 @@
     return !days.length || days.some(d => d >= cutoff);
   }
   function goalsBets() {
-    try { return T.goalsPageBets(JSON.parse(localStorage.getItem("goals-bets-v1") || "[]")); }
+    try { return T.goalsPageBets(JSON.parse(localStorage.getItem("goals-bets-v1") || "[]"), !!LOWER_LEAGUE_RELAY); }
     catch (e) { return []; }
   }
 
   // Each football leg's match, by (league, date); legs without a league are
   // looked for across the usual leagues.
   const soccerBoards = {};  // "slug|date" -> matches, refreshed while live
+  const relayCalls = {};    // date -> this round's single relay request
+  function relayDay(date) {
+    if (!relayCalls[date]) {
+      relayCalls[date] = getJson(`${LOWER_LEAGUE_RELAY}?date=${date}`);
+      setTimeout(() => { delete relayCalls[date]; }, 5000);
+    }
+    return relayCalls[date];
+  }
   async function soccerResults(active) {
     const legs = active.flatMap(b => b.legs.filter(isSoccer));
     const wanted = new Set();
@@ -217,8 +229,15 @@
       const old = soccerBoards[key];
       if (old && !old.some(m => m.state === "in") && old.every(m => m.state === "post")) return;  // all finished
       const [slug, date] = key.split("|");
-      try { soccerBoards[key] = T.parseSoccerBoard(await getJson(`${ESPN_SOCCER}/${slug}/scoreboard?dates=${date}`), slug); }
-      catch (e) { soccerBoards[key] = soccerBoards[key] || []; }
+      try {
+        if (slug.startsWith("ls:")) {
+          // One relay request per date covers all four leagues.
+          const all = T.parseRelay(await relayDay(date));
+          soccerBoards[key] = all.filter(m => m.slug === slug);
+        } else {
+          soccerBoards[key] = T.parseSoccerBoard(await getJson(`${ESPN_SOCCER}/${slug}/scoreboard?dates=${date}`), slug);
+        }
+      } catch (e) { soccerBoards[key] = soccerBoards[key] || []; }
     }));
     const matchOf = leg => {
       for (const slug of (leg.league ? [leg.league] : T.SEARCH_LEAGUES)) {
@@ -230,12 +249,12 @@
     const halves = {};
     await Promise.all(legs.map(async leg => {
       const m = matchOf(leg);
-      if (!T.soccerLegNeedsSummary(leg, m) || halves[m.id]) return;
+      if (!T.soccerLegNeedsSummary(leg, m) || halves[m.id] || m.slug.startsWith("ls:")) return;
       try { halves[m.id] = T.soccerHalves(await getJson(`${ESPN_SOCCER}/${m.slug}/summary?event=${m.id}`)); }
       catch (e) { /* leg shows "half scores loading" */ }
     }));
     const live = Object.values(soccerBoards).some(ms => ms.some(m => m.state === "in"));
-    return { live, evaluate: leg => { const m = matchOf(leg); return T.evaluateSoccerLeg(leg, m, m && halves[m.id]); } };
+    return { live, evaluate: leg => { const m = matchOf(leg); return T.evaluateSoccerLeg(leg, m, m && (halves[m.id] || m.halves)); } };
   }
 
   async function update() {
