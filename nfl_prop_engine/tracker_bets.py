@@ -9,12 +9,18 @@ moneyline's team), or the player's team on the season roster. A leg whose
 game can't be found, or a market the tracker can't follow (spreads, first TD
 scorer, ...), is kept and shown as "not tracked".
 
+Football (soccer) legs are followed from ESPN, or for National League
+North/South and Scottish League One/Two from the lower-league relay; the
+tracker finds the match from the two clubs, the date and, if the slip names
+it, the league.
+
 Nothing that identifies the physical slip (reference, terminal, barcode, the
 time it was placed) is ever written: bets.json is public.
 """
 import json
 import re
 from datetime import date, datetime, timedelta
+from difflib import SequenceMatcher
 
 from config import ODDS_API_TEAM_NAME_TO_ABBR
 
@@ -37,6 +43,76 @@ MARKET_STAT = {
     "player_tackles_assists": "tackles",
     "player_sacks": "sacks",
 }
+
+# The competition as written on a slip -> the tracker's league (tracker-core.js
+# GOALS_LEAGUES / RELAY_LEAGUES / SEARCH_LEAGUES). First match wins, so the
+# narrower names come first. Anything else is left out and the tracker looks
+# for the match across all the leagues it follows.
+FOOTBALL_LEAGUES = [
+    (r"national league north", "ls:north"),
+    (r"national league south", "ls:south"),
+    (r"national league", "eng.5"),
+    (r"(scottish|spfl|scotland).*league (one|1)\b", "ls:sco3"),
+    (r"(scottish|spfl|scotland).*league (two|2)\b", "ls:sco4"),
+    (r"(scottish|spfl|scotland).*championship", "sco.2"),
+    (r"(scottish|spfl|scotland).*premiership|^premiership$", "sco.1"),
+    (r"champions league", "uefa.champions"),
+    (r"conference league", "uefa.europa.conf"),
+    (r"europa league", "uefa.europa"),
+    (r"fa cup", "eng.fa"),
+    (r"(efl|carabao|league) cup", "eng.league_cup"),
+    (r"premier league", "eng.1"),
+    (r"championship", "eng.2"),
+    (r"league (one|1)\b", "eng.3"),
+    (r"league (two|2)\b", "eng.4"),
+]
+MATCH_SPLIT = re.compile(r"\s+(?:v|vs\.?|-)\s+", re.IGNORECASE)
+
+
+def football_league(competition: str | None) -> str | None:
+    text = re.sub(r"[^a-z0-9 ]+", " ", str(competition or "").lower())
+    text = re.sub(r"\s+", " ", text).strip()
+    for pattern, league in FOOTBALL_LEAGUES:
+        if re.search(pattern, text):
+            return league
+    return None
+
+
+def _same_club(a: str, b: str) -> float:
+    a, b = a.lower().strip(), b.lower().strip()
+    return 1.0 if a and (a in b or b in a) else SequenceMatcher(None, a, b).ratio()
+
+
+def football_leg(leg: dict) -> tuple[dict, str | None]:
+    """(tracker leg, YYYYMMDD) for one confirmed football leg."""
+    match = (leg.get("game") or "").strip()
+    teams = MATCH_SPLIT.split(match, maxsplit=1)
+    day = (leg.get("date") or "").replace("-", "") or None
+    label = " · ".join(x for x in (match, leg.get("market_text") or "") if x)
+    if len(teams) != 2 or not all(t.strip() for t in teams):
+        return {"type": "other", "label": label, "note": "match not clear on the slip"}, day
+    home, away = (t.strip() for t in teams)
+    base = {"sport": "soccer", "date": day or "", "home": home, "away": away}
+    league = football_league(leg.get("competition"))
+    if league:
+        base["league"] = league
+    market, side, line = leg.get("market"), leg.get("side"), leg.get("book_line")
+
+    if market == "match_goals" and side in ("over", "under") and line is not None:
+        return {**base, "type": "goals", "side": side, "line": line}, day
+    if market == "btts" and side in ("yes", "no"):
+        return {**base, "type": "btts", "side": side}, day
+    if market == "goal_both_halves" and side == "yes":
+        return {**base, "type": "gibh"}, day
+    if market == "match_result" and leg.get("team"):
+        team = leg["team"].strip()
+        if team.lower() == "draw":
+            return {**base, "type": "result", "pick": "draw"}, day
+        h, a = _same_club(team, home), _same_club(team, away)
+        if max(h, a) >= 0.6 and h != a:
+            return {**base, "type": "result", "pick": "home" if h > a else "away"}, day
+    return {"type": "other", "label": label, "note": "can't be followed live"}, day
+
 
 KINDS = {"single": "Single", "accumulator": "Accumulator", "bet_builder": "Bet Builder", "other": "Bet"}
 
@@ -115,15 +191,16 @@ def tracker_bets(issue: int, draft: dict, schedule: Schedule, team_of_player: di
     bets = []
     for n, slip in enumerate(draft["slips"], start=1):
         legs, days = [], set()
+        football = slip.get("sport") == "football"
         for leg in slip["legs"]:
-            tracked, day = tracker_leg(leg, schedule, team_of_player)
+            tracked, day = football_leg(leg) if football else tracker_leg(leg, schedule, team_of_player)
             legs.append(tracked)
             if day:
                 days.add(day)
         bets.append({
             "id": f"issue-{issue}-slip-{n}",
             "book": slip.get("bookmaker") or "bet365",
-            "kind": KINDS.get(slip["bet_type"], "Bet"),
+            "kind": ("Football " if football else "") + KINDS.get(slip["bet_type"], "Bet"),
             "odds": slip.get("total_odds_text") or "",
             "stake": slip.get("stake_gbp"),
             "returns": slip.get("potential_returns_gbp"),

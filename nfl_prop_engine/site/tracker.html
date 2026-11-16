@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Live Bet Tracker</title>
+<title>My Bets</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap">
 <style>
@@ -71,6 +71,14 @@
   .group.lost { color: var(--lost); }
   .won-group > summary { color: var(--won); cursor: pointer; list-style-position: inside; }
   .won-group > summary:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+  .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .action { display: flex; flex-direction: column; gap: 3px; padding: 11px 12px; border: 1px solid var(--rule-strong);
+    border-radius: 6px; background: var(--panel); color: var(--text); text-decoration: none; }
+  .action.primary { background: var(--text); color: var(--panel); }
+  .action-title { font-weight: 700; }
+  .action-title::after { content: " →"; }
+  .action-sub { font-size: 0.78rem; line-height: 1.4; opacity: 0.85; }
+  .action:focus-visible { outline: 2px solid var(--live); outline-offset: 2px; }
   .empty, .error { text-align: center; color: var(--sub); padding: 40px 16px; line-height: 1.5; }
   footer { font-size: 0.75rem; color: var(--sub); line-height: 1.5; border-top: 1px solid var(--rule-strong); padding-top: 12px; margin-top: 24px; }
   @media (prefers-reduced-motion: no-preference) { .bar i { transition: width 0.6s ease; } }
@@ -78,18 +86,30 @@
 </head>
 <body>
 <div class="wrap">
-  <nav class="back"><a href="./">← NFL fun slips</a> · <a href="goals/">Goals report</a></nav>
+  <nav class="back">Reports: <a href="./">NFL fun slips</a> · <a href="goals/">Goals report</a></nav>
   <header>
     <div>
-      <h1>Live bet tracker</h1>
+      <h1>My bets</h1>
       <div class="meta" id="meta">Loading…</div>
     </div>
     <button class="refresh" id="refresh" type="button">Refresh</button>
   </header>
+  <section class="actions" aria-label="Add a bet">
+    <a class="action primary" href="https://github.com/Pitchside-App26/pitchside-backend/issues/new?template=bet-slip.md">
+      <span class="action-title">Upload a bet slip</span>
+      <span class="action-sub">Screenshot or photo from any bookmaker, NFL or football: accas, BTTS, over 2.5, goal in both halves.
+        Reply <b>confirm</b> to the reading and it appears here in a couple of minutes.</span>
+    </a>
+    <a class="action" href="goals/">
+      <span class="action-title">Log an Over 1.5 acca</span>
+      <span class="action-sub">Tap + on the legs in the goals report, then Log bet. Kept on this phone only.</span>
+    </a>
+  </section>
   <main id="bets"><div class="empty">Loading your bets…</div></main>
   <footer>
-    Live scores and stats from ESPN, refreshed every 30 seconds while a game is on. NFL bets come from your
-    confirmed bet slips; football accas you log on the goals page appear here too (they stay on this phone).
+    Live scores and stats from ESPN (and LiveScore for National League North/South and Scottish League One/Two),
+    refreshed every 30 seconds while a game is on. Uploaded slips are on this public page without any bet
+    reference; Over 1.5 accas logged on the goals page stay on this phone, so open this page in the same browser.
     Football settles on 90 minutes. Settlement here is a guide: your bookmaker's rules decide.
   </footer>
 </div>
@@ -249,10 +269,13 @@
     }
     return relayCalls[date];
   }
+  // A slip that doesn't name the league: look everywhere the tracker follows.
+  const searchIn = leg => leg.league ? [leg.league]
+    : LOWER_LEAGUE_RELAY ? [...T.SEARCH_LEAGUES, ...Object.values(T.RELAY_LEAGUES)] : T.SEARCH_LEAGUES;
   async function soccerResults(active) {
     const legs = active.flatMap(b => b.legs.filter(isSoccer));
     const wanted = new Set();
-    for (const leg of legs) for (const slug of (leg.league ? [leg.league] : T.SEARCH_LEAGUES)) wanted.add(`${slug}|${leg.date}`);
+    for (const leg of legs) for (const slug of searchIn(leg)) wanted.add(`${slug}|${leg.date}`);
     await Promise.all([...wanted].map(async key => {
       const old = soccerBoards[key];
       if (old && !old.some(m => m.state === "in") && old.every(m => m.state === "post")) return;  // all finished
@@ -268,7 +291,7 @@
       } catch (e) { soccerBoards[key] = soccerBoards[key] || []; }
     }));
     const matchOf = leg => {
-      for (const slug of (leg.league ? [leg.league] : T.SEARCH_LEAGUES)) {
+      for (const slug of searchIn(leg)) {
         const m = T.findMatch(soccerBoards[`${slug}|${leg.date}`] || [], leg.home, leg.away);
         if (m) return m;
       }
@@ -312,7 +335,7 @@
       const order = { live: 0, pending: 1, check: 2, won: 3, lost: 4 };
       results.sort((a, b) => order[a.status] - order[b.status]);
       el.innerHTML = results.length ? results.map(betHtml).join("")
-        : '<div class="empty">No bets from the last few days. Log a football acca on the goals page, or confirm an NFL bet slip.</div>';
+        : '<div class="empty">No bets from the last few days. Upload a bet slip or log an Over 1.5 acca above.</div>';
       const anyLive = Object.values(games).some(g => g.state === "in") || soccer.live;
       meta.textContent = `Updated ${new Date().toLocaleTimeString("en-GB")}${anyLive ? " · live" : ""}`;
       schedule(anyLive);
