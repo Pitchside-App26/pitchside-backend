@@ -97,9 +97,9 @@
   const ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
   const ESPN_SOCCER = "https://site.api.espn.com/apis/site/v2/sports/soccer";
   // The Cloudflare relay for National League North/South and Scottish League
-  // One/Two (relay/README.md). Empty until it's set up: those legs then show
-  // "no live feed".
-  const LOWER_LEAGUE_RELAY = "";
+  // One/Two (relay/README.md). Set it to "" to switch it off: those legs then
+  // show "no live feed".
+  const LOWER_LEAGUE_RELAY = "https://pitchside-live.hello-pitchside.workers.dev/";
   const POLL_MS = 30000;
   const SHOW_DAYS = 5;  // settled bets older than this drop off the page
   const isSoccer = leg => leg.sport === "soccer";
