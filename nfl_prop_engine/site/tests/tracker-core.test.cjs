@@ -105,3 +105,65 @@ test("legs the tracker can't follow are shown, and a bet waits on them", () => {
   const lost = { legs: [{ type: "total", game: "MIN@GB", side: "over", line: 42 }, other] };
   assert.equal(T.evaluateBet(lost, games, boxes).status, "lost");
 });
+
+// ── Football ──  (shapes from ESPN's soccer feed, checked 16 Nov 2026)
+function match(id, home, away, hs, as, state, name, period = 2, clock = "67'") {
+  return { id, status: { period, displayClock: clock, type: { state, name, shortDetail: state === "post" ? "FT" : clock } },
+    competitions: [{ competitors: [
+      { homeAway: "home", score: String(hs), team: { displayName: home, abbreviation: home.slice(0, 3).toUpperCase() } },
+      { homeAway: "away", score: String(as), team: { displayName: away, abbreviation: away.slice(0, 3).toUpperCase() } }] }] };
+}
+const L1 = T.parseSoccerBoard({ events: [
+  match("a", "AFC Wimbledon", "Blackpool", 1, 0, "post", "STATUS_FULL_TIME"),
+  match("b", "Manchester United", "Wolverhampton Wanderers", 1, 1, "in", "STATUS_SECOND_HALF"),
+  match("c", "Stockport County", "Bolton Wanderers", 0, 0, "in", "STATUS_HALFTIME", 1, "45'"),
+  match("d", "Exeter City", "Reading", 0, 0, "pre", "STATUS_SCHEDULED"),
+  match("e", "Barnsley", "Wigan Athletic", 0, 0, "post", "STATUS_POSTPONED"),
+] }, "eng.3");
+const soccer = (leg, halves) => T.evaluateSoccerLeg(leg, T.findMatch(L1, leg.home, leg.away), halves);
+
+test("matches are found despite different club names, never the wrong way round", () => {
+  assert.equal(T.findMatch(L1, "Wimbledon", "Blackpool").id, "a");
+  assert.equal(T.findMatch(L1, "Man Utd", "Wolves").id, "b");
+  assert.equal(T.findMatch(L1, "Blackpool", "AFC Wimbledon"), null);
+  assert.equal(T.findMatch(L1, "Arsenal", "Chelsea"), null);
+});
+
+test("match goals, BTTS and result settle on the score", () => {
+  assert.equal(soccer({ type: "goals", home: "Wimbledon", away: "Blackpool", side: "over", line: 1.5 }).status, "lost");
+  assert.equal(soccer({ type: "goals", home: "Man Utd", away: "Wolves", side: "over", line: 1.5 }).status, "won");
+  const live = soccer({ type: "goals", home: "Stockport", away: "Bolton", side: "over", line: 1.5 });
+  assert.deepEqual([live.status, T.soccerProgress({ type: "goals", side: "over", line: 1.5 }, live)], ["losing", "needs 2 more goals"]);
+  assert.equal(soccer({ type: "btts", home: "Man Utd", away: "Wolves", side: "yes" }).status, "won");
+  assert.equal(soccer({ type: "result", home: "AFC Wimbledon", away: "Blackpool", pick: "home" }).status, "won");
+  assert.equal(soccer({ type: "goals", home: "Exeter", away: "Reading", side: "over", line: 1.5 }).status, "pending");
+  assert.equal(soccer({ type: "goals", home: "Barnsley", away: "Wigan", side: "over", line: 1.5 }).status, "void");
+});
+
+test("goal in both halves needs the half scores", () => {
+  const leg = { type: "gibh", home: "Man Utd", away: "Wolves" };
+  assert.equal(soccer(leg, null).status, "unknown");
+  assert.equal(soccer(leg, [[1, 0], [0, 1]]).status, "won");
+  assert.equal(soccer(leg, [[1, 0], [0, 0]]).status, "winning");  // 2nd half still going
+  assert.equal(soccer({ ...leg, home: "Stockport", away: "Bolton" }, [[0, 0], [0, 0]]).status, "lost");  // 0-0 at HT
+  assert.equal(soccer({ ...leg, home: "Wimbledon", away: "Blackpool" }, [[1, 0], [0, 0]]).status, "lost");
+});
+
+test("half scores come from the summary's line scores", () => {
+  const summary = { header: { competitions: [{ competitors: [
+    { homeAway: "home", linescores: [{ displayValue: "1" }, { displayValue: "0" }] },
+    { homeAway: "away", linescores: [{ displayValue: "0" }, { displayValue: "0" }] }] }] } };
+  assert.deepEqual(T.soccerHalves(summary), [[1, 0], [0, 0]]);
+});
+
+test("goals-page bets become tracker bets, with unfed leagues marked", () => {
+  const [bet] = T.goalsPageBets([{ id: "x1", date: "2026-11-14", mk: "o15", bookie: "SpreadEx", stake: 5, ret: 31.2,
+    legs: [{ fx: "AFC Wimbledon v Blackpool", lg: "League One", role: "leg" },
+           { fx: "Chorley v Darlington", lg: "National League North", role: "leg" }] }]);
+  assert.deepEqual([bet.book, bet.kind, bet.dates], ["SpreadEx", "2-fold Over 1.5 goals", ["20261114"]]);
+  assert.deepEqual(bet.legs[0], { sport: "soccer", league: "eng.3", date: "20261114", home: "AFC Wimbledon",
+    away: "Blackpool", type: "goals", side: "over", line: 1.5 });
+  assert.equal(bet.legs[1].type, "other");
+  const r = T.evaluateBet(bet, {}, {}, leg => T.evaluateSoccerLeg(leg, T.findMatch(L1, leg.home, leg.away), null));
+  assert.equal(r.status, "lost");
+});
