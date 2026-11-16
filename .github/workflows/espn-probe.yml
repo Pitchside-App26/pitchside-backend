@@ -1,0 +1,40 @@
+name: ESPN probe (temporary)
+on:
+  push:
+    branches: [claude/nfl-prop-ranking-engine-kth7z5]
+    paths: [.github/workflows/espn-probe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe ESPN soccer scoreboards and a summary
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          B = "https://site.api.espn.com/apis/site/v2/sports/soccer"
+          def get(u):
+              try: return json.load(urllib.request.urlopen(u, timeout=20))
+              except Exception as e: print("FAIL", u, e); return None
+          for slug in ["eng.1","eng.2","eng.3","eng.4","eng.5","sco.1","sco.2","sco.3","sco.4","all"]:
+              for d in ["20261114","20261116"]:
+                  j = get(f"{B}/{slug}/scoreboard?dates={d}")
+                  if not j: continue
+                  ev = j.get("events", [])
+                  print(slug, d, "events", len(ev), "league", (j.get("leagues") or [{}])[0].get("slug"))
+              if j and j.get("events"):
+                  e = j["events"][0]; c = e["competitions"][0]
+                  print("  status", json.dumps(e["status"])[:400])
+                  for t in c["competitors"]:
+                      tm = t["team"]
+                      print("  ", t["homeAway"], tm.get("displayName"), "|", tm.get("shortDisplayName"), "|", tm.get("abbreviation"), "|", tm.get("name"), "score", t.get("score"), "linescores", t.get("linescores"))
+                  if slug == "eng.3":
+                      s = get(f"{B}/{slug}/summary?event={e['id']}")
+                      if s:
+                          print("  summary keys", list(s))
+                          hc = s["header"]["competitions"][0]
+                          for t in hc["competitors"]:
+                              print("   header", t["homeAway"], t["team"].get("displayName"), t.get("score"), t.get("linescores"))
+                          print("   keyEvents", json.dumps((s.get("keyEvents") or [{}])[0])[:500])
+          PY
