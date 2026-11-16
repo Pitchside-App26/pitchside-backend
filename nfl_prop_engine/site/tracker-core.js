@@ -203,7 +203,12 @@
   // league is an ESPN slug; null means "search the usual leagues".
 
   // The goals page's league names -> ESPN slugs. National League North/South
-  // and Scottish League One/Two have no ESPN feed.
+  // and Scottish League One/Two have no ESPN feed: they come from LiveScore
+  // through the Cloudflare relay (relay/lower-leagues-worker.js), as "ls:*".
+  const RELAY_LEAGUES = {
+    "National League North": "ls:north", "National League South": "ls:south",
+    "Scottish League One": "ls:sco3", "Scottish League Two": "ls:sco4",
+  };
   const GOALS_LEAGUES = {
     "Premier League": "eng.1", "Championship": "eng.2", "League One": "eng.3", "League Two": "eng.4",
     "National League": "eng.5", "Scottish Premiership": "sco.1", "Scottish Championship": "sco.2",
@@ -351,10 +356,47 @@
     return "";
   }
 
+  // The relay's matches, in parseSoccerBoard's shape, with the half scores
+  // attached (LiveScore sends them with the score, so no summary is needed).
+  const LS_DONE = new Set(["FT", "AET", "AP"]);
+  function relayState(status) {
+    const s = String(status || "").trim();
+    if (/post|canc|aband|susp|award|int/i.test(s)) return { state: "post", off: true };
+    if (LS_DONE.has(s)) return { state: "post", off: false };
+    if (!s || s === "NS" || /^\d{1,2}:\d{2}$/.test(s)) return { state: "pre", off: false };
+    return { state: "in", off: false };  // "23'", "45+2'", "HT", "ET" ...
+  }
+  function parseRelay(json) {
+    const matches = [];
+    for (const r of (json && json.matches) || []) {
+      const { state, off } = relayState(r.status);
+      const minute = parseInt(r.status, 10);
+      const period = r.status === "HT" ? 1 : state === "post" || minute > 45 ? 2 : 1;
+      const short = n => String(n || "").replace(/[^A-Za-z ]/g, "").slice(0, 3).toUpperCase();
+      // 90-minute score: after extra time LiveScore keeps it in the *FT90 fields.
+      const h90 = r.homeFT90 ?? r.homeGoals ?? 0, a90 = r.awayFT90 ?? r.awayGoals ?? 0;
+      const ht = r.homeHT !== null && r.homeHT !== undefined && r.awayHT !== null && r.awayHT !== undefined;
+      const firstDone = state === "post" || period === 2;
+      matches.push({
+        id: `ls-${r.id}`, slug: `ls:${r.league}`,
+        home: { name: r.home, short: short(r.home), score: h90 }, away: { name: r.away, short: short(r.away), score: a90 },
+        state, off, final: state === "post", period,
+        name: r.status === "HT" ? "STATUS_HALFTIME" : "",
+        detail: state === "pre" ? "" : r.status,
+        // Before half time LiveScore has no HT score yet: the first half is the score so far.
+        halves: ht && firstDone ? [[r.homeHT, r.awayHT], [h90 - r.homeHT, a90 - r.awayHT]]
+          : state === "in" ? [[h90, a90], [0, 0]] : null,
+      });
+    }
+    return matches;
+  }
+
   // Bets logged on the goals page ("My bets", kept in this browser):
   // { id, date: "YYYY-MM-DD", mk: "o15"|"gibh", title, bookie, stake, ret,
   //   legs: [{ key, fx: "Home v Away", lg: league name, role }] }
-  function goalsPageBets(stored) {
+  // relay: true once the Cloudflare relay is set up, so the four leagues ESPN
+  // doesn't cover are followed live too.
+  function goalsPageBets(stored, relay = false) {
     return (Array.isArray(stored) ? stored : []).filter(b => b && Array.isArray(b.legs)).map(b => {
       const date = String(b.date || "").replace(/-/g, "");
       return {
@@ -362,7 +404,7 @@
         odds: "", stake: b.stake, returns: b.ret, dates: date ? [date] : [], source: "goals page",
         legs: b.legs.map(l => {
           const [home, away] = String(l.fx || "").split(" v ");
-          const league = GOALS_LEAGUES[l.lg];
+          const league = GOALS_LEAGUES[l.lg] || (relay ? RELAY_LEAGUES[l.lg] : undefined);
           if (!league) return { type: "other", label: `${l.fx} (${l.lg})`, note: "no live feed for this league" };
           const leg = { sport: "soccer", league, date, home, away };
           return b.mk === "gibh" ? { ...leg, type: "gibh" } : { ...leg, type: "goals", side: "over", line: 1.5 };
@@ -373,7 +415,7 @@
 
   const api = { STATS, nameKey, parseScoreboard, parseBoxscore, findPlayer, statValue, touchdowns,
     evaluateLeg, evaluateBet, progressText,
-    GOALS_LEAGUES, SEARCH_LEAGUES, clubScore, parseSoccerBoard, findMatch, soccerHalves, soccerLegNeedsSummary,
+    GOALS_LEAGUES, RELAY_LEAGUES, SEARCH_LEAGUES, parseRelay, clubScore, parseSoccerBoard, findMatch, soccerHalves, soccerLegNeedsSummary,
     evaluateSoccerLeg, soccerProgress, goalsPageBets };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.TrackerCore = api;

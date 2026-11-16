@@ -167,3 +167,47 @@ test("goals-page bets become tracker bets, with unfed leagues marked", () => {
   const r = T.evaluateBet(bet, {}, {}, leg => T.evaluateSoccerLeg(leg, T.findMatch(L1, leg.home, leg.away), null));
   assert.equal(r.status, "lost");
 });
+
+// ── Lower leagues through the Cloudflare relay ──
+// LiveScore event shapes as seen on 14 Nov 2026 (Airdrieonians 2-0 Queen of the South, HT 1-0).
+const LIVESCORE = { Stages: [
+  { Cnm: "Scotland", Snm: "League 1", Events: [
+    { Eid: "1793390", T1: [{ Nm: "Airdrieonians" }], T2: [{ Nm: "Queen of the South" }], Eps: "FT", Esd: 20261114150000,
+      Tr1: "2", Tr2: "0", Trh1: "1", Trh2: "0" },
+    { Eid: "2", T1: [{ Nm: "Montrose" }], T2: [{ Nm: "Alloa Athletic" }], Eps: "67'", Esd: 20261114150000,
+      Tr1: "1", Tr2: "0", Trh1: "1", Trh2: "0" },
+    { Eid: "3", T1: [{ Nm: "Kelty Hearts" }], T2: [{ Nm: "Cove Rangers" }], Eps: "23'", Esd: 20261114150000, Tr1: "0", Tr2: "0" }] },
+  { Cnm: "England", Snm: "National League: North", Events: [
+    { Eid: "4", T1: [{ Nm: "Chorley" }], T2: [{ Nm: "Darlington" }], Eps: "Postp.", Esd: 20261114150000 }] },
+  { Cnm: "England", Snm: "Premier League", Events: [{ Eid: "5", T1: [{ Nm: "X" }], T2: [{ Nm: "Y" }], Eps: "FT" }] },
+] };
+
+test("the relay keeps only the four leagues, in the shape the tracker reads", async () => {
+  const { pathToFileURL } = require("node:url");
+  const worker = await import(pathToFileURL(path.join(__dirname, "../../../relay/lower-leagues-worker.js")).href);
+  const picked = worker.pickMatches(LIVESCORE);
+  assert.deepEqual(picked.map(m => m.league), ["sco3", "sco3", "sco3", "north"]);
+  assert.deepEqual(picked[0], { league: "sco3", id: "1793390", home: "Airdrieonians", away: "Queen of the South",
+    status: "FT", kickoff: "20261114150000", homeGoals: 2, awayGoals: 0, homeHT: 1, awayHT: 0, homeFT90: null, awayFT90: null });
+
+  const matches = T.parseRelay({ matches: picked });
+  const [ft, live2nd, live1st, postponed] = matches;
+  assert.deepEqual([ft.state, ft.final, ft.halves], ["post", true, [[1, 0], [1, 0]]]);
+  assert.deepEqual([live2nd.state, live2nd.period, live2nd.halves], ["in", 2, [[1, 0], [0, 0]]]);
+  assert.deepEqual([live1st.period, live1st.halves], [1, [[0, 0], [0, 0]]]);
+  assert.equal(postponed.off, true);
+
+  const gibh = leg => T.evaluateSoccerLeg(leg, T.findMatch(matches, leg.home, leg.away), T.findMatch(matches, leg.home, leg.away).halves);
+  assert.equal(gibh({ type: "gibh", home: "Airdrie", away: "Queen of Sth" }).status, "won");
+  assert.equal(gibh({ type: "gibh", home: "Montrose", away: "Alloa" }).status, "winning");
+  assert.equal(gibh({ type: "goals", home: "Kelty Hearts", away: "Cove Rangers", side: "over", line: 1.5 }).status, "losing");
+  assert.equal(gibh({ type: "goals", home: "Chorley", away: "Darlington", side: "over", line: 1.5 }).status, "void");
+});
+
+test("goals-page legs in those leagues are followed once the relay is set up", () => {
+  const stored = [{ id: "z", date: "2026-11-14", mk: "o15", bookie: "SpreadEx", stake: 5, ret: 20,
+    legs: [{ fx: "Airdrieonians v Queen of the South", lg: "Scottish League One" }] }];
+  assert.equal(T.goalsPageBets(stored, false)[0].legs[0].type, "other");
+  assert.deepEqual(T.goalsPageBets(stored, true)[0].legs[0], { sport: "soccer", league: "ls:sco3", date: "20261114",
+    home: "Airdrieonians", away: "Queen of the South", type: "goals", side: "over", line: 1.5 });
+});
