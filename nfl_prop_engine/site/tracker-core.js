@@ -164,8 +164,10 @@
     return { ...base, status: "unknown", note: `unknown leg type ${leg.type}` };
   }
 
-  function evaluateBet(bet, games, boxscores) {
-    const legs = bet.legs.map(leg => ({ leg, ...evaluateLeg(leg, games, boxscores) }));
+  // soccer(leg) -> the leg's result, for football legs (the page looks up
+  // their matches); NFL legs use games and boxscores.
+  function evaluateBet(bet, games, boxscores, soccer) {
+    const legs = bet.legs.map(leg => ({ leg, ...(leg.sport === "soccer" && soccer ? soccer(leg) : evaluateLeg(leg, games, boxscores)) }));
     const counts = s => legs.filter(l => l.status === s).length;
     const settled = l => l.status === "won" || l.status === "void";
     let status;
@@ -173,7 +175,7 @@
     else if (legs.every(settled)) status = "won";
     // Everything the tracker can follow has landed; the rest is down to you.
     else if (legs.every(l => settled(l) || l.leg.type === "other")) status = "check";
-    else if (legs.some(l => l.game && l.game.state === "in")) status = "live";
+    else if (legs.some(l => (l.game && l.game.state === "in") || (l.match && l.match.state === "in"))) status = "live";
     else status = legs.some(l => l.status === "won") ? "live" : "pending";
     return { bet, legs, status, won: counts("won"), lost: counts("lost"), total: legs.length };
   }
@@ -192,8 +194,187 @@
     return Number.isInteger(n) ? String(n) : n.toFixed(1);
   }
 
+  // ════════════════════════ Football (soccer) ════════════════════════
+  // Legs: { sport: "soccer", league: "eng.3" | null, date: "YYYYMMDD", home, away, type, ... }
+  //   type "goals":  side "over"|"under", line (match goals, 90 minutes)
+  //   type "btts":   side "yes"|"no"
+  //   type "result": pick "home"|"draw"|"away"
+  //   type "gibh":   a goal in both halves
+  // league is an ESPN slug; null means "search the usual leagues".
+
+  // The goals page's league names -> ESPN slugs. National League North/South
+  // and Scottish League One/Two have no ESPN feed.
+  const GOALS_LEAGUES = {
+    "Premier League": "eng.1", "Championship": "eng.2", "League One": "eng.3", "League Two": "eng.4",
+    "National League": "eng.5", "Scottish Premiership": "sco.1", "Scottish Championship": "sco.2",
+  };
+  const SEARCH_LEAGUES = ["eng.1", "eng.2", "eng.3", "eng.4", "eng.5", "sco.1", "sco.2", "esp.1", "ger.1", "ita.1",
+    "fra.1", "ned.1", "por.1", "uefa.champions", "uefa.europa", "uefa.europa.conf", "eng.fa", "eng.league_cup"];
+  const OFF = /POSTPONED|CANCEL|ABANDON|SUSPENDED|FORFEIT/;
+
+  // Club names differ between sources ("Man Utd" / "Manchester United"); a
+  // port of football_goals/names.py.
+  const DROP = new Set(["fc", "afc", "the", "town", "city", "united", "utd", "athletic", "ath", "rovers", "rvs",
+    "county", "harriers", "albion", "wanderers", "hotspur", "and", "&", "football", "club"]);
+  const ALIASES = [["man", "manchester"], ["nottm", "nottingham"], ["sheffield weds", "sheffield wednesday"],
+    ["peterboro", "peterborough"], ["inverness c", "inverness caledonian thistle"], ["mk dons", "milton keynes dons"],
+    ["wolves", "wolverhampton"], ["spurs", "tottenham"], ["qpr", "queens park rangers"], ["west brom", "west bromwich"],
+    ["bristol rvs", "bristol rovers"], ["hearts", "heart of midlothian"], ["st johnstone", "saint johnstone"],
+    ["st mirren", "saint mirren"], ["raith rvs", "raith rovers"], ["airdrie", "airdrieonians"]];
+
+  function clubKey(name) {
+    let s = String(name || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()
+      .replace(/[^a-z0-9& ]+/g, " ").replace(/\s+/g, " ").trim();
+    for (const [k, v] of ALIASES) s = s.replace(new RegExp(`\\b${k}\\b`, "g"), v);
+    return s;
+  }
+  function clubCore(name) {
+    const words = clubKey(name).split(" ").filter(w => !DROP.has(w));
+    return words.join(" ") || clubKey(name);
+  }
+  function ratio(a, b) {  // 2 x longest common subsequence / total length
+    if (!a.length && !b.length) return 1;
+    const dp = new Array(b.length + 1).fill(0);
+    for (let i = 1; i <= a.length; i++) {
+      let prev = 0;
+      for (let j = 1; j <= b.length; j++) {
+        const tmp = dp[j];
+        dp[j] = a[i - 1] === b[j - 1] ? prev + 1 : Math.max(dp[j], dp[j - 1]);
+        prev = tmp;
+      }
+    }
+    return (2 * dp[b.length]) / (a.length + b.length);
+  }
+  function clubScore(a, b) {
+    const na = clubKey(a), nb = clubKey(b), ca = clubCore(a), cb = clubCore(b);
+    if (na === nb) return 1;
+    const full = ratio(na, nb);
+    if (ca === cb) return 0.9 + 0.09 * full;
+    let s = ratio(ca, cb);
+    if (ca.split(" ")[0] === cb.split(" ")[0]) s = Math.max(s, 0.8) + 0.1 * ratio(ca, cb);
+    if (ca.includes(cb) || cb.includes(ca)) s = Math.max(s, 0.85);
+    return Math.min(s, 0.99);
+  }
+
+  function parseSoccerBoard(json, slug) {
+    const matches = [];
+    for (const event of (json && json.events) || []) {
+      const comp = (event.competitions || [])[0] || {};
+      const side = {};
+      for (const c of comp.competitors || []) {
+        const t = c.team || {};
+        side[c.homeAway] = { name: t.displayName || "", short: t.abbreviation || t.shortDisplayName || "",
+          score: Number(c.score) || 0 };
+      }
+      if (!side.home || !side.away) continue;
+      const status = event.status || {}, type = status.type || {};
+      matches.push({
+        id: event.id, slug, home: side.home, away: side.away,
+        state: type.state || "pre", name: type.name || "", final: type.state === "post",
+        off: OFF.test(type.name || ""), period: status.period || 0,
+        detail: type.state === "in" ? (type.name === "STATUS_HALFTIME" ? "HT" : status.displayClock || type.shortDetail)
+          : type.shortDetail || "",
+      });
+    }
+    return matches;
+  }
+
+  // The match for (home, away): both names must clearly match, the right way round.
+  function findMatch(matches, home, away) {
+    let best = null;
+    for (const m of matches) {
+      const s = Math.min(clubScore(home, m.home.name), clubScore(away, m.away.name));
+      if (s >= 0.72 && (!best || s > best.s)) best = { m, s };
+    }
+    return best ? best.m : null;
+  }
+
+  // [[home, away] first half, [home, away] second half] from a match summary.
+  function soccerHalves(summary) {
+    const comp = (((summary || {}).header || {}).competitions || [])[0] || {};
+    const by = {};
+    for (const c of comp.competitors || []) by[c.homeAway] = (c.linescores || []).map(l => Number(l.displayValue ?? l.value) || 0);
+    if (!by.home || !by.away || !by.home.length) return null;
+    return [0, 1].map(i => [by.home[i] || 0, by.away[i] || 0]);
+  }
+
+  function soccerLegNeedsSummary(leg, match) {
+    return !!match && match.state !== "pre" && (leg.type === "gibh" || /AET|PEN/.test(match.name));
+  }
+
+  function evaluateSoccerLeg(leg, match, halves) {
+    if (!match) return { status: "unknown", note: "match not found on the live feed" };
+    const base = { match };
+    if (match.off) return { ...base, status: "void", note: "postponed or abandoned" };
+    if (match.state === "pre") return { ...base, status: "pending", value: null };
+    // Bets settle on 90 minutes: after extra time, use the two halves.
+    let h = match.home.score, a = match.away.score;
+    if (/AET|PEN/.test(match.name)) {
+      if (!halves) return { ...base, status: "unknown", note: "went to extra time: half scores loading" };
+      h = halves[0][0] + halves[1][0]; a = halves[0][1] + halves[1][1];
+    }
+    const final = match.final, total = h + a;
+    if (leg.type === "goals") return { ...base, value: total, status: overUnder(leg.side, total, leg.line, final) };
+    if (leg.type === "btts") {
+      const both = h > 0 && a > 0;
+      if (leg.side === "no") return { ...base, value: total, status: both ? "lost" : final ? "won" : "winning" };
+      return { ...base, value: total, status: both ? "won" : final ? "lost" : "losing" };
+    }
+    if (leg.type === "result") {
+      const now = h > a ? "home" : h < a ? "away" : "draw";
+      return { ...base, value: total, status: now === leg.pick ? (final ? "won" : "winning") : (final ? "lost" : "losing") };
+    }
+    if (leg.type === "gibh") {
+      if (!halves) return { ...base, value: total, status: "unknown", note: "half scores loading" };
+      const first = halves[0][0] + halves[0][1], second = halves[1][0] + halves[1][1];
+      const firstOver = match.period >= 2 || match.name === "STATUS_HALFTIME" || final;
+      let status;
+      if (first > 0 && second > 0) status = "won";
+      else if ((firstOver && first === 0) || (final && second === 0)) status = "lost";
+      else status = first > 0 ? "winning" : "losing";
+      return { ...base, value: total, halves: [first, second], status };
+    }
+    return { ...base, status: "unknown", note: `unknown leg type ${leg.type}` };
+  }
+
+  function soccerProgress(leg, r) {
+    if (r.value === null || r.value === undefined) return "";
+    if (leg.type === "goals") {
+      if (leg.side === "under") return r.value > leg.line ? "gone over" : `${fmt(leg.line - r.value)} to spare`;
+      const need = Math.floor(leg.line) + 1 - r.value;
+      return need <= 0 ? "landed" : `needs ${need} more goal${need === 1 ? "" : "s"}`;
+    }
+    if (leg.type === "gibh" && r.halves) {
+      const [f, s] = r.halves;
+      return `1st half ${f > 0 ? "✓" : "–"} · 2nd half ${s > 0 ? "✓" : "–"}`;
+    }
+    return "";
+  }
+
+  // Bets logged on the goals page ("My bets", kept in this browser):
+  // { id, date: "YYYY-MM-DD", mk: "o15"|"gibh", title, bookie, stake, ret,
+  //   legs: [{ key, fx: "Home v Away", lg: league name, role }] }
+  function goalsPageBets(stored) {
+    return (Array.isArray(stored) ? stored : []).filter(b => b && Array.isArray(b.legs)).map(b => {
+      const date = String(b.date || "").replace(/-/g, "");
+      return {
+        id: `goals-${b.id}`, book: b.bookie || "", kind: `${b.legs.length}-fold ${b.mk === "gibh" ? "Goal in both halves" : "Over 1.5 goals"}`,
+        odds: "", stake: b.stake, returns: b.ret, dates: date ? [date] : [], source: "goals page",
+        legs: b.legs.map(l => {
+          const [home, away] = String(l.fx || "").split(" v ");
+          const league = GOALS_LEAGUES[l.lg];
+          if (!league) return { type: "other", label: `${l.fx} (${l.lg})`, note: "no live feed for this league" };
+          const leg = { sport: "soccer", league, date, home, away };
+          return b.mk === "gibh" ? { ...leg, type: "gibh" } : { ...leg, type: "goals", side: "over", line: 1.5 };
+        }),
+      };
+    });
+  }
+
   const api = { STATS, nameKey, parseScoreboard, parseBoxscore, findPlayer, statValue, touchdowns,
-    evaluateLeg, evaluateBet, progressText };
+    evaluateLeg, evaluateBet, progressText,
+    GOALS_LEAGUES, SEARCH_LEAGUES, clubScore, parseSoccerBoard, findMatch, soccerHalves, soccerLegNeedsSummary,
+    evaluateSoccerLeg, soccerProgress, goalsPageBets };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.TrackerCore = api;
 })(typeof window !== "undefined" ? window : globalThis);

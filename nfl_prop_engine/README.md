@@ -32,6 +32,18 @@ game is on.
   re-confirmed slip replaces its earlier version; bets drop off 10 days
   after their last game. The slip reader also handles moneylines, game
   totals, milestones ("60+ yards" = over 59.5) and any bookmaker.
+- **Football (since 16 Nov):** accas logged under "My bets" on the goals
+  page (`/goals/`) show up on the tracker automatically. Both pages are on
+  the same site, so the tracker reads them from the phone's own storage:
+  they never go into the public repo. Over 1.5 legs follow the match goals;
+  goal-in-both-halves legs read the half scores from ESPN's match summary.
+  ESPN covers the Premier League to the National League and the Scottish
+  Premiership and Championship; legs in National League North/South and
+  Scottish League One/Two show as "no live feed". Football settles on 90
+  minutes (extra time is taken off using the half scores); a postponed
+  match is void. The tracker logic also handles both-teams-to-score and
+  match-result legs, ready for football slips from the bet-slip issue.
+  Bets drop off the page 5 days after their date.
 - Bets are listed in `site/bets.json` (public, like the rest of the page;
   never a bet reference, terminal, barcode or placed time):
   moneylines, game totals, player stat over/unders and anytime TDs. Each leg

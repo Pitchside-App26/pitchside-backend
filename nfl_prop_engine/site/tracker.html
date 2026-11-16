@@ -73,7 +73,7 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="./">← Fun slips</a>
+  <nav class="back"><a href="./">← NFL fun slips</a> · <a href="goals/">Goals report</a></nav>
   <header>
     <div>
       <h1>Live bet tracker</h1>
@@ -83,8 +83,9 @@
   </header>
   <main id="bets"><div class="empty">Loading your bets…</div></main>
   <footer>
-    Live scores and stats from ESPN, refreshed every 30 seconds while a game is on. Settlement here is a guide:
-    your bookmaker's rules decide (for example, a player who doesn't play is usually void).
+    Live scores and stats from ESPN, refreshed every 30 seconds while a game is on. NFL bets come from your
+    confirmed bet slips; football accas you log on the goals page appear here too (they stay on this phone).
+    Football settles on 90 minutes. Settlement here is a guide: your bookmaker's rules decide.
   </footer>
 </div>
 
@@ -94,7 +95,10 @@
   "use strict";
   const T = window.TrackerCore;
   const ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
+  const ESPN_SOCCER = "https://site.api.espn.com/apis/site/v2/sports/soccer";
   const POLL_MS = 30000;
+  const SHOW_DAYS = 5;  // settled bets older than this drop off the page
+  const isSoccer = leg => leg.sport === "soccer";
   let bets = [];
   let timer = null;
 
@@ -110,8 +114,16 @@
     return r.json();
   }
 
+  const SOCCER_MARKET = {
+    goals: leg => `${leg.side === "under" ? "Under" : "Over"} ${fmt(leg.line)} goals`,
+    btts: leg => `Both teams to score: ${leg.side}`,
+    result: leg => (leg.pick === "draw" ? "Draw" : `${leg.pick === "home" ? leg.home : leg.away} to win`),
+    gibh: () => "Goal in both halves",
+  };
+
   function legTitle(leg) {
     if (leg.type === "other") return leg.label || "Other selection";
+    if (isSoccer(leg)) return `${leg.home} v ${leg.away} · ${(SOCCER_MARKET[leg.type] || (() => leg.type))(leg)}`;
     if (leg.type === "moneyline") return `${leg.team} to win`;
     if (leg.type === "total") return `${leg.game.replace("@", " @ ")} ${leg.side} ${fmt(leg.line)} pts`;
     if (leg.type === "anytime_td") return `${leg.player} anytime TD`;
@@ -121,6 +133,7 @@
 
   function nowText(leg, r) {
     if (r.value === null || r.value === undefined) return "–";
+    if (isSoccer(leg)) return `${r.value} goal${r.value === 1 ? "" : "s"}`;
     if (leg.type === "moneyline") return r.value > 0 ? `+${r.value}` : String(r.value);
     if (leg.type === "anytime_td") return `${r.value} TD`;
     return fmt(r.value);
@@ -129,8 +142,16 @@
   function barWidth(leg, r) {
     if (r.status === "won") return 100;
     if (leg.type === "anytime_td") return r.value > 0 ? 100 : 0;
+    if (leg.type === "gibh" && r.halves) return (r.halves[0] > 0 ? 50 : 0) + (r.halves[1] > 0 ? 50 : 0);
+    if (isSoccer(leg) && leg.type !== "goals") return 0;
+    if (leg.type === "goals") return Math.max(0, Math.min(100, (r.value / Math.ceil(leg.line)) * 100));
     if (leg.type === "moneyline" || !Number.isFinite(r.value) || !leg.line) return 0;
     return Math.max(0, Math.min(100, (r.value / leg.line) * 100));
+  }
+
+  function matchText(m) {
+    if (!m) return "";
+    return `${m.home.short} ${m.home.score} – ${m.away.score} ${m.away.short} · ${m.state === "pre" ? "kicks off later" : m.detail}`;
   }
 
   function gameText(g) {
@@ -156,33 +177,80 @@
         </div>
         <div class="tally">${result.legs.map(l => `<span class="${l.status}"></span>`).join("")}</div>
         <ol class="legs">${result.legs.map(l => {
-          const need = l.status === "won" || l.status === "lost" || l.status === "void" ? "" : T.progressText(l.leg, l);
-          const note = l.note ? ` · ${esc(l.note)}` : "";
+          const settledLeg = l.status === "won" || l.status === "lost" || l.status === "void";
+          const need = isSoccer(l.leg) ? (settledLeg && l.leg.type !== "gibh" ? "" : T.soccerProgress(l.leg, l))
+            : settledLeg ? "" : T.progressText(l.leg, l);
+          const note = l.note ? `${need ? " · " : ""}${esc(l.note)}` : "";
           return `
           <li class="leg">
             <span class="mark ${l.status}" aria-label="${l.status}">${MARK[l.status] || "?"}</span>
             <span class="leg-name">${esc(legTitle(l.leg))}</span>
             <span class="leg-now">${esc(nowText(l.leg, l))}</span>
-            ${l.leg.type === "moneyline" || l.leg.type === "other" ? "" : `<span class="bar"><i class="${l.status}" style="width:${barWidth(l.leg, l)}%"></i></span>`}
+            ${["moneyline", "other", "btts", "result"].includes(l.leg.type) ? "" : `<span class="bar"><i class="${l.status}" style="width:${barWidth(l.leg, l)}%"></i></span>`}
             <span class="leg-need">${esc(need)}${note}</span>
-            <span class="leg-game">${esc(gameText(l.game))}</span>
+            <span class="leg-game">${esc(l.match ? matchText(l.match) : gameText(l.game))}</span>
           </li>`;
         }).join("")}</ol>
       </article>`;
+  }
+
+  // Bets on this page: bets.json (NFL, from bet-slip issues) plus the
+  // football accas logged on the goals page, which live in this browser only.
+  function recent(b) {
+    const cutoff = new Date(Date.now() - SHOW_DAYS * 864e5).toISOString().slice(0, 10).replace(/-/g, "");
+    const days = b.dates || (b.date ? [b.date] : []);
+    return !days.length || days.some(d => d >= cutoff);
+  }
+  function goalsBets() {
+    try { return T.goalsPageBets(JSON.parse(localStorage.getItem("goals-bets-v1") || "[]")); }
+    catch (e) { return []; }
+  }
+
+  // Each football leg's match, by (league, date); legs without a league are
+  // looked for across the usual leagues.
+  const soccerBoards = {};  // "slug|date" -> matches, refreshed while live
+  async function soccerResults(active) {
+    const legs = active.flatMap(b => b.legs.filter(isSoccer));
+    const wanted = new Set();
+    for (const leg of legs) for (const slug of (leg.league ? [leg.league] : T.SEARCH_LEAGUES)) wanted.add(`${slug}|${leg.date}`);
+    await Promise.all([...wanted].map(async key => {
+      const old = soccerBoards[key];
+      if (old && !old.some(m => m.state === "in") && old.every(m => m.state === "post")) return;  // all finished
+      const [slug, date] = key.split("|");
+      try { soccerBoards[key] = T.parseSoccerBoard(await getJson(`${ESPN_SOCCER}/${slug}/scoreboard?dates=${date}`), slug); }
+      catch (e) { soccerBoards[key] = soccerBoards[key] || []; }
+    }));
+    const matchOf = leg => {
+      for (const slug of (leg.league ? [leg.league] : T.SEARCH_LEAGUES)) {
+        const m = T.findMatch(soccerBoards[`${slug}|${leg.date}`] || [], leg.home, leg.away);
+        if (m) return m;
+      }
+      return null;
+    };
+    const halves = {};
+    await Promise.all(legs.map(async leg => {
+      const m = matchOf(leg);
+      if (!T.soccerLegNeedsSummary(leg, m) || halves[m.id]) return;
+      try { halves[m.id] = T.soccerHalves(await getJson(`${ESPN_SOCCER}/${m.slug}/summary?event=${m.id}`)); }
+      catch (e) { /* leg shows "half scores loading" */ }
+    }));
+    const live = Object.values(soccerBoards).some(ms => ms.some(m => m.state === "in"));
+    return { live, evaluate: leg => { const m = matchOf(leg); return T.evaluateSoccerLeg(leg, m, m && halves[m.id]); } };
   }
 
   async function update() {
     const meta = document.getElementById("meta");
     const el = document.getElementById("bets");
     try {
-      const dates = [...new Set(bets.flatMap(b => b.dates || (b.date ? [b.date] : [])))];
-      const boards = await Promise.all((dates.length ? dates : [""]).map(d =>
-        getJson(`${ESPN}/scoreboard${d ? `?dates=${d}` : ""}`)));
+      const active = bets.concat(goalsBets()).filter(recent);
+      const nflBets = active.filter(b => b.legs.some(l => !isSoccer(l) && l.type !== "other"));
+      const dates = [...new Set(nflBets.flatMap(b => b.dates || (b.date ? [b.date] : [])))];
+      const boards = await Promise.all(dates.map(d => getJson(`${ESPN}/scoreboard?dates=${d}`)));
       const games = Object.assign({}, ...boards.map(T.parseScoreboard));
 
       // Box scores only for games a player leg needs, once they've started.
       const needed = new Set();
-      for (const b of bets) for (const leg of b.legs) {
+      for (const b of nflBets) for (const leg of b.legs) {
         const g = games[leg.game];
         if (g && g.state !== "pre" && (leg.type === "player" || leg.type === "anytime_td")) needed.add(g.id);
       }
@@ -192,11 +260,13 @@
         catch (e) { /* leg shows "box score not loaded yet" */ }
       }));
 
-      const results = bets.map(b => T.evaluateBet(b, games, boxscores));
+      const soccer = await soccerResults(active);
+      const results = active.map(b => T.evaluateBet(b, games, boxscores, soccer.evaluate));
       const order = { live: 0, pending: 1, check: 2, won: 3, lost: 4 };
       results.sort((a, b) => order[a.status] - order[b.status]);
-      el.innerHTML = results.length ? results.map(betHtml).join("") : '<div class="empty">No bets to track yet.</div>';
-      const anyLive = Object.values(games).some(g => g.state === "in");
+      el.innerHTML = results.length ? results.map(betHtml).join("")
+        : '<div class="empty">No bets from the last few days. Log a football acca on the goals page, or confirm an NFL bet slip.</div>';
+      const anyLive = Object.values(games).some(g => g.state === "in") || soccer.live;
       meta.textContent = `Updated ${new Date().toLocaleTimeString("en-GB")}${anyLive ? " · live" : ""}`;
       schedule(anyLive);
     } catch (e) {
