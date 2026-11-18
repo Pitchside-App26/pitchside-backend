@@ -284,3 +284,20 @@ def test_livescore_fills_scottish_fixtures(monkeypatch):
     fx, _ = run_report._livescore_crosscheck(lg, date(2026, 10, 24), [{"home": "Hamilton", "away": "Alloa",
                                              "kickoff": "15:00"}], clubs, notes, problems)
     assert any(f.get("note", "").startswith("not on LiveScore") for f in fx)
+
+
+# Prices v ratings: the page carries every graded Over 1.5 result, keyed like the legs.
+def test_results_json_is_keyed_like_the_legs():
+    import json as _json
+    import pandas as pd
+    from football_goals import history, render
+    rows = [{"report_date": "2026-11-07", "home": "Preston", "away": "Southampton", "status": "graded", "o15_hit": "False"},
+            {"report_date": "2026-11-07", "home": "Folkestone Invicta", "away": "Truro City", "status": "void", "o15_hit": ""},
+            {"report_date": "2026-11-07", "home": "A", "away": "B</script>", "status": "graded", "o15_hit": "True"},
+            {"report_date": "2026-11-14", "home": "C", "away": "D", "status": "pending", "o15_hit": ""}]
+    html = render._results_json(pd.DataFrame(rows, columns=history.COLUMNS))
+    body = html[html.index(">") + 1:html.rindex("</script>")]
+    assert "</script>" not in body                                   # can't close the tag early
+    got = _json.loads(body)
+    assert got == {"2026-11-07|Preston|Southampton": 0, "2026-11-07|Folkestone Invicta|Truro City": "v",
+                   "2026-11-07|A|B</script>": 1}

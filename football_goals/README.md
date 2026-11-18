@@ -91,12 +91,23 @@ Each accumulator card works as a checklist while you place the bet:
      for each market is remembered. Bet365, BetFred, BoyleSports and "Other" are in the list.
   2. Enter the stake.
   3. Enter the **return shown on the bet slip**, so boosts are included exactly.
+  4. Optional: type each leg's **price** as the bookmaker shows it (1/7, 2/13 or 1.14).
+  5. Played a fixture that isn't on the card? Pick it from **+ Add a fixture not on this card**. It's saved as
+     an "own pick".
 
-  The bet is saved with its exact legs and appears under **Results → My bets**.
+  The bet is saved with its exact legs and appears under **Results → My bets**. A bet's **Prices** button adds
+  or corrects prices later.
+
+**Prices v ratings** (under My bets): every priced Over 1.5 leg you've logged, set against its result, in two
+tables. One groups legs by the bookmaker's price, the other by our rating. Seven weeks of results showed our
+ratings don't pick legs that land more often than other 3pm games do; this tests whether the bookmaker's prices
+do. If short prices land more often than high ratings, rank your legs by price. It needs 100 or more legs before
+it means much.
 
 **Where your bets are kept:** only in your phone's browser. They're never uploaded, because the repo and the site
 are public. Clearing browser data deletes them, so use **Info → My bets backup → Back up** now and then; the same
-file moves them to another phone. **Restore** never duplicates a bet that's already there.
+file moves them to another phone. **Restore** never duplicates a bet that's already there; for a bet already
+logged on the phone (same date, market and return), it just fills in any missing prices.
 
 Coming next: settling each bet (won/lost) and profit and loss, by market and bookmaker.
 

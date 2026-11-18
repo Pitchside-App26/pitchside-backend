@@ -7,6 +7,7 @@ Sunday grading run can replace just that part of the published page."""
 from __future__ import annotations
 
 import csv as _csv
+import json
 from html import escape
 from zoneinfo import ZoneInfo
 
@@ -197,7 +198,8 @@ def _fixture_list(report, mk):
         flags = ("<div class=fl><span>Flags</span>" + "".join(f"<span class=tag>{escape(f)}</span>" for f in r["flags"])
                  + "</div>") if r["flags"] else ""
         items.append(
-            f"<details class=fx data-lg='{escape(r['league_name'])}' data-hi={int(hi)}>"
+            f"<details class=fx data-lg='{escape(r['league_name'])}' data-hi={int(hi)} data-key='{escape(_key(report, r))}' "
+            f"data-fx='{escape(_fixture(r))}' data-pct='{pct(m['combined_pct'], 1)}'>"
             f"<summary><span class=fxn>{escape(_fixture(r))}<small>{escape(_short(r['league_name']))} · "
             f"{escape(r['kickoff'] or '–')} · venue {pct(m['venue_pct'])}{flag}</small></span>"
             f"<b class='pc{' hi' if hi else ''}'>{pct(m['combined_pct'], 1)}</b></summary>"
@@ -279,6 +281,17 @@ def _track_line(hit_rates, label):
 
 
 # ---------------------------------------------------------------- results
+def _results_json(df) -> str:
+    """Every graded Over 1.5 result as {"date|home|away": 1 (landed), 0 (missed) or "v" (void)},
+    keyed like the accumulator legs, so the phone can set its logged prices against results."""
+    out = {}
+    for r in df[df["status"].isin(["graded", "void"])].itertuples():
+        k = f"{r.report_date}|{r.home}|{r.away}"
+        out[k] = "v" if r.status == "void" else int(str(r.o15_hit).lower() in ("true", "1", "1.0"))
+    return ("<script type=application/json id=o15-results>"
+            + json.dumps(out, separators=(",", ":")).replace("</", "<\\/") + "</script>")
+
+
 def results_section(df, hit_rates, cfg: dict | None = None) -> str:
     """Inner HTML of the Results section: last graded weekend + running record."""
     g = df[df["status"].isin(["graded", "void"])]
@@ -313,7 +326,7 @@ def results_section(df, hit_rates, cfg: dict | None = None) -> str:
                         f"<td class=n>{tick('o15', r.o15_hit, r)}</td><td class=n>{tick('gibh', r.gibh_hit, r)}</td></tr>")
         body = ("<div class='card scroll'><table><thead><tr><th>Fixture</th><th class=n>Score</th><th class=n>O1.5</th>"
                 f"<th class=n>GIBH</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>")
-    return (head + body + "<h2>Track record</h2><p class=sub style='margin:0'>'Lg avg' is the season-to-date rate of "
+    return (head + body + _results_json(df) + "<h2>Track record</h2><p class=sub style='margin:0'>'Lg avg' is the season-to-date rate of "
             "the same leagues when each report ran: beating it means the selection adds something.</p>" + _track(hit_rates))
 
 
