@@ -55,8 +55,18 @@ game is on.
   written on the slip picks the feed (`tracker_bets.FOOTBALL_LEAGUES`); with
   no league the tracker looks across every league it follows. With no match
   date on the slip, the upload date is assumed and the draft says so.
+- **Stakes are private (since 18 Nov).** The repo is public, so Dan's stake
+  and returns are never written anywhere in it: not in `bets.json`, the
+  results log, or the slip reading posted on the issue (the stake x odds vs
+  returns check still runs, without naming amounts). The upload form asks
+  him to cover them on the screenshot. On My bets he can add a stake per bet
+  ("Add your stake"), saved in that browser only (`my-stakes-v1`).
+- **Football leg prices:** each confirmed football leg's price goes to
+  `football_goals/data/placed_legs.csv` (`price_log.py`; no stakes), so the
+  goals report can test prices against its ratings. A re-confirm replaces
+  that issue's rows; rows with issue 0 or below are hand-entered seeds.
 - Bets are listed in `site/bets.json` (public, like the rest of the page;
-  never a bet reference, terminal, barcode or placed time):
+  never a stake, return, bet reference, terminal, barcode or placed time):
   moneylines, game totals, player stat over/unders and anytime TDs. Each leg
   names its game as ESPN's `AWAY@HOME` abbreviations (Rams `LAR`,
   Commanders `WSH`); stat names are in `site/tracker-core.js`.

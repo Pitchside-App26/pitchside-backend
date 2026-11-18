@@ -71,7 +71,7 @@ def test_nothing_identifying_the_slip_is_written(tmp_path):
     publish(3, _draft(_leg("Brock Purdy", "player_pass_yds", "over", 260.5)), SCHEDULE, ROSTER, str(path),
             today=date(2026, 11, 15))
     bet = json.loads(path.read_text())["bets"][0]
-    assert set(bet) == {"id", "book", "kind", "odds", "stake", "returns", "dates", "legs"}
+    assert set(bet) == {"id", "book", "kind", "odds", "dates", "legs"}
 
 
 def test_a_reconfirmed_slip_replaces_its_bets_and_old_bets_drop_off():

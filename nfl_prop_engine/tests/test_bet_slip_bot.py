@@ -74,6 +74,9 @@ def gh(monkeypatch, tmp_path):
                         lambda week: (tracker_bets.Schedule(games), {"Drake Maye": "NE"}))
     fake.bets_path = str(tmp_path / "bets.json")
     monkeypatch.setattr(tracker_bets, "BETS_PATH", fake.bets_path)
+    import price_log
+    fake.prices_path = str(tmp_path / "placed_legs.csv")
+    monkeypatch.setattr(price_log, "PATH", fake.prices_path)
     monkeypatch.setenv("GITHUB_REPOSITORY", "Pitchside-App26/pitchside-backend")
     fake.db = db
     return fake
@@ -298,3 +301,8 @@ def test_a_football_slip_needs_no_nfl_week_and_goes_on_the_tracker_only(gh, tmp_
     assert bet["legs"][0] == {"sport": "soccer", "date": "20261121", "home": "Forfar Athletic", "away": "Spartans",
                               "league": "ls:sco4", "type": "goals", "side": "over", "line": 2.5}
     assert bet["legs"][1]["type"] == "btts" and bet["legs"][1]["league"] == "eng.3"
+    assert "stake" not in bet and "returns" not in bet
+    import csv
+    rows = list(csv.DictReader(open(gh.prices_path)))
+    assert [(r["issue"], r["game"], r["book_price"]) for r in rows] == [
+        ("5", "Forfar Athletic v Spartans", "2.1"), ("5", "Stockport County v Bolton Wanderers", "1.6667")]

@@ -10,6 +10,10 @@ player names to the nflverse roster, and arithmetic cross-checks (leg odds
 multiplied together vs the slip's total, stake x odds vs potential returns)
 that flag a likely misread before Dan is asked to confirm.
 
+Dan's stakes and returns stay private: the repo is public, so they are never
+put in the draft (which is posted on the issue), the results log or the
+tracker. The model may still read them, only for the cross-check.
+
 The GitHub side (fetching the issue, posting comments) lives in
 bet_slip_bot.py; this module has no network access except the Claude call.
 """
@@ -115,7 +119,7 @@ Rules:
 - sport: "nfl" for American football, "football" for soccer.
 - Each selection is one leg. For a bet builder (or a bet builder inside an accumulator), give its selections the same bet_builder_group label ("BB1", "BB2", ...). Set a leg's odds to null when the slip only prices the group as a whole.
 - Copy odds exactly as displayed ("5/6", "evens", "1.83"). Never convert or calculate odds.
-- Stakes and returns are in GBP. Give numbers without the currency symbol.
+- Stakes and returns are in GBP. Give numbers without the currency symbol. The bettor usually covers or crops them out: then use null, and don't mention them in "unclear".
 - market_text is the market name as shown on the slip. market is the closest match from the lists below, or other.
 - bookmaker: the brand on the slip (bet365, Ladbrokes, ...), null if not shown.
 - Never transcribe a bet reference, receipt number, terminal number or barcode.
@@ -223,10 +227,6 @@ def odds_to_decimal(raw: str | None) -> float | None:
     return round(value, 4) if value > 1.0 else None
 
 
-def _money(value: float | None) -> str:
-    return "?" if value is None else f"£{value:,.2f}"
-
-
 def has_nfl(slips: list[dict]) -> bool:
     return any(slip.get("sport", "nfl") == "nfl" for slip in slips)
 
@@ -302,19 +302,14 @@ def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, ov
                     "One of them is probably misread."
                 )
         if stake and total and returns and abs(stake * total - returns) / returns > 0.02:
-            warnings.append(
-                f"Slip {slip_no}: {_money(stake)} at {total:.2f} should return {_money(stake * total)}, "
-                f"but the slip shows {_money(returns)}. Check the stake, odds and returns."
-            )
+            warnings.append(_STAKE_MISMATCH.format(slip_no=slip_no))
 
         slips.append({
             "sport": "nfl",
             "bet_type": slip["bet_type"],
             "bookmaker": slip.get("bookmaker"),
-            "stake_gbp": stake,
             "total_odds_text": slip["total_odds"],
             "total_odds_decimal": total,
-            "potential_returns_gbp": returns,
             "legs": legs,
         })
 
@@ -322,6 +317,11 @@ def normalize(parsed: dict, week: int | None, roster_names: list[str] | None, ov
         warnings.append("No placed bet found in the screenshot(s).")
 
     return {"version": 1, "week": week, "slips": slips, "warnings": warnings}
+
+
+# Shown on the public issue, so it never names the amounts.
+_STAKE_MISMATCH = ("Slip {slip_no}: the stake, total odds and returns on the slip don't add up, "
+                   "so the total odds are probably misread.")
 
 
 def _football_slip(slip_no: int, slip: dict, default_date: str | None, warnings: list[str]) -> dict:
@@ -371,18 +371,13 @@ def _football_slip(slip_no: int, slip: dict, default_date: str | None, warnings:
                 "One of them is probably misread."
             )
     if stake and total and returns and abs(stake * total - returns) / returns > 0.02:
-        warnings.append(
-            f"Slip {slip_no}: {_money(stake)} at {total:.2f} should return {_money(stake * total)}, "
-            f"but the slip shows {_money(returns)}. Check the stake, odds and returns."
-        )
+        warnings.append(_STAKE_MISMATCH.format(slip_no=slip_no))
     return {
         "sport": "football",
         "bet_type": slip["bet_type"],
         "bookmaker": slip.get("bookmaker"),
-        "stake_gbp": stake,
         "total_odds_text": slip["total_odds"],
         "total_odds_decimal": total,
-        "potential_returns_gbp": returns,
         "legs": legs,
     }
 
@@ -456,9 +451,7 @@ def render_draft_comment(draft: dict) -> str:
         kind = slip["bet_type"].replace("_", " ").capitalize()
         lines.append(
             f"**Slip {slip_no}: {'Football ' if slip.get('sport') == 'football' else ''}{kind}**, "
-            f"stake {_money(slip['stake_gbp'])}, "
-            f"odds {_odds_label(slip['total_odds_text'], slip['total_odds_decimal'])}, "
-            f"returns {_money(slip['potential_returns_gbp'])}"
+            f"odds {_odds_label(slip['total_odds_text'], slip['total_odds_decimal'])}"
         )
         if slip.get("sport") == "football":
             lines += _football_rows(slip)
@@ -484,7 +477,7 @@ def render_draft_comment(draft: dict) -> str:
 
     lines.append(
         "Reply **confirm** to log this, **cancel** to discard it, or describe what's wrong "
-        "(e.g. `leg 2 line is 64.5`, `stake was £10`, `week is 5`, `games are on Saturday 21 Nov`) "
+        "(e.g. `leg 2 line is 64.5`, `week is 5`, `games are on Saturday 21 Nov`) "
         "and I'll read it again."
     )
     lines += ["", encode_draft(draft)]
@@ -611,7 +604,7 @@ def detect_media_type(data: bytes) -> str | None:
 
 def strip_images(body_markdown: str | None) -> str:
     """The issue's text without image markup, passed to the model as Dan's
-    notes (e.g. "stake was £10")."""
+    notes (e.g. "games are on Saturday")."""
     text = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", body_markdown or "")
     text = re.sub(r"<img\b[^>]*>", "", text, flags=re.IGNORECASE)
     return text.strip()[:2000]

@@ -15,7 +15,8 @@ tracker finds the match from the two clubs, the date and, if the slip names
 it, the league.
 
 Nothing that identifies the physical slip (reference, terminal, barcode, the
-time it was placed) is ever written: bets.json is public.
+time it was placed) is ever written, and neither are Dan's stake or returns:
+bets.json is public. The tracker keeps a stake Dan types in on his phone only.
 """
 import json
 import re
@@ -202,8 +203,6 @@ def tracker_bets(issue: int, draft: dict, schedule: Schedule, team_of_player: di
             "book": slip.get("bookmaker") or "bet365",
             "kind": ("Football " if football else "") + KINDS.get(slip["bet_type"], "Bet"),
             "odds": slip.get("total_odds_text") or "",
-            "stake": slip.get("stake_gbp"),
-            "returns": slip.get("potential_returns_gbp"),
             "dates": sorted(days),
             "legs": legs,
         })

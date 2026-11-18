@@ -18,6 +18,7 @@ import sys
 import requests
 
 import bet_slips
+import price_log
 import tracker_bets
 from config import BET_SLIP, RESULTS_DB_PATH, get_current_nfl_season
 from prop_bets_log import AlreadySettledError, replace_slips_for_issue
@@ -320,6 +321,10 @@ def cmd_comment(number: int, comment_id: int, reply_file: str) -> None:
                        f"({n_legs} leg{'s' if n_legs != 1 else ''}) to Week {draft['week']}. ")
 
     tracker_line = put_on_tracker(number, draft)
+    try:
+        price_log.record(number, draft)  # football legs' prices, for the goals report
+    except Exception:
+        logger.exception("Couldn't record the football leg prices")
     with open(reply_file, "w") as f:
         f.write(bet_slips.status_comment(
             f"{logged_line}{tracker_line} If something's wrong, reply with a correction and confirm "

@@ -76,7 +76,9 @@ def test_normalize_skips_multiply_check_for_bet_builder_legs():
 
 def test_normalize_flags_returns_that_dont_match_stake_times_odds():
     draft = normalize(_parsed([_leg(odds="11/2")], bet_type="single", total="11/2", returns=40.0), week=4, roster_names=None)
-    assert any("should return" in w for w in draft["warnings"])
+    assert any("don't add up" in w for w in draft["warnings"])
+    # The warning is posted on the public issue: it never names the amounts.
+    assert not any("£" in w or "40" in w for w in draft["warnings"])
 
 
 def test_normalize_matches_names_to_the_roster():
@@ -248,7 +250,8 @@ def test_a_corrected_confirm_replaces_the_logged_version(tmp_path):
     replace_slips_for_issue(7, 4, _draft(line=200.5, stake=5.0)["slips"], db_path=db)
     replace_slips_for_issue(7, 4, _draft(line=214.5, stake=10.0)["slips"], db_path=db)
     conn = sqlite3.connect(db)
-    assert conn.execute("SELECT stake_gbp, total_odds_decimal FROM bet_slips").fetchall() == [(10.0, 3.25)]
+    # Stakes are never logged (the results log is public).
+    assert conn.execute("SELECT stake_gbp, total_odds_decimal FROM bet_slips").fetchall() == [(None, 3.25)]
     assert conn.execute("SELECT book_line FROM prop_bets WHERE player='Drake Maye'").fetchall() == [(214.5,)]
     conn.close()
 
@@ -281,3 +284,12 @@ def test_settlement_skips_legs_it_cannot_grade(tmp_path):
     conn = sqlite3.connect(db)
     assert conn.execute("SELECT COUNT(*) FROM prop_bets WHERE result IS NOT NULL").fetchone()[0] == 0
     conn.close()
+
+
+def test_stakes_and_returns_never_reach_the_draft_or_its_comment():
+    from bet_slips import render_draft_comment
+    draft = normalize(_parsed([_leg(odds="5/6")], bet_type="single", total="5/6", returns=91.67), week=4,
+                      roster_names=None)
+    assert all("stake_gbp" not in slip and "potential_returns_gbp" not in slip for slip in draft["slips"])
+    comment = render_draft_comment(draft)
+    assert "91.67" not in comment and "£" not in comment

@@ -71,6 +71,20 @@
   .group.lost { color: var(--lost); }
   .won-group > summary { color: var(--won); cursor: pointer; list-style-position: inside; }
   .won-group > summary:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+  .label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sub);
+    margin: 0 0 6px; }
+  .stake-edit { display: inline; }
+  .stake-edit > summary { display: inline; cursor: pointer; color: var(--text); text-decoration: underline; list-style: none; }
+  .stake-edit > summary::-webkit-details-marker { display: none; }
+  .stake-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 8px; }
+  .stake-form label { display: flex; flex-direction: column; gap: 2px; font-size: 0.72rem; color: var(--sub); }
+  .stake-form input { width: 6.5rem; padding: 6px 8px; font: inherit; font-size: 0.95rem; color: var(--text);
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; }
+  .stake-form button { padding: 7px 12px; font: inherit; font-size: 0.82rem; font-weight: 700; color: var(--panel);
+    background: var(--text); border: 0; border-radius: 4px; cursor: pointer; }
+  .stake-form input:focus-visible, .stake-form button:focus-visible, .stake-edit > summary:focus-visible {
+    outline: 2px solid var(--live); outline-offset: 2px; }
+  .stake-note { flex-basis: 100%; font-size: 0.72rem; color: var(--sub); }
   .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 18px; }
   .action { display: flex; flex-direction: column; gap: 3px; padding: 11px 12px; border: 1px solid var(--rule-strong);
     border-radius: 6px; background: var(--panel); color: var(--text); text-decoration: none; }
@@ -86,7 +100,6 @@
 </head>
 <body>
 <div class="wrap">
-  <nav class="back">Reports: <a href="./">NFL fun slips</a> · <a href="goals/">Goals report</a></nav>
   <header>
     <div>
       <h1>My bets</h1>
@@ -94,15 +107,24 @@
     </div>
     <button class="refresh" id="refresh" type="button">Refresh</button>
   </header>
-  <section class="actions" aria-label="Add a bet">
-    <a class="action primary" href="https://github.com/Pitchside-App26/pitchside-backend/issues/new?template=bet-slip.md">
-      <span class="action-title">Upload a bet slip</span>
-      <span class="action-sub">Screenshot or photo from any bookmaker, NFL or football: accas, BTTS, over 2.5, goal in both halves.
-        Reply <b>confirm</b> to the reading and it appears here in a couple of minutes.</span>
+  <div class="label">Build a bet</div>
+  <section class="actions" aria-label="Build a bet">
+    <a class="action" href="./">
+      <span class="action-title">NFL fun slips</span>
+      <span class="action-sub">This week's six-leg milestone slips, with swaps.</span>
     </a>
     <a class="action" href="goals/">
-      <span class="action-title">Log an Over 1.5 acca</span>
-      <span class="action-sub">Tap + on the legs in the goals report, then Log bet. Kept on this phone only.</span>
+      <span class="action-title">Football goals report</span>
+      <span class="action-sub">Over 1.5 picks. Tap + on the legs, then Log bet: it shows here, on this phone only.</span>
+    </a>
+  </section>
+  <div class="label">Placed a bet somewhere else?</div>
+  <section class="actions" aria-label="Upload a bet slip">
+    <a class="action primary" href="https://github.com/Pitchside-App26/pitchside-backend/issues/new?template=bet-slip.md">
+      <span class="action-title">Upload a bet slip</span>
+      <span class="action-sub">Screenshot from any bookmaker, NFL or football: accas, BTTS, over 2.5, goal in both halves.
+        Cover the stake and return first (the slip is public), reply <b>confirm</b> to the reading, and it
+        appears here in a couple of minutes. Add your stake below; it stays on this phone.</span>
     </a>
   </section>
   <main id="bets"><div class="empty">Loading your bets…</div></main>
@@ -216,10 +238,50 @@
     if (e.target.open) foldedWon.delete(id); else foldedWon.add(id);
   }, true);
 
+  // Dan's stakes never go on the public site. He can type one in per bet; it
+  // is kept in this browser only, keyed by the bet's id. Football accas
+  // logged on the goals page carry their own (also phone-only) stake.
+  const STAKES_KEY = "my-stakes-v1";
+  function readStakes() {
+    try { return JSON.parse(localStorage.getItem(STAKES_KEY) || "{}") || {}; } catch (e) { return {}; }
+  }
+  function saveStake(id, stake, ret) {
+    const all = readStakes();
+    if (Number.isFinite(stake) && stake > 0) all[id] = { stake, ret: Number.isFinite(ret) && ret > 0 ? ret : null };
+    else delete all[id];
+    try { localStorage.setItem(STAKES_KEY, JSON.stringify(all)); return true; } catch (e) { return false; }
+  }
+  const openStake = new Set();
+  document.addEventListener("toggle", e => {
+    const id = e.target.dataset && e.target.dataset.stake;
+    if (id === undefined) return;
+    if (e.target.open) openStake.add(id); else openStake.delete(id);
+  }, true);
+
+  function stakeHtml(b, status, landed) {
+    const fromGoals = b.source === "goals page";
+    const own = fromGoals ? { stake: b.stake, ret: b.returns } : readStakes()[b.id];
+    const money2 = own && Number.isFinite(own.stake) ? [
+      `Stake ${money(own.stake)}`,
+      status === "lost" ? "Lost" : Number.isFinite(own.ret) ? `${status === "won" ? "Returns" : "To return"} ${money(own.ret)}` : "",
+    ].filter(Boolean).join(" · ") : "";
+    const parts = [money2, landed].filter(Boolean).join(" · ");
+    if (fromGoals) return parts;
+    const id = esc(b.id);
+    const v = x => (own && Number.isFinite(x) ? x : "");
+    return `${parts} · <details class="stake-edit" data-stake="${id}"${openStake.has(String(b.id)) ? " open" : ""}>
+        <summary>${own ? "Edit stake" : "Add your stake"}</summary>
+        <form class="stake-form" data-bet="${id}">
+          <label for="stake-${id}">Stake (£)<input id="stake-${id}" name="stake" inputmode="decimal" value="${v(own && own.stake)}"></label>
+          <label for="ret-${id}">Return (£)<input id="ret-${id}" name="ret" inputmode="decimal" value="${v(own && own.ret)}"></label>
+          <button type="submit">Save</button>
+          <span class="stake-note">Saved on this phone only. Clear the stake and save to remove it.</span>
+        </form>
+      </details>`;
+  }
+
   function betHtml(result) {
     const b = result.bet;
-    const settledText = result.status === "won" ? `Returns ${money(b.returns)}`
-      : result.status === "lost" ? "Lost" : `To return ${money(b.returns)}`;
     const g = T.groupLegs(result.legs);
     const shown = [...g.open, ...g.lost, ...g.won, ...g.void];
     const sections = ["open", "lost", "won", "void"].filter(k => g[k].length).length;
@@ -237,7 +299,7 @@
         <div class="bet-head">
           <div>
             <div class="bet-title">${esc(b.book)} ${esc(b.kind)}${b.odds ? ` · ${esc(b.odds)}` : ""}</div>
-            <div class="bet-sub">Stake ${money(b.stake)} · ${settledText} · ${result.won} of ${result.total} landed</div>
+            <div class="bet-sub">${stakeHtml(b, result.status, `${result.won} of ${result.total} landed`)}</div>
           </div>
           <span class="pill ${result.status}">${PILL[result.status] || result.status}</span>
         </div>
@@ -334,8 +396,8 @@
       const results = active.map(b => T.evaluateBet(b, games, boxscores, soccer.evaluate));
       const order = { live: 0, pending: 1, check: 2, won: 3, lost: 4 };
       results.sort((a, b) => order[a.status] - order[b.status]);
-      el.innerHTML = results.length ? results.map(betHtml).join("")
-        : '<div class="empty">No bets from the last few days. Upload a bet slip or log an Over 1.5 acca above.</div>';
+      lastResults = results;
+      render();
       const anyLive = Object.values(games).some(g => g.state === "in") || soccer.live;
       meta.textContent = `Updated ${new Date().toLocaleTimeString("en-GB")}${anyLive ? " · live" : ""}`;
       schedule(anyLive);
@@ -344,6 +406,27 @@
       schedule(true);
     }
   }
+
+  let lastResults = null;
+  function render() {
+    // Don't wipe a stake someone is typing; the next refresh catches up.
+    if (lastResults === null || (document.activeElement && document.activeElement.closest(".stake-form"))) return;
+    document.getElementById("bets").innerHTML = lastResults.length ? lastResults.map(betHtml).join("")
+      : '<div class="empty">No bets from the last few days. Build one above, or upload a slip.</div>';
+  }
+  document.getElementById("bets").addEventListener("submit", e => {
+    const form = e.target.closest(".stake-form");
+    if (!form) return;
+    e.preventDefault();
+    const num = name => parseFloat(String(form.elements[name].value).replace(/[£,\s]/g, ""));
+    if (!saveStake(form.dataset.bet, num("stake"), num("ret"))) {
+      alert("Couldn't save on this phone (private browsing blocks it).");
+      return;
+    }
+    openStake.delete(form.dataset.bet);
+    document.activeElement && document.activeElement.blur();
+    render();
+  });
 
   function schedule(live) {
     clearTimeout(timer);
