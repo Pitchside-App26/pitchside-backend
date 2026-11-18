@@ -6,8 +6,6 @@
       "book": "Ladbrokes",
       "kind": "Bet Builder",
       "odds": "20/1",
-      "stake": 7.5,
-      "returns": 157.5,
       "date": "20261115",
       "legs": [
         {"type": "player", "game": "SF@DAL", "player": "Brock Purdy", "stat": "passingYards", "side": "over", "line": 260.5},
@@ -23,8 +21,6 @@
       "book": "Ladbrokes",
       "kind": "Accumulator",
       "odds": "",
-      "stake": 7.5,
-      "returns": 238.18,
       "date": "20261115",
       "legs": [
         {"type": "moneyline", "game": "KC@ATL", "team": "KC"},

@@ -114,6 +114,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add results_log.sqlite3 site/bets.json
+          if [ -f ../football_goals/data/placed_legs.csv ]; then git add ../football_goals/data/placed_legs.csv; fi
           git diff --cached --quiet && exit 0
           git commit -m "chore: log bet slip from issue #$ISSUE_NUMBER"
           for attempt in 1 2 3; do
@@ -124,7 +125,8 @@ jobs:
 
       - name: Republish the page with the slip on the live tracker
         # Bets go on the public page without anything that identifies the
-        # physical slip (no reference, terminal, barcode or placed time).
+        # physical slip (no reference, terminal, barcode or placed time) and
+        # without Dan's stake or returns.
         if: steps.handle.outputs.tracker == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
