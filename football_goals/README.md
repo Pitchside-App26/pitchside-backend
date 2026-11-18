@@ -94,6 +94,14 @@ Each accumulator card works as a checklist while you place the bet:
 
   The bet is saved with its exact legs and appears under **Results → My bets**.
 
+**Prices v ratings** (Results tab): seven weeks of results showed our ratings don't pick Over 1.5 legs that
+land more often than other 3pm games do. This tests whether the bookmaker's price does. Every football slip you
+upload and confirm on **My bets** records each leg's price in `data/placed_legs.csv` (no stakes). The first 40
+rows were typed in from the 31 Oct and 7 Nov SpreadEx screenshots. The Results tab sets each priced Over 1.5
+leg against its graded result, once by price and once by our rating. If short prices land more often than high
+ratings do, rank legs by price. It needs about 100 legs before it means much. Bets logged only on this page
+have no prices, so upload the slip as well if you want a bet in the test.
+
 **Where your bets are kept:** only in your phone's browser. They're never uploaded, because the repo and the site
 are public. Clearing browser data deletes them, so use **Info → My bets backup → Back up** now and then; the same
 file moves them to another phone. **Restore** never duplicates a bet that's already there.

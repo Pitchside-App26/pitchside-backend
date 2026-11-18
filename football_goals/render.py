@@ -10,7 +10,7 @@ import csv as _csv
 from html import escape
 from zoneinfo import ZoneInfo
 
-from . import betslip, scope, update_button
+from . import betslip, prices, scope, update_button
 
 UK = ZoneInfo("Europe/London")
 MARKETS = (("o15", "Over 1.5 goals", "over_1_5_highlight"), ("gibh", "Goal in both halves", "gibh_highlight"))
@@ -313,7 +313,7 @@ def results_section(df, hit_rates, cfg: dict | None = None) -> str:
                         f"<td class=n>{tick('o15', r.o15_hit, r)}</td><td class=n>{tick('gibh', r.gibh_hit, r)}</td></tr>")
         body = ("<div class='card scroll'><table><thead><tr><th>Fixture</th><th class=n>Score</th><th class=n>O1.5</th>"
                 f"<th class=n>GIBH</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>")
-    return (head + body + "<h2>Track record</h2><p class=sub style='margin:0'>'Lg avg' is the season-to-date rate of "
+    return (head + body + prices.section(df) + "<h2>Track record</h2><p class=sub style='margin:0'>'Lg avg' is the season-to-date rate of "
             "the same leagues when each report ran: beating it means the selection adds something.</p>" + _track(hit_rates))
 
 
