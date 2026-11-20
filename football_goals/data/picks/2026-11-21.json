@@ -1,0 +1,177 @@
+{
+ "locked_at": "2026-11-20T23:52+00:00",
+ "o15": {
+  "legs": [
+   [
+    "SCO4",
+    "Spartans",
+    "Dumbarton"
+   ],
+   [
+    "ENG5",
+    "Worthing",
+    "Harrogate"
+   ],
+   [
+    "SCO4",
+    "Clyde",
+    "Stirling"
+   ],
+   [
+    "ENG3",
+    "Huddersfield",
+    "Leicester"
+   ],
+   [
+    "ENG5",
+    "Barrow",
+    "Carlisle"
+   ],
+   [
+    "ENG6S",
+    "Braintree Town",
+    "Torquay United"
+   ],
+   [
+    "ENG5",
+    "Sutton",
+    "Boston Utd"
+   ],
+   [
+    "ENG3",
+    "Oxford",
+    "Wycombe"
+   ],
+   [
+    "ENG6S",
+    "Chesham United",
+    "Hampton & Richmond"
+   ],
+   [
+    "ENG3",
+    "Burton",
+    "Luton"
+   ],
+   [
+    "SCO3",
+    "Ross County",
+    "Cove Rangers"
+   ],
+   [
+    "ENG3",
+    "Plymouth",
+    "Peterboro"
+   ],
+   [
+    "SCO1",
+    "Hibernian",
+    "Dundee United"
+   ],
+   [
+    "ENG6N",
+    "Worksop Town",
+    "Chorley"
+   ],
+   [
+    "ENG6S",
+    "Maidstone United",
+    "Farnham Town"
+   ],
+   [
+    "ENG6S",
+    "Farnborough",
+    "Salisbury FC"
+   ],
+   [
+    "ENG5",
+    "Wealdstone",
+    "Hornchurch"
+   ],
+   [
+    "ENG5",
+    "Kidderminster",
+    "Fylde"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG3",
+    "Cambridge",
+    "Stockport"
+   ],
+   [
+    "SCO3",
+    "Peterhead",
+    "East Kilbride"
+   ],
+   [
+    "ENG6N",
+    "Buxton",
+    "Hednesford"
+   ],
+   [
+    "SCO4",
+    "Annan Athletic",
+    "Forfar"
+   ],
+   [
+    "SCO4",
+    "Edinburgh City",
+    "Kelty Hearts"
+   ],
+   [
+    "ENG2",
+    "West Ham",
+    "Preston"
+   ]
+  ],
+  "below_line": []
+ },
+ "gibh": {
+  "legs": [
+   [
+    "SCO4",
+    "Spartans",
+    "Dumbarton"
+   ],
+   [
+    "SCO4",
+    "Clyde",
+    "Stirling"
+   ],
+   [
+    "SCO4",
+    "Edinburgh City",
+    "Kelty Hearts"
+   ],
+   [
+    "SCO4",
+    "Annan Athletic",
+    "Forfar"
+   ],
+   [
+    "ENG5",
+    "Worthing",
+    "Harrogate"
+   ],
+   [
+    "ENG2",
+    "West Ham",
+    "Preston"
+   ]
+  ],
+  "reserves": [
+   [
+    "SCO4",
+    "Stranraer",
+    "Elgin"
+   ],
+   [
+    "ENG3",
+    "Plymouth",
+    "Peterboro"
+   ]
+  ],
+  "below_line": []
+ }
+}
