@@ -1,0 +1,177 @@
+{
+ "locked_at": "2026-11-27T19:23+00:00",
+ "o15": {
+  "legs": [
+   [
+    "ENG5",
+    "Harrogate",
+    "Yeovil"
+   ],
+   [
+    "ENG5",
+    "Forest Green",
+    "Tamworth"
+   ],
+   [
+    "ENG5",
+    "Boreham Wood",
+    "Gateshead"
+   ],
+   [
+    "ENG6S",
+    "Folkestone Invicta",
+    "Hampton & Richmond"
+   ],
+   [
+    "ENG6N",
+    "Buxton",
+    "Spennymoor Town"
+   ],
+   [
+    "ENG1",
+    "Man United",
+    "Brentford"
+   ],
+   [
+    "ENG3",
+    "Luton",
+    "Oxford"
+   ],
+   [
+    "ENG5",
+    "Altrincham",
+    "Worthing"
+   ],
+   [
+    "ENG5",
+    "Carlisle",
+    "Sutton"
+   ],
+   [
+    "ENG5",
+    "Eastleigh",
+    "Halifax"
+   ],
+   [
+    "ENG5",
+    "Hornchurch",
+    "Solihull"
+   ],
+   [
+    "ENG2",
+    "Millwall",
+    "Burnley"
+   ],
+   [
+    "SCO1",
+    "Dundee United",
+    "St Johnstone"
+   ],
+   [
+    "ENG6S",
+    "Dorking Wanderers",
+    "Farnborough"
+   ],
+   [
+    "ENG6S",
+    "Maidstone United",
+    "Chesham United"
+   ],
+   [
+    "ENG6N",
+    "Chorley",
+    "Harborough Town FC"
+   ],
+   [
+    "SCO1",
+    "Aberdeen",
+    "Dundee"
+   ],
+   [
+    "ENG6S",
+    "Hemel Hempstead",
+    "Walton and Hersham"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG3",
+    "Leicester",
+    "Mansfield"
+   ],
+   [
+    "ENG6S",
+    "Slough Town",
+    "Tonbridge Angels"
+   ],
+   [
+    "ENG4",
+    "Shrewsbury",
+    "Cheltenham"
+   ],
+   [
+    "ENG2",
+    "West Ham",
+    "Stoke"
+   ],
+   [
+    "ENG4",
+    "Rochdale",
+    "Barnet"
+   ],
+   [
+    "ENG6S",
+    "Farnham Town",
+    "Ebbsfleet United"
+   ]
+  ],
+  "below_line": []
+ },
+ "gibh": {
+  "legs": [
+   [
+    "ENG2",
+    "Millwall",
+    "Burnley"
+   ],
+   [
+    "ENG5",
+    "Harrogate",
+    "Yeovil"
+   ],
+   [
+    "SCO1",
+    "Aberdeen",
+    "Dundee"
+   ],
+   [
+    "SCO1",
+    "Rangers",
+    "Falkirk"
+   ],
+   [
+    "SCO1",
+    "Dundee United",
+    "St Johnstone"
+   ],
+   [
+    "SCO1",
+    "St Mirren",
+    "Kilmarnock"
+   ]
+  ],
+  "reserves": [
+   [
+    "ENG5",
+    "Boreham Wood",
+    "Gateshead"
+   ],
+   [
+    "ENG4",
+    "Rochdale",
+    "Barnet"
+   ]
+  ],
+  "below_line": []
+ }
+}
