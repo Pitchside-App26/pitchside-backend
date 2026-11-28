@@ -55,7 +55,7 @@ def test_section_is_empty_until_a_priced_leg_is_graded(tmp_path):
 
 def test_the_seed_rows_match_the_history(tmp_path):
     with open(prices.PATH, newline="") as f:          # hand-entered seeds: issue 0 or below
-        seeds = [r for r in csv.DictReader(f) if int(r["issue"]) <= 0]
+        seeds = [r for r in csv.DictReader(f) if int(r["issue"]) in (0, -1)]
     p = tmp_path / "seeds.csv"
     with open(p, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(seeds[0]))
